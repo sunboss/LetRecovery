@@ -2717,5 +2717,8 @@
         "锁定卷 {} 失败（可能有句柄占用）": "Volume {} konnte nicht gesperrt werden (möglicherweise ist noch ein Handle geöffnet)",
         "（未能更新恢复环境的位置记录；回到 Windows 后可用管理员命令提示符依次运行 reagentc /disable 和 reagentc /enable 修复）": " (Der Speicherort der Wiederherstellungsumgebung konnte nicht aktualisiert werden; in Windows in einer Administrator-Eingabeaufforderung nacheinander reagentc /disable und reagentc /enable ausführen.)",
         "（未能更新系统里被移动分区的盘符记录；若回到 Windows 后盘符变了，可在磁盘管理里改回）": " (Die Laufwerksbuchstaben-Zuordnung der verschobenen Partitionen konnte nicht aktualisiert werden; falls sich in Windows ein Buchstabe geändert hat, in der Datenträgerverwaltung zurücksetzen.)"
-    }
+    },
+    "已生成 R装机-support.json": "RZhuangJi-support.json erstellt",
+    "R装机 遇到错误": "RZhuangJi hat einen Fehler festgestellt",
+    "R装机 PE": "RZhuangJi PE"
 }
