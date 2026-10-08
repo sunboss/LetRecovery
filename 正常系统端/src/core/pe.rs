@@ -25,7 +25,7 @@ const HANDOFF_ADMINISTRATOR_WIM_PATH: &str =
     lr_core::unattend_account::PROTECTED_ADMINISTRATOR_SECRET_WIM_PATH;
 const HANDOFF_BITLOCKER_WIM_PATH: &str = lr_core::bl_passthrough::KEYS_WIM_PATH;
 const HANDOFF_CAPABILITIES_WIM_PATH: &str =
-    "\\Program Files\\LetRecoveryPE\\handoff-capabilities.txt";
+    "\\Program Files\\R装机PE\\handoff-capabilities.txt";
 const SOURCE_IMAGE_VERIFIED_CAPABILITY: &str = "source-image-verified-v1";
 const JOURNAL_VERSION: &str = "LRPE4";
 const PRE_AUTH_JOURNAL_VERSION: &str = "LRPE3";
@@ -83,7 +83,7 @@ fn read_pe_capabilities(pe_path: &Path) -> Result<Vec<u8>> {
         &extraction
             .path()
             .join("Program Files")
-            .join("LetRecoveryPE")
+            .join("R装机PE")
             .join("handoff-capabilities.txt"),
         4096,
     )?;

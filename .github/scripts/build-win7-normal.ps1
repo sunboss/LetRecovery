@@ -8,7 +8,7 @@ $ErrorActionPreference = 'Stop'
 
 $scriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $repositoryRoot = [System.IO.Path]::GetFullPath((Join-Path $scriptRoot '..\..'))
-$artifact = Join-Path $repositoryRoot 'target\x86_64-win7-windows-msvc\release\LetRecovery.exe'
+$artifact = Join-Path $repositoryRoot 'target\x86_64-win7-windows-msvc\release\R装机.exe'
 $toolchainArgument = "+$Toolchain"
 $featureArguments = if ($CiAutomation) { @('--features','ci-automation') } else { @() }
 

@@ -185,7 +185,7 @@ pub(crate) fn page_content(
                 row(crate::tr!("结果"), crate::tr!("操作未完成")),
                 row(
                     crate::tr!("诊断信息"),
-                    crate::tr!("详细错误已写入 LetRecoveryPE.log。"),
+                    crate::tr!("详细错误已写入 R装机PE.log。"),
                 ),
             ],
             note: crate::tr!("请修正问题后从原入口重新开始；程序不会自动重试非幂等步骤。"),

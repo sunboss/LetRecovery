@@ -555,7 +555,7 @@ namespace LetRecovery {
     try {
       [System.IO.File]::Delete($restoreStdout)
       [System.IO.File]::Delete($restoreStderr)
-      # LetRecoveryPE.exe uses the GUI subsystem. PowerShell's call operator does not provide a
+      # R装机PE.exe uses the GUI subsystem. PowerShell's call operator does not provide a
       # reliable synchronous exit code for GUI applications, so use an explicit process handle.
       $restoreProcess = Start-Process -FilePath $personalRestoreHelper -ArgumentList @('--internal-restore-personal-files-at-shell',$personalRestoreSessionId) -WindowStyle Hidden -RedirectStandardOutput $restoreStdout -RedirectStandardError $restoreStderr -Wait -PassThru
       foreach ($outputPath in @($restoreStdout,$restoreStderr)) {

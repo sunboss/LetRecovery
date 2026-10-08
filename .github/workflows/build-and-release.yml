@@ -61,13 +61,13 @@ jobs:
           cargo test -p letrecovery-pe --locked --features non-elevated-tests
           cargo test -p LetRecovery --locked --features non-elevated-tests
 
-      - name: Build and verify system-side exe (LetRecovery.exe)
+      - name: Build and verify system-side exe (R装机.exe)
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
           & .\.github\scripts\build-win7-normal.ps1
 
-      - name: Build PE-side exe (LetRecoveryPE.exe)
+      - name: Build PE-side exe (R装机PE.exe)
         shell: bash
         working-directory: PE端
         run: |
@@ -91,7 +91,7 @@ jobs:
           set -euo pipefail
           mkdir -p pkg
           7z x package.7z -opkg -y >/dev/null
-          test -f "pkg/LetRecovery.exe"            || { echo "底包缺少 LetRecovery.exe"; exit 1; }
+          test -f "pkg/R装机.exe"            || { echo "底包缺少 R装机.exe"; exit 1; }
           test -f "pkg/bin/pe/LetRecovery_PE.wim"  || { echo "底包缺少 bin/pe/LetRecovery_PE.wim"; exit 1; }
 
       - name: Rebuild package config from generated release defaults
@@ -315,11 +315,11 @@ jobs:
         run: |
           set -euo pipefail
           # 正常端只发布一份 Win7-11 通用 EXE。PE 端仍由默认现代 Windows target 单独构建。
-          src="target/x86_64-win7-windows-msvc/release/LetRecovery.exe"
-          test -f "$src" || { echo "找不到 Win7-11 通用编译产物 LetRecovery.exe"; exit 1; }
+          src="target/x86_64-win7-windows-msvc/release/R装机.exe"
+          test -f "$src" || { echo "找不到 Win7-11 通用编译产物 R装机.exe"; exit 1; }
           echo "Using system-side exe: $src"
-          cp -f "$src" "pkg/LetRecovery.exe"
-          find "pkg" -maxdepth 1 -type f -iname '*.exe' ! -iname 'LetRecovery.exe' -delete
+          cp -f "$src" "pkg/R装机.exe"
+          find "pkg" -maxdepth 1 -type f -iname '*.exe' ! -iname 'R装机.exe' -delete
 
       - name: Inject PE-side exe into WIM
         shell: pwsh
@@ -331,14 +331,14 @@ jobs:
           Write-Host "Mounting $wim ..."
           dism /Mount-Image /ImageFile:"$wim" /Index:1 /MountDir:"$mount"
           if ($LASTEXITCODE -ne 0) { throw "DISM mount failed" }
-          $dst = Join-Path $mount "Program Files\LetRecoveryPE\LetRecoveryPE.exe"
+          $dst = Join-Path $mount "Program Files\R装机PE\R装机PE.exe"
           # 产物可能在 crate 的 target\ 或工作区根 target\
-          $peExe = @("PE端\target\release\LetRecoveryPE.exe", "target\release\LetRecoveryPE.exe") | Where-Object { Test-Path $_ } | Select-Object -First 1
-          if (-not $peExe) { throw "找不到编译产物 LetRecoveryPE.exe" }
+          $peExe = @("PE端\target\release\R装机PE.exe", "target\release\R装机PE.exe") | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (-not $peExe) { throw "找不到编译产物 R装机PE.exe" }
           Write-Host "Using PE-side exe: $peExe"
           Copy-Item -Force $peExe $dst
           Write-Host "Replaced: $dst"
-          $capabilityPath = Join-Path $mount "Program Files\LetRecoveryPE\handoff-capabilities.txt"
+          $capabilityPath = Join-Path $mount "Program Files\R装机PE\handoff-capabilities.txt"
           $capabilityText = "source-image-verified-v1`r`nscattered-staging-v1`r`npe-network-v1`r`n"
           [IO.File]::WriteAllBytes($capabilityPath, [Text.Encoding]::ASCII.GetBytes($capabilityText))
           if ([IO.File]::ReadAllText($capabilityPath, [Text.Encoding]::ASCII) -ne $capabilityText) {
@@ -346,7 +346,7 @@ jobs:
           }
           Write-Host "Injected PE handoff capabilities: $capabilityPath"
           $offregSource = "assets\release\bin\offreg.dll"
-          $offregDestination = Join-Path $mount "Program Files\LetRecoveryPE\offreg.dll"
+          $offregDestination = Join-Path $mount "Program Files\R装机PE\offreg.dll"
           Copy-Item -LiteralPath $offregSource -Destination $offregDestination -Force
           if ((Get-Item -LiteralPath $offregDestination).Length -ne 125424 -or
               (Get-FileHash -LiteralPath $offregDestination -Algorithm SHA256).Hash -ne
@@ -356,18 +356,18 @@ jobs:
           Write-Host "Injected Microsoft Offline Registry runtime: $offregDestination"
           # The PE client is native Win32-only. Remove the legacy Mesa shim from the base WIM so
           # release artifacts do not retain an unused OpenGL runtime after replacing the old EXE.
-          $legacyOpenGl = Join-Path $mount "Program Files\LetRecoveryPE\opengl32.dll"
+          $legacyOpenGl = Join-Path $mount "Program Files\R装机PE\opengl32.dll"
           if (Test-Path -LiteralPath $legacyOpenGl) {
             Remove-Item -LiteralPath $legacyOpenGl -Force
             Write-Host "Removed legacy OpenGL runtime: $legacyOpenGl"
           }
           $pcaSource = "pkg\bin\pca2023"
-          $pcaDestination = Join-Path $mount "Program Files\LetRecoveryPE\bin\pca2023"
+          $pcaDestination = Join-Path $mount "Program Files\R装机PE\bin\pca2023"
           New-Item -ItemType Directory -Force -Path $pcaDestination | Out-Null
           Copy-Item -Path (Join-Path $pcaSource "*") -Destination $pcaDestination -Recurse -Force
           Write-Host "Injected PCA2023 offline assets: $pcaDestination"
           $uefiSevenSource = "pkg\bin\uefiseven"
-          $uefiSevenDestination = Join-Path $mount "Program Files\LetRecoveryPE\bin\uefiseven"
+          $uefiSevenDestination = Join-Path $mount "Program Files\R装机PE\bin\uefiseven"
           if (Test-Path -LiteralPath $uefiSevenDestination) {
             Remove-Item -LiteralPath $uefiSevenDestination -Recurse -Force
           }
@@ -386,12 +386,12 @@ jobs:
           }
           Write-Host "Injected locked UefiSeven assets: $uefiSevenDestination"
           $languageSource = "assets\release\lang"
-          $languageDestination = Join-Path $mount "Program Files\LetRecoveryPE\lang"
+          $languageDestination = Join-Path $mount "Program Files\R装机PE\lang"
           New-Item -ItemType Directory -Force -Path $languageDestination | Out-Null
           Copy-Item -Path (Join-Path $languageSource "*.json") -Destination $languageDestination -Force
           Write-Host "Injected release language catalogs: $languageDestination"
           $storageSource = "pkg\bin\drivers\storage_controller"
-          $storageDestination = Join-Path $mount "Program Files\LetRecoveryPE\drivers\storage_controller"
+          $storageDestination = Join-Path $mount "Program Files\R装机PE\drivers\storage_controller"
           if (Test-Path -LiteralPath $storageDestination) {
             Remove-Item -LiteralPath $storageDestination -Recurse -Force
           }
@@ -402,7 +402,7 @@ jobs:
             -LockFile "docs\STORAGE_CONTROLLER_DRIVERS.lock.json"
           Write-Host "Injected locked storage-controller drivers: $storageDestination"
           $windows7Source = "pkg\bin\drivers"
-          $windows7Destination = Join-Path $mount "Program Files\LetRecoveryPE\drivers"
+          $windows7Destination = Join-Path $mount "Program Files\R装机PE\drivers"
           New-Item -ItemType Directory -Force -Path $windows7Destination | Out-Null
           foreach ($family in @("usb3", "nvme")) {
             $target = Join-Path $windows7Destination $family
@@ -488,7 +488,7 @@ jobs:
             dism /Mount-Image /ImageFile:"$wim" /Index:1 /MountDir:"$mount" /ReadOnly
             if ($LASTEXITCODE -ne 0) { throw "DISM read-only mount failed" }
             $mounted = $true
-            $storageRoot = Join-Path $mount "Program Files\LetRecoveryPE\drivers\storage_controller"
+            $storageRoot = Join-Path $mount "Program Files\R装机PE\drivers\storage_controller"
             # DISM exposes files in a mounted WIM through reparse-point projections.
             # Copy the bytes out before applying the release-tree no-reparse policy.
             Copy-Item -Path (Join-Path $storageRoot "*") -Destination $audit -Recurse -Force
@@ -496,7 +496,7 @@ jobs:
               -Root $audit `
               -LockFile "docs\STORAGE_CONTROLLER_DRIVERS.lock.json" `
               -VerifySignatures
-            $windows7Root = Join-Path $mount "Program Files\LetRecoveryPE\drivers"
+            $windows7Root = Join-Path $mount "Program Files\R装机PE\drivers"
             foreach ($family in @("usb3", "nvme")) {
               Copy-Item -LiteralPath (Join-Path $windows7Root $family) `
                 -Destination (Join-Path $windows7Audit $family) -Recurse
@@ -509,7 +509,7 @@ jobs:
             if ($wimLogs.Count -ne 0) {
               throw "Final WinPE image contains stale runtime logs: $($wimLogs.FullName -join ', ')"
             }
-            $uefiSevenRoot = Join-Path $mount "Program Files\LetRecoveryPE\bin\uefiseven"
+            $uefiSevenRoot = Join-Path $mount "Program Files\R装机PE\bin\uefiseven"
             foreach ($lockedFile in @(
               @{ Name = "bootx64.efi"; Size = 96896; Sha256 = "0A44A256CDA725C22F1DAADCF093FC4660B7214E6437968A4C8E119AED02A947" },
               @{ Name = "UefiSeven.ini"; Size = 294; Sha256 = "7A4293182F93AE9537251B80DE03308B2E9CB33E194711894DDF84377EDF58BB" }
@@ -521,13 +521,13 @@ jobs:
                 throw "Final WIM UefiSeven resource does not match its lock: $lockedPath"
               }
             }
-            $offreg = Join-Path $mount "Program Files\LetRecoveryPE\offreg.dll"
+            $offreg = Join-Path $mount "Program Files\R装机PE\offreg.dll"
             if ((Get-Item -LiteralPath $offreg).Length -ne 125424 -or
                 (Get-FileHash -LiteralPath $offreg -Algorithm SHA256).Hash -ne
                   "BAEE13B111020107A3CCFE4BEC5FDD2CE6863991066201CA110E02B2DDD495E0") {
               throw "Final WIM Microsoft Offline Registry runtime does not match its release lock"
             }
-            $capabilities = Join-Path $mount "Program Files\LetRecoveryPE\handoff-capabilities.txt"
+            $capabilities = Join-Path $mount "Program Files\R装机PE\handoff-capabilities.txt"
             $expectedCapabilities = "source-image-verified-v1`r`nscattered-staging-v1`r`npe-network-v1`r`n"
             if ([IO.File]::ReadAllText($capabilities, [Text.Encoding]::ASCII) -ne $expectedCapabilities) {
               throw "Final WIM handoff capability marker mismatch"

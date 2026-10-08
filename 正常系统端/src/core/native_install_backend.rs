@@ -2986,7 +2986,7 @@ impl ProductionInstallBackend {
         Err(InstallBackendError::new(
             "scatter_requires_new_pe",
             format!(
-                "the selected PE ({}) does not declare scattered-staging-v1; rebuild the PE with the current LetRecoveryPE",
+                "the selected PE ({}) does not declare scattered-staging-v1; rebuild the PE with the current R装机PE",
                 pe_path.display()
             ),
         ))
@@ -5452,7 +5452,7 @@ impl ProductionInstallBackend {
             if let Some(pe_path) = self.pe_path.as_ref() {
                 if !super::pe::supports_scattered_staging(pe_path) {
                     log::warn!(
-                        "[SCATTER] 所选 PE 没有声明 scattered-staging-v1；如果 PE 里的 LetRecoveryPE 是旧版本，它无法读取放在其他分区的文件，请用新版 PE端 重新打包 PE"
+                        "[SCATTER] 所选 PE 没有声明 scattered-staging-v1；如果 PE 里的 R装机PE 是旧版本，它无法读取放在其他分区的文件，请用新版 PE端 重新打包 PE"
                     );
                 }
             }

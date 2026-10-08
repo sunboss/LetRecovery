@@ -1,5 +1,5 @@
 param(
-    [string]$Executable = (Join-Path $PSScriptRoot '..\..\target\x86_64-win7-windows-msvc\release\LetRecovery.exe')
+    [string]$Executable = (Join-Path $PSScriptRoot '..\..\target\x86_64-win7-windows-msvc\release\R装机.exe')
 )
 
 $ErrorActionPreference = 'Stop'

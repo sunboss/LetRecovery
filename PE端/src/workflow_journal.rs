@@ -17,7 +17,7 @@ use lr_core::operation::{OperationKind, StepDefinition};
 use crate::core::config::OperationType;
 use crate::ui::progress::{BackupStep, InstallStep};
 
-const LAST_RUNTIME_LOG_FILE: &str = "LetRecoveryPE-last.log";
+const LAST_RUNTIME_LOG_FILE: &str = "R装机PE-last.log";
 
 pub(crate) struct PeWorkflowJournal {
     journal: OperationJournal,
