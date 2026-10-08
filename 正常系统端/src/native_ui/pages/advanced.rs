@@ -643,6 +643,8 @@ pub struct AdvancedPageHandles {
     pub scripts_header: HWND,
     deploy_script: CheckEdit,
     first_login_script: CheckEdit,
+    /// PE 在线下载模式：勾选并填写 http:// 镜像 URL 后，PE 端自行下载安装镜像。
+    online_image: CheckEdit,
     pub content_header: HWND,
     custom_drivers: CheckEdit,
     pub storage_drivers: HWND,
@@ -791,6 +793,14 @@ impl AdvancedPage {
             next_id(),
             Some((next_id(), AdvancedBrowseTarget::FirstLoginScript)),
         )?;
+        let online_image = check_edit(
+            parent,
+            &crate::tr!("PE 在线下载安装镜像（http:// 镜像 URL）"),
+            &initial.online_image_source_url.clone().unwrap_or_default(),
+            next_id(),
+            next_id(),
+            None,
+        )?;
 
         let content_header = label(parent, &crate::tr!("驱动与自定义内容"), next_id())?;
         let custom_drivers = check_edit(
@@ -900,6 +910,7 @@ impl AdvancedPage {
                 scripts_header,
                 deploy_script,
                 first_login_script,
+                online_image,
                 content_header,
                 custom_drivers,
                 storage_drivers,
@@ -1106,6 +1117,11 @@ impl AdvancedPage {
             &data.first_login_script_path,
         );
         apply_check_edit(
+            h.online_image,
+            data.online_image_source_url.is_some(),
+            &data.online_image_source_url.clone().unwrap_or_default(),
+        );
+        apply_check_edit(
             h.custom_drivers,
             data.import_custom_drivers,
             &data.custom_drivers_path,
@@ -1179,6 +1195,14 @@ impl AdvancedPage {
             read_required_pair(h.deploy_script);
         (data.run_script_first_login, data.first_login_script_path) =
             read_required_pair(h.first_login_script);
+        // PE 在线下载模式：勾选且 URL 非空时启用；SHA-256 与长度暂由服务端/手工保证，
+        // v1 不在 UI 中采集（PE 端下载后按配置校验）。
+        let (online_enabled, online_url) = read_required_pair(h.online_image);
+        data.online_image_source_url = if online_enabled {
+            Some(online_url)
+        } else {
+            None
+        };
         (data.import_custom_drivers, data.custom_drivers_path) =
             read_required_pair(h.custom_drivers);
         if self.context.target_capabilities.storage_controller_drivers {
@@ -1488,6 +1512,13 @@ impl AdvancedPage {
         );
         layout_pair(
             h.first_login_script,
+            x,
+            &mut bottoms[column],
+            grid.column_width,
+            dpi,
+        );
+        layout_pair(
+            h.online_image,
             x,
             &mut bottoms[column],
             grid.column_width,
@@ -1942,11 +1973,12 @@ impl AdvancedPage {
         ]
     }
 
-    fn check_edits(&self) -> [CheckEdit; 9] {
+    fn check_edits(&self) -> [CheckEdit; 10] {
         let h = &self.handles;
         [
             h.deploy_script,
             h.first_login_script,
+            h.online_image,
             h.custom_drivers,
             h.registry_file,
             h.custom_files,

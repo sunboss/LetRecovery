@@ -127,6 +127,7 @@ pub enum InstallValidationError {
     PersonalFilesUnsupportedSource,
     PersonalFilesRequirePartitionReinstall,
     PersonalFilesRequireNormalWindows,
+    InvalidOnlineImageSourceUrl,
 }
 
 impl std::fmt::Display for InstallValidationError {
@@ -212,6 +213,9 @@ impl std::fmt::Display for InstallValidationError {
             Self::PersonalFilesRequireNormalWindows => {
                 crate::tr!("请从完整 Windows 启动保留个人文件重装，程序将自动进入 PE 执行。")
             }
+            Self::InvalidOnlineImageSourceUrl => {
+                crate::tr!("在线镜像源 URL 无效，请输入 http:// 开头的完整地址。")
+            }
         };
         formatter.write_str(&message)
     }
@@ -273,13 +277,39 @@ pub struct PcaCompatConfig {
 }
 
 impl NativeInstallState {
+    /// PE 在线下载模式是否启用：高级选项中配置了镜像源 URL。
+    pub fn online_image_enabled(&self) -> bool {
+        self.prefs
+            .advanced_options
+            .online_image_source_url
+            .as_deref()
+            .is_some_and(|url| !url.trim().is_empty())
+    }
+
     pub fn start_intent(&self) -> Result<StartInstallIntent, InstallValidationError> {
         let image_path = self.effective_image_path();
-        if image_path.trim().is_empty() {
-            return Err(InstallValidationError::MissingImage);
-        }
-        if !self.image_ready {
-            return Err(InstallValidationError::ImageNotReady);
+        // 在线下载模式下不需要本地镜像文件，PE 端会自行下载；但 URL 本身必须合法。
+        if self.online_image_enabled() {
+            let url = self
+                .prefs
+                .advanced_options
+                .online_image_source_url
+                .as_deref()
+                .unwrap_or_default()
+                .trim();
+            if !url.starts_with("http://")
+                || url.len() > 2048
+                || url.bytes().any(|b| b < 0x20 || b == 0x7f)
+            {
+                return Err(InstallValidationError::InvalidOnlineImageSourceUrl);
+            }
+        } else {
+            if image_path.trim().is_empty() {
+                return Err(InstallValidationError::MissingImage);
+            }
+            if !self.image_ready {
+                return Err(InstallValidationError::ImageNotReady);
+            }
         }
 
         let target = self
@@ -687,6 +717,13 @@ impl StartInstallIntent {
             image_chunked: false,
             image_chunked_length: 0,
             image_chunked_sha256: String::new(),
+            // PE 在线下载模式：由高级选项中的镜像源 URL 决定（见 AdvancedOptionsData）。
+            image_source_url: advanced.online_image_source_url.clone().unwrap_or_default(),
+            image_source_length: advanced.online_image_source_length,
+            image_source_sha256: advanced
+                .online_image_source_sha256
+                .clone()
+                .unwrap_or_default(),
             image_expanded_bytes: 0,
             in_place_target_staging: false,
             is_gho: self.is_gho,

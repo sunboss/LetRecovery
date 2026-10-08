@@ -415,6 +415,13 @@ pub struct InstallConfig {
     pub image_chunked_length: u64,
     /// 拼回后完整镜像文件的 SHA-256（小写十六进制）。
     pub image_chunked_sha256: String,
+    /// PE 在线下载模式：非空时 PE 端从该 http:// URL 自行下载安装镜像，
+    /// 而不是使用桌面端预置的镜像文件（macOS 互联网恢复式流程）。
+    pub image_source_url: String,
+    /// 在线下载镜像的预期字节数（0 表示未知，下载完成后仍以哈希为准）。
+    pub image_source_length: u64,
+    /// 在线下载镜像的 SHA-256（小写十六进制 hex；为空则下载后不校验哈希）。
+    pub image_source_sha256: String,
     /// 所选镜像卷释放后大约占用的字节数（0 表示未知），供 PE 在写盘前核对目标分区容量。
     pub image_expanded_bytes: u64,
     /// 目标盘内暂存：分散暂存找不到其他分区时，把安装文件放在目标分区自身的 LetRecovery_Data 里。
@@ -1435,6 +1442,32 @@ impl ConfigFileManager {
                 config.image_chunked_length, sha256, config.image_expanded_bytes
             ));
         }
+        // PE 在线下载模式：URL 非空时 PE 端自行下载镜像。URL 与哈希绑定进入认证交接。
+        let image_source_url = config.image_source_url.trim();
+        if !image_source_url.is_empty() {
+            if !image_source_url.starts_with("http://") {
+                anyhow::bail!("online image source must be an http:// URL");
+            }
+            if image_source_url.len() > 2048
+                || image_source_url.bytes().any(|b| b < 0x20 || b == 0x7f)
+            {
+                anyhow::bail!("online image source URL is too long or contains control characters");
+            }
+            let sha256 = config.image_source_sha256.trim().to_ascii_lowercase();
+            if !sha256.is_empty()
+                && (sha256.len() != 64 || !sha256.bytes().all(|byte| byte.is_ascii_hexdigit()))
+            {
+                anyhow::bail!("online image source SHA-256 binding is invalid");
+            }
+            source_verification_binding.push_str(&format!(
+                "ImageSourceUrl={}\r\nImageSourceLength={}\r\nImageSourceSha256={}\r\n",
+                image_source_url, config.image_source_length, sha256
+            ));
+        }
+        // PE 在线下载模式强制启用 PE 网络：没有网络就不可能下载镜像，
+        // 请求在线镜像本身就是网络使用授权。
+        let pe_network_enabled =
+            config.pe_network_enabled || !config.image_source_url.trim().is_empty();
         let feedback_mode = match config.automatic_feedback_mode.as_str() {
             "disabled" | "normal" | "normal_and_pe" => config.automatic_feedback_mode.as_str(),
             _ => "normal_and_pe",
@@ -1534,7 +1567,7 @@ XpInjectNvmeDriver={}
             config.pca_compat_target_build,
             config.pca_compat_target_architecture,
             crate::utils::i18n::current_language(),
-            config.pe_network_enabled,
+            pe_network_enabled,
             feedback_mode,
             wifi_binding,
             canonical_target,
@@ -1684,6 +1717,11 @@ Language={}
                     }
                     "ImageChunkedSha256" => {
                         config.image_chunked_sha256 = value.trim().to_ascii_lowercase()
+                    }
+                    "ImageSourceUrl" => config.image_source_url = value.to_string(),
+                    "ImageSourceLength" => config.image_source_length = value.parse().unwrap_or(0),
+                    "ImageSourceSha256" => {
+                        config.image_source_sha256 = value.trim().to_ascii_lowercase()
                     }
                     "ImageExpandedBytes" => {
                         config.image_expanded_bytes = value.parse().unwrap_or(0)

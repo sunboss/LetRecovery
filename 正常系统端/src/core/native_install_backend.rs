@@ -5202,9 +5202,26 @@ impl ProductionInstallBackend {
         &mut self,
         intent: &StartInstallIntent,
     ) -> Result<(), InstallBackendError> {
-        let staged_name = self.staged_image_name.as_deref().ok_or_else(|| {
-            InstallBackendError::new("staged_image_missing", "source image has not been staged")
-        })?;
+        // PE 在线下载模式：PE 端自行下载安装镜像，桌面端不暂存本地镜像文件。
+        let online_image = intent
+            .options
+            .advanced_options
+            .online_image_source_url
+            .as_deref()
+            .is_some_and(|url| !url.trim().is_empty());
+        let staged_name = if online_image {
+            String::new()
+        } else {
+            self.staged_image_name
+                .as_deref()
+                .ok_or_else(|| {
+                    InstallBackendError::new(
+                        "staged_image_missing",
+                        "source image has not been staged",
+                    )
+                })?
+                .to_owned()
+        };
         let pca = self.pca_package.as_ref().map(|package| PcaCompatConfig {
             package: lr_core::pca_compat::STAGED_PACKAGE_RELATIVE_PATH.to_string(),
             sha256: package.sha256().to_string(),
@@ -5348,8 +5365,12 @@ impl ProductionInstallBackend {
         }
         let auth_key = lr_core::handoff_auth::SessionAuthKey::generate()
             .map_err(|error| Self::error("generate_pe_handoff_auth", error))?;
-        let staged_root = self.image_data_dir()?.join(staged_name);
-        let identities = if intent.options.is_xp_i386 {
+        let staged_root = self.image_data_dir()?.join(&staged_name);
+        // PE 在线下载模式：没有桌面端暂存的镜像，安装源身份清单为空；
+        // PE 端以下载完成并通过 SHA-256 校验的镜像为准。
+        let identities = if online_image {
+            Vec::new()
+        } else if intent.options.is_xp_i386 {
             let source_arch = self.staged_xp_source_arch.as_deref().ok_or_else(|| {
                 InstallBackendError::new(
                     "staged_xp_arch_missing",
@@ -5397,7 +5418,8 @@ impl ProductionInstallBackend {
             self.pe_source_lock = Some(lock);
             identities
         };
-        let receipt_matches = self.scattered_image_layout == ScatteredImageLayout::Directory
+        let receipt_matches = !online_image
+            && self.scattered_image_layout == ScatteredImageLayout::Directory
             && Self::receipt_matches_manifest_identities(
                 self.staged_source_image_receipt.as_ref(),
                 &staged_root,
@@ -5459,6 +5481,46 @@ impl ProductionInstallBackend {
             })
             .collect::<Result<Vec<_>, _>>()?;
         let data_dir = PathBuf::from(self.data_dir()?);
+        // PE 在线下载模式：写在线镜像描述文件并注册为 manifest artifact，
+        // 使安装交接满足"至少一个认证镜像源"的结构要求。描述文件本身被
+        // manifest 签名认证；PE 端会核对它与 INI 配置的一致性。
+        if online_image {
+            let descriptor_url = intent
+                .options
+                .advanced_options
+                .online_image_source_url
+                .as_deref()
+                .unwrap_or_default()
+                .trim()
+                .to_owned();
+            if descriptor_url.is_empty() {
+                return Err(InstallBackendError::new(
+                    "online_image_url_missing",
+                    "online image mode is enabled but the source URL is empty",
+                ));
+            }
+            let descriptor = serde_json::json!({
+                "url": descriptor_url,
+                "sha256": intent.options.advanced_options.online_image_source_sha256.clone().unwrap_or_default(),
+                "length": intent.options.advanced_options.online_image_source_length,
+            });
+            let descriptor_path = data_dir.join("online_image.json");
+            std::fs::write(
+                &descriptor_path,
+                serde_json::to_string_pretty(&descriptor)
+                    .map_err(|error| Self::error("write_online_image_descriptor", error))?,
+            )
+            .map_err(|error| Self::error("write_online_image_descriptor", error))?;
+            let lock = lr_core::install_source_lock::LockedPlainArtifact::acquire(&descriptor_path)
+                .map_err(|error| Self::error("lock_online_image_descriptor", error))?;
+            source_artifacts.push(self.scatter_artifact_record(
+                lock.identity(),
+                lr_core::handoff_manifest::ArtifactRole::OnlineImageDescriptor,
+                0,
+            )?);
+            self.pe_auxiliary_file_locks.push(lock);
+            log::info!("[PE HANDOFF] online image descriptor staged: {descriptor_url}");
+        }
         #[cfg(feature = "ci-automation")]
         if let Some(run_id) = ci_stale_disabled_driver_scenario_run_id() {
             if intent.options.export_drivers {

@@ -884,6 +884,128 @@ impl Drop for AutomationFailureShutdown {
     }
 }
 
+/// PE 在线下载模式：从认证交接配置的 ImageSourceUrl 下载安装镜像到数据目录。
+/// 返回下载完成并校验通过的本地镜像路径。调用方应在失败时 fail_prewrite
+/// （下载发生在任何写盘操作之前，是安全的）。
+fn download_online_image(
+    tx: &Sender<WorkerMessage>,
+    network_ready: bool,
+    authenticated_task: &crate::core::config::AuthenticatedOperationTask,
+    config: &crate::core::config::InstallConfig,
+    data_dir: &str,
+) -> anyhow::Result<String> {
+    use anyhow::Context as _;
+    let url = config.image_source_url.trim().to_owned();
+    let file_name = lr_core::pe_http_fetch::file_name_from_url(&url)
+        .unwrap_or_else(|| "online_image.wim".to_owned());
+    let dest = std::path::Path::new(data_dir)
+        .join("pe_online_image")
+        .join(&file_name);
+    log::info!("[PE ONLINE] image source URL: {url}");
+    log::info!("[PE ONLINE] download destination: {}", dest.display());
+
+    // 核对认证交接中的在线镜像描述文件与 INI 配置一致（防桌面端 bug 导致配置错位）。
+    verify_online_image_descriptor(tx, authenticated_task, &url, config)?;
+
+    if !network_ready {
+        anyhow::bail!("PE 网络不可用，无法下载在线安装镜像（请检查网线/Wi-Fi 配置）");
+    }
+    let _ = tx.send(WorkerMessage::SetProgressStatus {
+        progress: 0,
+        status: tr!("网络已就绪，开始下载安装镜像..."),
+    });
+
+    let spec = lr_core::pe_http_fetch::FetchSpec {
+        url,
+        dest: dest.clone(),
+        expected_length: if config.image_source_length > 0 {
+            Some(config.image_source_length)
+        } else {
+            None
+        },
+        expected_sha256: if config.image_source_sha256.trim().is_empty() {
+            None
+        } else {
+            Some(config.image_source_sha256.clone())
+        },
+    };
+    let mut last_pct = u8::MAX;
+    lr_core::pe_http_fetch::fetch(&spec, &mut |downloaded, total| {
+        let pct = match total {
+            Some(t) if t > 0 => ((downloaded as f64 / t as f64) * 100.0).min(100.0) as u8,
+            _ => 0,
+        };
+        if pct != last_pct {
+            last_pct = pct;
+            let mb = downloaded / 1024 / 1024;
+            let status = match total {
+                Some(t) => tr!(
+                    "正在下载安装镜像：{} / {} MB（{}%）",
+                    mb,
+                    t / 1024 / 1024,
+                    pct
+                ),
+                None => tr!("正在下载安装镜像：{} MB", mb),
+            };
+            let _ = tx.send(WorkerMessage::SetProgressStatus {
+                progress: pct,
+                status,
+            });
+        }
+    })
+    .context("fetch online installation image")?;
+
+    if !dest.is_file() {
+        anyhow::bail!("下载完成后未找到镜像文件：{}", dest.display());
+    }
+    log::info!("[PE ONLINE] image ready: {}", dest.display());
+    Ok(dest.to_string_lossy().into_owned())
+}
+
+/// 核对 manifest 中的在线镜像描述文件（online_image.json）与 INI 配置一致。
+/// 描述文件与 INI 同被交接签名认证；不一致说明桌面端写配置时出了 bug，直接失败。
+fn verify_online_image_descriptor(
+    tx: &Sender<WorkerMessage>,
+    authenticated_task: &crate::core::config::AuthenticatedOperationTask,
+    url: &str,
+    config: &crate::core::config::InstallConfig,
+) -> anyhow::Result<()> {
+    use anyhow::Context as _;
+    let _ = tx.send(WorkerMessage::SetStatus(tr!("正在核对在线镜像交接信息...")));
+    let paths = authenticated_task
+        .install_artifact_paths(lr_core::handoff_manifest::ArtifactRole::OnlineImageDescriptor)
+        .context("读取在线镜像描述 artifact")?;
+    let path = paths.into_iter().next().with_context(|| {
+        "交接中缺少在线镜像描述文件（online_image.json），无法继续在线安装".to_owned()
+    })?;
+    let text = std::fs::read_to_string(&path)
+        .with_context(|| format!("读取在线镜像描述文件 {}", path.display()))?;
+    let descriptor: serde_json::Value =
+        serde_json::from_str(&text).context("解析在线镜像描述文件")?;
+    let descriptor_url = descriptor
+        .get("url")
+        .and_then(|v| v.as_str())
+        .unwrap_or_default()
+        .trim();
+    if descriptor_url != url.trim() {
+        anyhow::bail!(
+            "在线镜像描述文件中的 URL 与安装配置不一致：描述文件={descriptor_url}，配置={}",
+            url.trim()
+        );
+    }
+    let descriptor_sha = descriptor
+        .get("sha256")
+        .and_then(|v| v.as_str())
+        .unwrap_or_default()
+        .trim()
+        .to_ascii_lowercase();
+    if descriptor_sha != config.image_source_sha256.trim().to_ascii_lowercase() {
+        anyhow::bail!("在线镜像描述文件中的 SHA-256 与安装配置不一致");
+    }
+    log::info!("[PE ONLINE] online image descriptor matches handoff config");
+    Ok(())
+}
+
 /// 执行安装工作流
 fn execute_install_workflow(
     tx: Sender<WorkerMessage>,
@@ -905,6 +1027,22 @@ fn execute_install_workflow(
         status: tr!("正在定位本次安装卷并认证安装文件..."),
     });
     let mut last_auth_progress = u8::MAX;
+    // PE 在线下载模式的网络预检：into_task_with_progress 会消费 authenticated_handoff，
+    // 而网络拉起需要 guard 读取 Wi-Fi 配置，因此预检必须在此之前完成。
+    // 后台的 start_from_handoff 线程可能已经连上网络，ensure_network_blocking 会先快速检查。
+    let online_image_wanted =
+        crate::core::config::ConfigFileManager::install_config_from_guard(&authenticated_handoff)
+            .map(|preview| !preview.image_source_url.trim().is_empty())
+            .unwrap_or(false);
+    let pe_network_ready = if online_image_wanted {
+        let _ = tx.send(WorkerMessage::SetProgressStatus {
+            progress: 0,
+            status: tr!("在线安装模式：正在建立网络连接..."),
+        });
+        crate::core::pe_network::ensure_network_blocking(&authenticated_handoff)
+    } else {
+        true
+    };
     let mut authenticated_task = match authenticated_handoff.into_task_with_progress(|event| {
         use crate::core::config::TaskAuthenticationProgress;
         match event {
@@ -1139,8 +1277,26 @@ fn execute_install_workflow(
     };
     // Scattered staging may store one image file as raw chunks. They are concatenated on the
     // target after it is formatted, so every pre-write image check is deferred until then.
-    let chunked_image = config.image_chunked && !config.is_xp_i386;
-    let mut image_path = if chunked_image {
+    //
+    // Online-image mode (macOS-Internet-Recovery style): when the authenticated handoff
+    // carries ImageSourceUrl, the PE endpoint downloads the installation image itself
+    // instead of using a file staged by the desktop client.
+    let online_image = !config.image_source_url.trim().is_empty() && !config.is_xp_i386;
+    let chunked_image = config.image_chunked && !config.is_xp_i386 && !online_image;
+    let mut image_path = if online_image {
+        match download_online_image(
+            &tx,
+            pe_network_ready,
+            &authenticated_task,
+            &config,
+            &data_dir,
+        ) {
+            Ok(path) => path,
+            Err(error) => {
+                fail_prewrite!(tr!("下载在线安装镜像失败: {}", format!("{error:#}")));
+            }
+        }
+    } else if chunked_image {
         if !(config.format_partition
             && matches!(
                 config.custom_install_plan,

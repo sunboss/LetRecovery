@@ -962,6 +962,13 @@ pub struct InstallConfig {
     pub image_chunked: bool,
     pub image_chunked_length: u64,
     pub image_chunked_sha256: String,
+    /// PE 在线下载模式：非空时 PE 端从该 http:// URL 自行下载安装镜像
+    /// （macOS 互联网恢复式流程），而不是使用桌面端预置的镜像文件。
+    pub image_source_url: String,
+    /// 在线下载镜像的预期字节数（0 表示未知）。
+    pub image_source_length: u64,
+    /// 在线下载镜像的 SHA-256（小写十六进制；为空则下载后不校验哈希）。
+    pub image_source_sha256: String,
     /// 所选镜像卷释放后约占用的字节数；0 表示未知。
     pub image_expanded_bytes: u64,
     /// 目标盘内暂存：PE 不格式化目标分区，先原地删除旧系统（保留 LetRecovery_ 暂存目录）再释放镜像。
@@ -2132,6 +2139,11 @@ impl ConfigFileManager {
                     }
                     "ImageChunkedSha256" => {
                         config.image_chunked_sha256 = value.trim().to_ascii_lowercase()
+                    }
+                    "ImageSourceUrl" => config.image_source_url = value.to_string(),
+                    "ImageSourceLength" => config.image_source_length = value.parse().unwrap_or(0),
+                    "ImageSourceSha256" => {
+                        config.image_source_sha256 = value.trim().to_ascii_lowercase()
                     }
                     "ImageExpandedBytes" => {
                         config.image_expanded_bytes = value.parse().unwrap_or(0)
