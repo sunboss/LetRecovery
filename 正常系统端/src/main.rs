@@ -1219,29 +1219,30 @@ mod tests {
 
     #[test]
     fn restore_windows_update_cli_is_fixed_and_parameterless() {
-        assert!(!parse_restore_windows_update_cli(&args(&["R装机.exe"]))
+        assert!(!parse_restore_windows_update_cli(&args(&["RZhuangJi.exe"]))
             .expect("ordinary startup should parse"));
         assert!(parse_restore_windows_update_cli(&args(&[
-            "R装机.exe",
+            "RZhuangJi.exe",
             "--restore-windows-update",
         ]))
         .expect("fixed maintenance command should parse"));
-        assert!(parse_restore_windows_update_cli(&args(
-            &["R装机.exe", "/restore-windows-update",]
-        ))
+        assert!(parse_restore_windows_update_cli(&args(&[
+            "RZhuangJi.exe",
+            "/restore-windows-update",
+        ]))
         .expect("Windows-style spelling should be case-insensitive"));
     }
 
     #[test]
     fn restore_windows_update_cli_rejects_duplicates_and_combinations() {
         assert!(parse_restore_windows_update_cli(&args(&[
-            "R装机.exe",
+            "RZhuangJi.exe",
             "--restore-windows-update",
             "--restore-windows-update",
         ]))
         .is_err());
         assert!(parse_restore_windows_update_cli(&args(&[
-            "R装机.exe",
+            "RZhuangJi.exe",
             "--restore-windows-update",
             "--install",
         ]))
@@ -1251,80 +1252,83 @@ mod tests {
     #[test]
     fn startup_router_never_treats_cli_or_internal_handoffs_as_gui() {
         for values in [
-            &["R装机.exe", "help"][..],
-            &["R装机.exe", "install", "run"][..],
-            &["R装机.exe", "config", "generate"][..],
-            &["R装机.exe", "update", "restore"][..],
-            &["R装机.exe", "tool", "network-info", "inspect"][..],
-            &["R装机.exe", "--restore-windows-update"][..],
+            &["RZhuangJi.exe", "help"][..],
+            &["RZhuangJi.exe", "install", "run"][..],
+            &["RZhuangJi.exe", "config", "generate"][..],
+            &["RZhuangJi.exe", "update", "restore"][..],
+            &["RZhuangJi.exe", "tool", "network-info", "inspect"][..],
+            &["RZhuangJi.exe", "--restore-windows-update"][..],
             &[
-                "R装机.exe",
+                "RZhuangJi.exe",
                 "--internal-restore-personal-files",
                 "0123456789abcdef0123456789abcdef",
             ][..],
             &[
-                "R装机.exe",
+                "RZhuangJi.exe",
                 "--internal-restore-personal-files-at-shell",
                 "0123456789abcdef0123456789abcdef",
             ][..],
             &[
-                "R装机.exe",
+                "RZhuangJi.exe",
                 "--internal-restore-personal-files-before-shell",
                 "0123456789abcdef0123456789abcdef",
             ][..],
             &[
-                "R装机.exe",
+                "RZhuangJi.exe",
                 "--internal-personal-restore-progress-shell",
                 "0123456789abcdef0123456789abcdef",
             ][..],
             &[
-                "R装机.exe",
+                "RZhuangJi.exe",
                 "--internal-activate-personal-restore-shell-gate",
                 "0123456789abcdef0123456789abcdef",
             ][..],
             &[
-                "R装机.exe",
+                "RZhuangJi.exe",
                 "--internal-begin-personal-restore-second-logon",
                 "0123456789abcdef0123456789abcdef",
             ][..],
             &[
-                "R装机.exe",
+                "RZhuangJi.exe",
                 "--internal-rearm-personal-restore-before-shell",
                 "0123456789abcdef0123456789abcdef",
             ][..],
             &[
-                "R装机.exe",
+                "RZhuangJi.exe",
                 "--internal-restore-personal-files-after-shell",
                 "0123456789abcdef0123456789abcdef",
                 "true",
             ][..],
             &[
-                "R装机.exe",
+                "RZhuangJi.exe",
                 "--internal-register-personal-files-at-shell",
                 "0123456789abcdef0123456789abcdef",
                 r"C:\LetRecovery-first-logon.cmd",
             ][..],
             &[
-                "R装机.exe",
+                "RZhuangJi.exe",
                 "--internal-prepare-local-rid",
                 "500",
                 "004c005200410064006d0069006e00310031",
             ][..],
-            &["R装机.exe", "--internal-store-builtin-administrator-secret"][..],
             &[
-                "R装机.exe",
+                "RZhuangJi.exe",
+                "--internal-store-builtin-administrator-secret",
+            ][..],
+            &[
+                "RZhuangJi.exe",
                 "--internal-begin-builtin-administrator-transition-with-personal-restore",
                 "004c005200410064006d0069006e00310031",
                 "004c0072004f004f00420045002d003000310032003300340035003600370038003900610062",
                 "0123456789abcdef0123456789abcdef",
             ][..],
             &[
-                "R装机.exe",
+                "RZhuangJi.exe",
                 "--internal-delete-temporary-oobe-account",
                 "004c0072004f004f00420045002d003000310032003300340035003600370038003900610062",
             ][..],
-            &["R装机.exe", "--internal-cleanup-disabled-defaultuser0"][..],
-            &["R装机.exe", "/PEBACKUP"][..],
+            &["RZhuangJi.exe", "--internal-cleanup-disabled-defaultuser0"][..],
+            &["RZhuangJi.exe", "/PEBACKUP"][..],
         ] {
             let route = classify_startup_route(&args(values));
             assert_ne!(route, StartupRoute::Gui);
@@ -1336,19 +1340,22 @@ mod tests {
     fn personal_restore_helper_route_requires_exact_private_arity() {
         assert_eq!(
             classify_startup_route(&args(&[
-                "R装机.exe",
+                "RZhuangJi.exe",
                 "--internal-restore-personal-files",
                 "0123456789abcdef0123456789abcdef",
             ])),
             StartupRoute::InternalNativeHelper
         );
         assert_eq!(
-            classify_startup_route(&args(&["R装机.exe", "--internal-restore-personal-files",])),
+            classify_startup_route(&args(&[
+                "RZhuangJi.exe",
+                "--internal-restore-personal-files",
+            ])),
             StartupRoute::UnsupportedArguments
         );
         assert_eq!(
             classify_startup_route(&args(&[
-                "R装机.exe",
+                "RZhuangJi.exe",
                 "--internal-restore-personal-files-at-shell",
                 "0123456789abcdef0123456789abcdef",
             ])),
@@ -1362,20 +1369,20 @@ mod tests {
         ] {
             assert_eq!(
                 classify_startup_route(&args(&[
-                    "R装机.exe",
+                    "RZhuangJi.exe",
                     switch,
                     "0123456789abcdef0123456789abcdef",
                 ])),
                 StartupRoute::InternalNativeHelper
             );
             assert_eq!(
-                classify_startup_route(&args(&["R装机.exe", switch])),
+                classify_startup_route(&args(&["RZhuangJi.exe", switch])),
                 StartupRoute::UnsupportedArguments
             );
         }
         assert_eq!(
             classify_startup_route(&args(&[
-                "R装机.exe",
+                "RZhuangJi.exe",
                 "--internal-register-personal-files-at-shell",
                 "0123456789abcdef0123456789abcdef",
                 r"C:\LetRecovery-first-logon.cmd",
@@ -1384,7 +1391,7 @@ mod tests {
         );
         assert_eq!(
             classify_startup_route(&args(&[
-                "R装机.exe",
+                "RZhuangJi.exe",
                 "--internal-restore-personal-files-after-shell",
                 "0123456789abcdef0123456789abcdef",
                 "false",
@@ -1393,7 +1400,7 @@ mod tests {
         );
         assert_eq!(
             classify_startup_route(&args(&[
-                "R装机.exe",
+                "RZhuangJi.exe",
                 "--internal-restore-personal-files-after-shell",
                 "0123456789abcdef0123456789abcdef",
             ])),
@@ -1401,7 +1408,7 @@ mod tests {
         );
         assert_eq!(
             classify_startup_route(&args(&[
-                "R装机.exe",
+                "RZhuangJi.exe",
                 "--internal-register-personal-files-at-shell",
                 "0123456789abcdef0123456789abcdef",
             ])),
@@ -1413,7 +1420,7 @@ mod tests {
     fn built_in_account_prepare_route_requires_exact_private_arity() {
         assert_eq!(
             classify_startup_route(&args(&[
-                "R装机.exe",
+                "RZhuangJi.exe",
                 "--internal-prepare-local-rid",
                 "500",
                 "004c005200410064006d0069006e00310031",
@@ -1421,9 +1428,11 @@ mod tests {
             StartupRoute::InternalNativeHelper
         );
         assert_eq!(
-            classify_startup_route(&args(
-                &["R装机.exe", "--internal-prepare-local-rid", "500",]
-            )),
+            classify_startup_route(&args(&[
+                "RZhuangJi.exe",
+                "--internal-prepare-local-rid",
+                "500",
+            ])),
             StartupRoute::UnsupportedArguments
         );
     }
@@ -1432,14 +1441,14 @@ mod tests {
     fn built_in_secret_store_route_requires_exact_private_arity() {
         assert_eq!(
             classify_startup_route(&args(&[
-                "R装机.exe",
+                "RZhuangJi.exe",
                 "--internal-store-builtin-administrator-secret",
             ])),
             StartupRoute::InternalNativeHelper
         );
         assert_eq!(
             classify_startup_route(&args(&[
-                "R装机.exe",
+                "RZhuangJi.exe",
                 "--internal-store-builtin-administrator-secret",
                 "unexpected",
             ])),
@@ -1456,7 +1465,7 @@ mod tests {
         ] {
             assert_eq!(
                 classify_startup_route(&args(&[
-                    "R装机.exe",
+                    "RZhuangJi.exe",
                     switch,
                     "004c005200410064006d0069006e00310031",
                     "004c0072004f004f00420045002d003000310032003300340035003600370038003900610062",
@@ -1465,7 +1474,7 @@ mod tests {
             );
             assert_eq!(
                 classify_startup_route(&args(&[
-                    "R装机.exe",
+                    "RZhuangJi.exe",
                     switch,
                     "004c005200410064006d0069006e00310031",
                 ])),
@@ -1474,7 +1483,7 @@ mod tests {
         }
         assert_eq!(
             classify_startup_route(&args(&[
-                "R装机.exe",
+                "RZhuangJi.exe",
                 "--internal-begin-builtin-administrator-transition-with-personal-restore",
                 "004c005200410064006d0069006e00310031",
                 "004c0072004f004f00420045002d003000310032003300340035003600370038003900610062",
@@ -1484,7 +1493,7 @@ mod tests {
         );
         assert_eq!(
             classify_startup_route(&args(&[
-                "R装机.exe",
+                "RZhuangJi.exe",
                 "--internal-begin-builtin-administrator-transition-with-personal-restore",
                 "004c005200410064006d0069006e00310031",
                 "004c0072004f004f00420045002d003000310032003300340035003600370038003900610062",
@@ -1497,14 +1506,14 @@ mod tests {
     fn temporary_oobe_cleanup_route_requires_exact_private_arity() {
         assert_eq!(
             classify_startup_route(&args(&[
-                "R装机.exe",
+                "RZhuangJi.exe",
                 "--internal-cleanup-disabled-defaultuser0",
             ])),
             StartupRoute::InternalNativeHelper
         );
         assert_eq!(
             classify_startup_route(&args(&[
-                "R装机.exe",
+                "RZhuangJi.exe",
                 "--internal-cleanup-disabled-defaultuser0",
                 "unexpected",
             ])),
@@ -1512,7 +1521,7 @@ mod tests {
         );
         assert_eq!(
             classify_startup_route(&args(&[
-                "R装机.exe",
+                "RZhuangJi.exe",
                 "--internal-delete-temporary-oobe-account",
                 "004c0072004f004f00420045002d003000310032003300340035003600370038003900610062",
             ])),
@@ -1520,7 +1529,7 @@ mod tests {
         );
         assert_eq!(
             classify_startup_route(&args(&[
-                "R装机.exe",
+                "RZhuangJi.exe",
                 "--internal-delete-temporary-oobe-account",
             ])),
             StartupRoute::UnsupportedArguments
@@ -1530,23 +1539,23 @@ mod tests {
     #[test]
     fn retired_pe_switches_are_case_insensitive_rejections_and_require_exact_arity() {
         assert_eq!(
-            classify_startup_route(&args(&["R装机.exe", "/pebackup"])),
+            classify_startup_route(&args(&["RZhuangJi.exe", "/pebackup"])),
             StartupRoute::RejectedLegacyCli
         );
         assert_eq!(
-            classify_startup_route(&args(&["R装机.exe", "/peinstall", "extra"])),
+            classify_startup_route(&args(&["RZhuangJi.exe", "/peinstall", "extra"])),
             StartupRoute::UnsupportedArguments
         );
     }
 
     #[test]
     fn only_plain_production_gui_launch_requests_elevation() {
-        let gui = classify_startup_route(&args(&["R装机.exe"]));
+        let gui = classify_startup_route(&args(&["RZhuangJi.exe"]));
         assert_eq!(gui, StartupRoute::Gui);
         assert!(should_request_gui_elevation(gui, false, false));
         assert!(!should_request_gui_elevation(gui, true, false));
         assert!(!should_request_gui_elevation(gui, false, true));
-        let unknown = classify_startup_route(&args(&["R装机.exe", "--unknown"]));
+        let unknown = classify_startup_route(&args(&["RZhuangJi.exe", "--unknown"]));
         assert_eq!(unknown, StartupRoute::UnsupportedArguments);
         assert!(!should_request_gui_elevation(unknown, false, false));
     }
@@ -1555,14 +1564,14 @@ mod tests {
     #[test]
     fn personal_restore_progress_preview_is_a_non_elevated_native_route() {
         let route = classify_startup_route(&args(&[
-            "R装机.exe",
+            "RZhuangJi.exe",
             "--ui-personal-restore-progress-preview",
         ]));
         assert_eq!(route, StartupRoute::InternalNativeHelper);
         assert!(!should_request_gui_elevation(route, false, true));
         assert_eq!(
             classify_startup_route(&args(&[
-                "R装机.exe",
+                "RZhuangJi.exe",
                 "--ui-personal-restore-progress-preview",
                 "extra",
             ])),
@@ -1573,7 +1582,7 @@ mod tests {
     #[cfg(feature = "non-elevated-tests")]
     #[test]
     fn progress_preview_is_an_explicit_non_elevated_gui_route() {
-        let route = classify_startup_route(&args(&["R装机.exe", "--ui-progress-preview"]));
+        let route = classify_startup_route(&args(&["RZhuangJi.exe", "--ui-progress-preview"]));
         assert_eq!(route, StartupRoute::Gui);
         assert!(!should_request_gui_elevation(route, false, true));
     }
@@ -1581,7 +1590,8 @@ mod tests {
     #[cfg(feature = "non-elevated-tests")]
     #[test]
     fn pe_maintenance_preview_is_an_explicit_non_elevated_gui_route() {
-        let route = classify_startup_route(&args(&["R装机.exe", "--ui-pe-maintenance-preview"]));
+        let route =
+            classify_startup_route(&args(&["RZhuangJi.exe", "--ui-pe-maintenance-preview"]));
         assert_eq!(route, StartupRoute::Gui);
         assert!(!should_request_gui_elevation(route, false, true));
     }
@@ -1589,7 +1599,7 @@ mod tests {
     #[cfg(feature = "non-elevated-tests")]
     #[test]
     fn about_preview_is_an_explicit_non_elevated_gui_route() {
-        let route = classify_startup_route(&args(&["R装机.exe", "--ui-about-preview"]));
+        let route = classify_startup_route(&args(&["RZhuangJi.exe", "--ui-about-preview"]));
         assert_eq!(route, StartupRoute::Gui);
         assert!(!should_request_gui_elevation(route, false, true));
     }

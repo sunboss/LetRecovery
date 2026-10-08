@@ -19,25 +19,25 @@
 
 [Setup]
 AppId={{F0B9EACD-36A4-4D12-B07E-4D0CC87B4798}
-AppName=R装机
+AppName=RZhuangJi
 AppVersion={#AppDisplayVersion}
-AppVerName=R装机 {#AppDisplayVersion}
+AppVerName=RZhuangJi {#AppDisplayVersion}
 AppPublisher=中邦智能
 AppPublisherURL=https://www.1234r.com/
 AppSupportURL=https://www.1234r.com/
 AppUpdatesURL=https://www.1234r.com/
 AppCopyright=© 2026-present 中邦智能
-DefaultDirName={autopf}\R装机
-DefaultGroupName=R装机
+DefaultDirName={autopf}\RZhuangJi
+DefaultGroupName=RZhuangJi
 DisableProgramGroupPage=yes
 AllowNoIcons=yes
 LicenseFile=LICENSE.zh-CN.txt
 InfoBeforeFile=NOTICE.zh-CN.txt
 OutputDir={#OutputDir}
-OutputBaseFilename=R装机-Setup-x64
+OutputBaseFilename=RZhuangJi-Setup-x64
 SetupIconFile={#AppIcon}
-UninstallDisplayIcon={app}\R装机.exe
-UninstallDisplayName=R装机
+UninstallDisplayIcon={app}\RZhuangJi.exe
+UninstallDisplayName=RZhuangJi
 PrivilegesRequired=admin
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
@@ -50,7 +50,7 @@ SolidCompression=yes
 CompressionThreads=auto
 LZMAUseSeparateProcess=yes
 CloseApplications=yes
-CloseApplicationsFilter=R装机.exe
+CloseApplicationsFilter=RZhuangJi.exe
 RestartApplications=no
 UsePreviousAppDir=yes
 UsePreviousGroup=yes
@@ -61,8 +61,8 @@ ShowLanguageDialog=no
 LanguageDetectionMethod=uilanguage
 VersionInfoVersion={#AppVersion}
 VersionInfoCompany=中邦智能
-VersionInfoDescription=R装机安装包
-VersionInfoProductName=R装机
+VersionInfoDescription=RZhuangJi安装包
+VersionInfoProductName=RZhuangJi
 VersionInfoProductVersion={#AppDisplayVersion}
 VersionInfoCopyright=© 2026-present 中邦智能
 
@@ -83,12 +83,12 @@ Source: "{#SourceDir}\*"; DestDir: "{app}"; Excludes: "config.json"; Flags: igno
 Source: "{#SourceDir}\config.json"; DestDir: "{app}"; Flags: onlyifdoesntexist
 
 [Icons]
-Name: "{group}\R装机"; Filename: "{app}\R装机.exe"; WorkingDir: "{app}"
-Name: "{group}\卸载 R装机"; Filename: "{uninstallexe}"
-Name: "{autodesktop}\R装机"; Filename: "{app}\R装机.exe"; WorkingDir: "{app}"; Tasks: desktopicon
+Name: "{group}\RZhuangJi"; Filename: "{app}\RZhuangJi.exe"; WorkingDir: "{app}"
+Name: "{group}\卸载 RZhuangJi"; Filename: "{uninstallexe}"
+Name: "{autodesktop}\RZhuangJi"; Filename: "{app}\RZhuangJi.exe"; WorkingDir: "{app}"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\R装机.exe"; Description: "启动 R装机"; WorkingDir: "{app}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\RZhuangJi.exe"; Description: "启动 RZhuangJi"; WorkingDir: "{app}"; Flags: nowait postinstall skipifsilent
 
 [UninstallDelete]
 Type: files; Name: "{app}\config.json"

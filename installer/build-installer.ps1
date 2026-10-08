@@ -31,7 +31,7 @@ if (-not (Test-Path -LiteralPath $source -PathType Container)) {
 }
 
 $requiredFiles = @(
-    "R装机.exe",
+    "RZhuangJi.exe",
     "config.json",
     "README.txt",
     "bin\pe\LetRecovery_PE.wim"
@@ -43,11 +43,11 @@ foreach ($relativePath in $requiredFiles) {
 $releaseTreeAudit = Join-Path $PSScriptRoot "..\.github\scripts\assert-release-tree-clean.ps1"
 & $releaseTreeAudit -Root $source
 
-$appExe = Join-Path $source "R装机.exe"
+$appExe = Join-Path $source "RZhuangJi.exe"
 $versionInfo = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($appExe)
 $numericVersion = $versionInfo.FileVersion
 if ([string]::IsNullOrWhiteSpace($numericVersion) -or $numericVersion -notmatch '^\d+\.\d+\.\d+\.\d+$') {
-    throw "R装机.exe has an invalid four-part file version: '$numericVersion'"
+    throw "RZhuangJi.exe has an invalid four-part file version: '$numericVersion'"
 }
 $displayVersion = $numericVersion -replace '\.0$', ''
 
@@ -64,7 +64,7 @@ if ([string]::IsNullOrWhiteSpace($InnoCompiler)) {
     throw "ISCC.exe was not found. Install Inno Setup 6.7 or pass -InnoCompiler explicitly."
 }
 $compiler = Resolve-ExistingFile -Path $InnoCompiler -Description "Inno Setup compiler"
-$script = Resolve-ExistingFile -Path (Join-Path $PSScriptRoot "R装机.iss") -Description "Installer script"
+$script = Resolve-ExistingFile -Path (Join-Path $PSScriptRoot "RZhuangJi.iss") -Description "Installer script"
 Resolve-ExistingFile -Path (Join-Path $PSScriptRoot "LICENSE.zh-CN.txt") -Description "Chinese license text" | Out-Null
 Resolve-ExistingFile -Path (Join-Path $PSScriptRoot "NOTICE.zh-CN.txt") -Description "Installation notice" | Out-Null
 $repoRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot "..")).Path
@@ -82,7 +82,7 @@ $icon = Resolve-ExistingFile -Path $icon -Description "Application icon"
 New-Item -ItemType Directory -Force -Path $OutputDirectory | Out-Null
 $output = (Resolve-Path -LiteralPath $OutputDirectory).Path
 
-Write-Host "Building R装机 installer"
+Write-Host "Building RZhuangJi installer"
 Write-Host "  Source : $source"
 Write-Host "  Version: $displayVersion"
 Write-Host "  Output : $output"
@@ -107,7 +107,7 @@ finally {
     Remove-Item Env:LETRECOVERY_INSTALLER_ICON -ErrorAction SilentlyContinue
 }
 
-$installer = Resolve-ExistingFile -Path (Join-Path $output "R装机-Setup-x64.exe") -Description "Compiled installer"
+$installer = Resolve-ExistingFile -Path (Join-Path $output "RZhuangJi-Setup-x64.exe") -Description "Compiled installer"
 $signature = Get-AuthenticodeSignature -LiteralPath $installer
 if ($RequireSignature -and $signature.Status -ne [System.Management.Automation.SignatureStatus]::Valid) {
     throw "Installer signature is required but status is $($signature.Status)."
