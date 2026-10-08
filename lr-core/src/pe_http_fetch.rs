@@ -310,7 +310,7 @@ fn read_response_head(reader: &mut BufReader<TcpStream>) -> Result<(u16, HashMap
         if used > MAX_HEADER_BYTES {
             bail!("HTTP response head exceeds {MAX_HEADER_BYTES} bytes");
         }
-        let trimmed = line.trim_end_matches(|c| c == '\r' || c == '\n');
+        let trimmed = line.trim_end_matches(|c| matches!(c, '\r' | '\n'));
         if trimmed.is_empty() {
             break;
         }
@@ -376,7 +376,10 @@ fn stream_body(
                 loop {
                     let mut line = String::new();
                     reader.read_line(&mut line)?;
-                    if line.trim_end_matches(|c| c == '\r' || c == '\n').is_empty() {
+                    if line
+                        .trim_end_matches(|c| matches!(c, '\r' | '\n'))
+                        .is_empty()
+                    {
                         break;
                     }
                 }
@@ -421,7 +424,7 @@ fn read_chunk_size(reader: &mut BufReader<TcpStream>) -> Result<u64> {
     let mut line = String::new();
     reader.read_line(&mut line).context("read chunk size")?;
     let hex = line
-        .trim_end_matches(|c| c == '\r' || c == '\n')
+        .trim_end_matches(|c| matches!(c, '\r' | '\n'))
         .split(';')
         .next()
         .unwrap_or("")
@@ -508,7 +511,6 @@ pub fn file_name_from_url(url: &str) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::io::Read as _;
 
     /// Tiny scripted HTTP server: each connection gets the next scripted response.
     /// The listener is bound before the thread spawns, so there is no startup race.
@@ -680,7 +682,8 @@ mod tests {
     fn follows_redirect() {
         let payload = b"redirected-body".to_vec();
         let (port, _h) = scripted_server(vec![
-            format!("HTTP/1.1 302 Found\r\nLocation: /real.wim\r\nConnection: close\r\n\r\n")
+            "HTTP/1.1 302 Found\r\nLocation: /real.wim\r\nConnection: close\r\n\r\n"
+                .to_string()
                 .into_bytes(),
             format!(
                 "HTTP/1.1 200 OK\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
