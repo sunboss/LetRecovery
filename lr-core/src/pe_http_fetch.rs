@@ -310,7 +310,7 @@ fn read_response_head(reader: &mut BufReader<TcpStream>) -> Result<(u16, HashMap
         if used > MAX_HEADER_BYTES {
             bail!("HTTP response head exceeds {MAX_HEADER_BYTES} bytes");
         }
-        let trimmed = line.trim_end_matches(|c| matches!(c, '\r' | '\n'));
+        let trimmed = line.trim_end_matches(['\r', '\n']);
         if trimmed.is_empty() {
             break;
         }
@@ -376,10 +376,7 @@ fn stream_body(
                 loop {
                     let mut line = String::new();
                     reader.read_line(&mut line)?;
-                    if line
-                        .trim_end_matches(|c| matches!(c, '\r' | '\n'))
-                        .is_empty()
-                    {
+                    if line.trim_end_matches(['\r', '\n']).is_empty() {
                         break;
                     }
                 }
@@ -424,7 +421,7 @@ fn read_chunk_size(reader: &mut BufReader<TcpStream>) -> Result<u64> {
     let mut line = String::new();
     reader.read_line(&mut line).context("read chunk size")?;
     let hex = line
-        .trim_end_matches(|c| matches!(c, '\r' | '\n'))
+        .trim_end_matches(['\r', '\n'])
         .split(';')
         .next()
         .unwrap_or("")
