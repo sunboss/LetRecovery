@@ -399,6 +399,9 @@ pub enum TaskAuthenticationProgress {
     Finalizing,
 }
 
+/// Install carries the full install configuration (including online image source fields);
+/// the size difference vs Backup/Expand is inherent to the config shapes.
+#[allow(clippy::large_enum_variant)]
 pub enum AuthenticatedOperationConfig {
     Install(InstallConfig),
     Backup(BackupConfig),
