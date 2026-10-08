@@ -2716,9 +2716,9 @@
         "这个扩容方案不受支持（只能使用相邻未分配空间，或移动紧挨在后面的一个 NTFS 数据分区）；未创建 PE 交接或启动项。": "This extension plan is not supported (only adjacent unallocated space or a move plan from the analysis can be used); no PE handoff or boot entry was created.",
         "锁定卷 {} 失败（可能有句柄占用）": "Failed to lock volume {} (a handle may still be open)",
         "（未能更新恢复环境的位置记录；回到 Windows 后可用管理员命令提示符依次运行 reagentc /disable 和 reagentc /enable 修复）": " (The location record of the recovery environment could not be updated; back in Windows, run reagentc /disable and then reagentc /enable in an administrator command prompt to fix it.)",
-        "（未能更新系统里被移动分区的盘符记录；若回到 Windows 后盘符变了，可在磁盘管理里改回）": " (The drive letter record of the moved partitions could not be updated; if a drive letter changed back in Windows, change it back in Disk Management.)"
-    },
-    "已生成 R装机-support.json": "Generated RZhuangJi-support.json",
-    "R装机 遇到错误": "RZhuangJi encountered an error",
-    "R装机 PE": "RZhuangJi PE"
+        "（未能更新系统里被移动分区的盘符记录；若回到 Windows 后盘符变了，可在磁盘管理里改回）": " (The drive letter record of the moved partitions could not be updated; if a drive letter changed back in Windows, change it back in Disk Management.)",
+        "已生成 R装机-support.json": "Generated RZhuangJi-support.json",
+        "R装机 遇到错误": "RZhuangJi encountered an error",
+        "R装机 PE": "RZhuangJi PE"
+    }
 }

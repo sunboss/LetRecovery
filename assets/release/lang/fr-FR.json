@@ -2716,9 +2716,9 @@
         "这个扩容方案不受支持（只能使用相邻未分配空间，或移动紧挨在后面的一个 NTFS 数据分区）；未创建 PE 交接或启动项。": "Ce plan d’extension n’est pas pris en charge (seuls l’espace non alloué adjacent ou un plan de déplacement issu de l’analyse sont utilisables) ; aucun transfert PE ni entrée de démarrage n’a été créé.",
         "锁定卷 {} 失败（可能有句柄占用）": "Impossible de verrouiller le volume {} (un handle est peut-être encore ouvert)",
         "（未能更新恢复环境的位置记录；回到 Windows 后可用管理员命令提示符依次运行 reagentc /disable 和 reagentc /enable 修复）": " (L’emplacement de l’environnement de récupération n’a pas pu être mis à jour ; de retour dans Windows, exécutez reagentc /disable puis reagentc /enable dans une invite de commandes administrateur.)",
-        "（未能更新系统里被移动分区的盘符记录；若回到 Windows 后盘符变了，可在磁盘管理里改回）": " (L’attribution de lettre des partitions déplacées n’a pas pu être mise à jour ; si une lettre a changé dans Windows, rétablissez-la dans la Gestion des disques.)"
-    },
-    "已生成 R装机-support.json": "RZhuangJi-support.json généré",
-    "R装机 遇到错误": "RZhuangJi a rencontré une erreur",
-    "R装机 PE": "RZhuangJi PE"
+        "（未能更新系统里被移动分区的盘符记录；若回到 Windows 后盘符变了，可在磁盘管理里改回）": " (L’attribution de lettre des partitions déplacées n’a pas pu être mise à jour ; si une lettre a changé dans Windows, rétablissez-la dans la Gestion des disques.)",
+        "已生成 R装机-support.json": "RZhuangJi-support.json généré",
+        "R装机 遇到错误": "RZhuangJi a rencontré une erreur",
+        "R装机 PE": "RZhuangJi PE"
+    }
 }
