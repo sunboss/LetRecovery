@@ -1219,19 +1219,16 @@ mod tests {
 
     #[test]
     fn restore_windows_update_cli_is_fixed_and_parameterless() {
-        assert!(
-            !parse_restore_windows_update_cli(&args(&["R装机.exe"]))
-                .expect("ordinary startup should parse")
-        );
+        assert!(!parse_restore_windows_update_cli(&args(&["R装机.exe"]))
+            .expect("ordinary startup should parse"));
         assert!(parse_restore_windows_update_cli(&args(&[
             "R装机.exe",
             "--restore-windows-update",
         ]))
         .expect("fixed maintenance command should parse"));
-        assert!(parse_restore_windows_update_cli(&args(&[
-            "R装机.exe",
-            "/restore-windows-update",
-        ]))
+        assert!(parse_restore_windows_update_cli(&args(
+            &["R装机.exe", "/restore-windows-update",]
+        ))
         .expect("Windows-style spelling should be case-insensitive"));
     }
 
@@ -1313,10 +1310,7 @@ mod tests {
                 "500",
                 "004c005200410064006d0069006e00310031",
             ][..],
-            &[
-                "R装机.exe",
-                "--internal-store-builtin-administrator-secret",
-            ][..],
+            &["R装机.exe", "--internal-store-builtin-administrator-secret"][..],
             &[
                 "R装机.exe",
                 "--internal-begin-builtin-administrator-transition-with-personal-restore",
@@ -1329,10 +1323,7 @@ mod tests {
                 "--internal-delete-temporary-oobe-account",
                 "004c0072004f004f00420045002d003000310032003300340035003600370038003900610062",
             ][..],
-            &[
-                "R装机.exe",
-                "--internal-cleanup-disabled-defaultuser0",
-            ][..],
+            &["R装机.exe", "--internal-cleanup-disabled-defaultuser0"][..],
             &["R装机.exe", "/PEBACKUP"][..],
         ] {
             let route = classify_startup_route(&args(values));
@@ -1352,10 +1343,7 @@ mod tests {
             StartupRoute::InternalNativeHelper
         );
         assert_eq!(
-            classify_startup_route(&args(&[
-                "R装机.exe",
-                "--internal-restore-personal-files",
-            ])),
+            classify_startup_route(&args(&["R装机.exe", "--internal-restore-personal-files",])),
             StartupRoute::UnsupportedArguments
         );
         assert_eq!(
@@ -1433,11 +1421,9 @@ mod tests {
             StartupRoute::InternalNativeHelper
         );
         assert_eq!(
-            classify_startup_route(&args(&[
-                "R装机.exe",
-                "--internal-prepare-local-rid",
-                "500",
-            ])),
+            classify_startup_route(&args(
+                &["R装机.exe", "--internal-prepare-local-rid", "500",]
+            )),
             StartupRoute::UnsupportedArguments
         );
     }
@@ -1595,8 +1581,7 @@ mod tests {
     #[cfg(feature = "non-elevated-tests")]
     #[test]
     fn pe_maintenance_preview_is_an_explicit_non_elevated_gui_route() {
-        let route =
-            classify_startup_route(&args(&["R装机.exe", "--ui-pe-maintenance-preview"]));
+        let route = classify_startup_route(&args(&["R装机.exe", "--ui-pe-maintenance-preview"]));
         assert_eq!(route, StartupRoute::Gui);
         assert!(!should_request_gui_elevation(route, false, true));
     }
