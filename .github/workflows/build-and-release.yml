@@ -336,7 +336,9 @@ jobs:
           Write-Host "Mounting $wim ..."
           dism /Mount-Image /ImageFile:"$wim" /Index:1 /MountDir:"$mount"
           if ($LASTEXITCODE -ne 0) { throw "DISM mount failed" }
-          $dst = Join-Path $mount "Program Files\RZhuangJiPE\RZhuangJiPE.exe"
+          $dstDir = Join-Path $mount "Program Files\RZhuangJiPE"
+          New-Item -ItemType Directory -Force -Path $dstDir | Out-Null
+          $dst = Join-Path $dstDir "RZhuangJiPE.exe"
           # 产物可能在 crate 的 target\ 或工作区根 target\
           $peExe = @("PE端\target\release\RZhuangJiPE.exe", "target\release\RZhuangJiPE.exe") | Where-Object { Test-Path $_ } | Select-Object -First 1
           if (-not $peExe) { throw "找不到编译产物 RZhuangJiPE.exe" }
