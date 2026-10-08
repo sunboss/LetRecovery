@@ -2117,6 +2117,7 @@
         "操作未完成": "The operation did not complete",
         "诊断信息": "Diagnostic information",
         "详细错误已写入 LetRecoveryPE.log。": "Detailed errors were written to LetRecoveryPE.log.",
+        "详细错误已写入 RZhuangJiPE.log。": "Detailed errors were written to RZhuangJiPE.log.",
         "请修正问题后从原入口重新开始；程序不会自动重试非幂等步骤。": "Correct the problem and restart from the original entry point. Non-idempotent steps are not retried automatically.",
         "恢复信息": "Recovery information",
         "查看当前任务的只读检查点与安全收尾状态。": "View the current task's read-only checkpoint and safe finalization status.",

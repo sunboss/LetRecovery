@@ -2117,6 +2117,7 @@
         "操作未完成": "L'opération n'a pas abouti",
         "诊断信息": "Informations de diagnostic",
         "详细错误已写入 LetRecoveryPE.log。": "Les erreurs détaillées ont été écrites dans LetRecoveryPE.log.",
+        "详细错误已写入 RZhuangJiPE.log。": "Les erreurs détaillées ont été écrites dans RZhuangJiPE.log.",
         "请修正问题后从原入口重新开始；程序不会自动重试非幂等步骤。": "Corrigez le problème et redémarrez à partir du point d'entrée d'origine. Les étapes non idempotentes ne sont pas réessayées automatiquement.",
         "恢复信息": "Informations de récupération",
         "查看当前任务的只读检查点与安全收尾状态。": "Affichez le point de contrôle en lecture seule de la tâche actuelle et l'état de finalisation sécurisée.",
