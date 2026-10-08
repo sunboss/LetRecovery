@@ -77,7 +77,7 @@ jobs:
       - name: Download base package (template)
         shell: bash
         env:
-          GH_TOKEN: ${{ secrets.RELEASE_PAT }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           gh release download 2026.10.1 \
@@ -991,7 +991,7 @@ jobs:
       - name: Create Release
         shell: bash
         env:
-          GH_TOKEN: ${{ secrets.RELEASE_PAT }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           TAG="${{ steps.tag.outputs.tag }}"
