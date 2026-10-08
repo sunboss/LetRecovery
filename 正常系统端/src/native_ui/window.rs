@@ -8843,7 +8843,7 @@ impl NativeWindow {
             )
             .then(|| OnlinePE {
                 download_url: String::new(),
-                display_name: "LetRecovery PE".to_owned(),
+                display_name: "R装机 PE".to_owned(),
                 filename: "LetRecovery_PE.wim".to_owned(),
                 md5: None,
                 sha256: None,
