@@ -532,7 +532,7 @@ mod tests {
                 }
                 // Stash the request for assertions via a sidecar file.
                 std::fs::write(
-                    format!("/tmp/pe_fetch_req_{port}.txt"),
+                    std::env::temp_dir().join(format!("pe_fetch_req_{port}.txt")),
                     String::from_utf8_lossy(&head).as_bytes(),
                 )
                 .ok();
@@ -645,7 +645,9 @@ mod tests {
         fetch(&spec, &mut |_, _| {}).unwrap();
         assert_eq!(std::fs::read(&dest).unwrap(), payload);
         // The request must have carried a Range header.
-        let req = std::fs::read_to_string(format!("/tmp/pe_fetch_req_{port}.txt")).unwrap();
+        let req =
+            std::fs::read_to_string(std::env::temp_dir().join(format!("pe_fetch_req_{port}.txt")))
+                .unwrap();
         assert!(req.to_ascii_lowercase().contains("range: bytes=6-"));
         std::fs::remove_file(&dest).ok();
     }
