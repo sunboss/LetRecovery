@@ -1446,7 +1446,7 @@ fn select_cached_pe(official_only: bool) -> Result<crate::download::config::Onli
     ) {
         return Ok(crate::download::config::OnlinePE {
             download_url: String::new(),
-            display_name: "LetRecovery PE".into(),
+            display_name: "R装机 PE".into(),
             filename: filename.into(),
             md5: None,
             sha256: None,

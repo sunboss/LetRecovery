@@ -1180,7 +1180,7 @@ fn show_success_message(message: &str) {
             .encode_wide()
             .chain(std::iter::once(0))
             .collect();
-        let wide_title: Vec<u16> = OsStr::new("LetRecovery")
+        let wide_title: Vec<u16> = OsStr::new("R装机")
             .encode_wide()
             .chain(std::iter::once(0))
             .collect();
@@ -1220,16 +1220,16 @@ mod tests {
     #[test]
     fn restore_windows_update_cli_is_fixed_and_parameterless() {
         assert!(
-            !parse_restore_windows_update_cli(&args(&["LetRecovery.exe"]))
+            !parse_restore_windows_update_cli(&args(&["R装机.exe"]))
                 .expect("ordinary startup should parse")
         );
         assert!(parse_restore_windows_update_cli(&args(&[
-            "LetRecovery.exe",
+            "R装机.exe",
             "--restore-windows-update",
         ]))
         .expect("fixed maintenance command should parse"));
         assert!(parse_restore_windows_update_cli(&args(&[
-            "LetRecovery.exe",
+            "R装机.exe",
             "/restore-windows-update",
         ]))
         .expect("Windows-style spelling should be case-insensitive"));
@@ -1238,13 +1238,13 @@ mod tests {
     #[test]
     fn restore_windows_update_cli_rejects_duplicates_and_combinations() {
         assert!(parse_restore_windows_update_cli(&args(&[
-            "LetRecovery.exe",
+            "R装机.exe",
             "--restore-windows-update",
             "--restore-windows-update",
         ]))
         .is_err());
         assert!(parse_restore_windows_update_cli(&args(&[
-            "LetRecovery.exe",
+            "R装机.exe",
             "--restore-windows-update",
             "--install",
         ]))
@@ -1254,86 +1254,86 @@ mod tests {
     #[test]
     fn startup_router_never_treats_cli_or_internal_handoffs_as_gui() {
         for values in [
-            &["LetRecovery.exe", "help"][..],
-            &["LetRecovery.exe", "install", "run"][..],
-            &["LetRecovery.exe", "config", "generate"][..],
-            &["LetRecovery.exe", "update", "restore"][..],
-            &["LetRecovery.exe", "tool", "network-info", "inspect"][..],
-            &["LetRecovery.exe", "--restore-windows-update"][..],
+            &["R装机.exe", "help"][..],
+            &["R装机.exe", "install", "run"][..],
+            &["R装机.exe", "config", "generate"][..],
+            &["R装机.exe", "update", "restore"][..],
+            &["R装机.exe", "tool", "network-info", "inspect"][..],
+            &["R装机.exe", "--restore-windows-update"][..],
             &[
-                "LetRecovery.exe",
+                "R装机.exe",
                 "--internal-restore-personal-files",
                 "0123456789abcdef0123456789abcdef",
             ][..],
             &[
-                "LetRecovery.exe",
+                "R装机.exe",
                 "--internal-restore-personal-files-at-shell",
                 "0123456789abcdef0123456789abcdef",
             ][..],
             &[
-                "LetRecovery.exe",
+                "R装机.exe",
                 "--internal-restore-personal-files-before-shell",
                 "0123456789abcdef0123456789abcdef",
             ][..],
             &[
-                "LetRecovery.exe",
+                "R装机.exe",
                 "--internal-personal-restore-progress-shell",
                 "0123456789abcdef0123456789abcdef",
             ][..],
             &[
-                "LetRecovery.exe",
+                "R装机.exe",
                 "--internal-activate-personal-restore-shell-gate",
                 "0123456789abcdef0123456789abcdef",
             ][..],
             &[
-                "LetRecovery.exe",
+                "R装机.exe",
                 "--internal-begin-personal-restore-second-logon",
                 "0123456789abcdef0123456789abcdef",
             ][..],
             &[
-                "LetRecovery.exe",
+                "R装机.exe",
                 "--internal-rearm-personal-restore-before-shell",
                 "0123456789abcdef0123456789abcdef",
             ][..],
             &[
-                "LetRecovery.exe",
+                "R装机.exe",
                 "--internal-restore-personal-files-after-shell",
                 "0123456789abcdef0123456789abcdef",
                 "true",
             ][..],
             &[
-                "LetRecovery.exe",
+                "R装机.exe",
                 "--internal-register-personal-files-at-shell",
                 "0123456789abcdef0123456789abcdef",
                 r"C:\LetRecovery-first-logon.cmd",
             ][..],
             &[
-                "LetRecovery.exe",
+                "R装机.exe",
                 "--internal-prepare-local-rid",
                 "500",
                 "004c005200410064006d0069006e00310031",
             ][..],
             &[
-                "LetRecovery.exe",
+                "R装机.exe",
                 "--internal-store-builtin-administrator-secret",
             ][..],
             &[
-                "LetRecovery.exe",
+                "R装机.exe",
                 "--internal-begin-builtin-administrator-transition-with-personal-restore",
                 "004c005200410064006d0069006e00310031",
                 "004c0072004f004f00420045002d003000310032003300340035003600370038003900610062",
                 "0123456789abcdef0123456789abcdef",
             ][..],
             &[
-                "LetRecovery.exe",
+                "R装机.exe",
                 "--internal-delete-temporary-oobe-account",
                 "004c0072004f004f00420045002d003000310032003300340035003600370038003900610062",
             ][..],
             &[
-                "LetRecovery.exe",
+                "R装机.exe",
                 "--internal-cleanup-disabled-defaultuser0",
             ][..],
-            &["LetRecovery.exe", "/PEBACKUP"][..],
+            &["R装机.exe", "/PEBACKUP"][..],
         ] {
             let route = classify_startup_route(&args(values));
             assert_ne!(route, StartupRoute::Gui);
@@ -1345,7 +1345,7 @@ mod tests {
     fn personal_restore_helper_route_requires_exact_private_arity() {
         assert_eq!(
             classify_startup_route(&args(&[
-                "LetRecovery.exe",
+                "R装机.exe",
                 "--internal-restore-personal-files",
                 "0123456789abcdef0123456789abcdef",
             ])),
@@ -1353,14 +1353,14 @@ mod tests {
         );
         assert_eq!(
             classify_startup_route(&args(&[
-                "LetRecovery.exe",
+                "R装机.exe",
                 "--internal-restore-personal-files",
             ])),
             StartupRoute::UnsupportedArguments
         );
         assert_eq!(
             classify_startup_route(&args(&[
-                "LetRecovery.exe",
+                "R装机.exe",
                 "--internal-restore-personal-files-at-shell",
                 "0123456789abcdef0123456789abcdef",
             ])),
@@ -1374,20 +1374,20 @@ mod tests {
         ] {
             assert_eq!(
                 classify_startup_route(&args(&[
-                    "LetRecovery.exe",
+                    "R装机.exe",
                     switch,
                     "0123456789abcdef0123456789abcdef",
                 ])),
                 StartupRoute::InternalNativeHelper
             );
             assert_eq!(
-                classify_startup_route(&args(&["LetRecovery.exe", switch])),
+                classify_startup_route(&args(&["R装机.exe", switch])),
                 StartupRoute::UnsupportedArguments
             );
         }
         assert_eq!(
             classify_startup_route(&args(&[
-                "LetRecovery.exe",
+                "R装机.exe",
                 "--internal-register-personal-files-at-shell",
                 "0123456789abcdef0123456789abcdef",
                 r"C:\LetRecovery-first-logon.cmd",
@@ -1396,7 +1396,7 @@ mod tests {
         );
         assert_eq!(
             classify_startup_route(&args(&[
-                "LetRecovery.exe",
+                "R装机.exe",
                 "--internal-restore-personal-files-after-shell",
                 "0123456789abcdef0123456789abcdef",
                 "false",
@@ -1405,7 +1405,7 @@ mod tests {
         );
         assert_eq!(
             classify_startup_route(&args(&[
-                "LetRecovery.exe",
+                "R装机.exe",
                 "--internal-restore-personal-files-after-shell",
                 "0123456789abcdef0123456789abcdef",
             ])),
@@ -1413,7 +1413,7 @@ mod tests {
         );
         assert_eq!(
             classify_startup_route(&args(&[
-                "LetRecovery.exe",
+                "R装机.exe",
                 "--internal-register-personal-files-at-shell",
                 "0123456789abcdef0123456789abcdef",
             ])),
@@ -1425,7 +1425,7 @@ mod tests {
     fn built_in_account_prepare_route_requires_exact_private_arity() {
         assert_eq!(
             classify_startup_route(&args(&[
-                "LetRecovery.exe",
+                "R装机.exe",
                 "--internal-prepare-local-rid",
                 "500",
                 "004c005200410064006d0069006e00310031",
@@ -1434,7 +1434,7 @@ mod tests {
         );
         assert_eq!(
             classify_startup_route(&args(&[
-                "LetRecovery.exe",
+                "R装机.exe",
                 "--internal-prepare-local-rid",
                 "500",
             ])),
@@ -1446,14 +1446,14 @@ mod tests {
     fn built_in_secret_store_route_requires_exact_private_arity() {
         assert_eq!(
             classify_startup_route(&args(&[
-                "LetRecovery.exe",
+                "R装机.exe",
                 "--internal-store-builtin-administrator-secret",
             ])),
             StartupRoute::InternalNativeHelper
         );
         assert_eq!(
             classify_startup_route(&args(&[
-                "LetRecovery.exe",
+                "R装机.exe",
                 "--internal-store-builtin-administrator-secret",
                 "unexpected",
             ])),
@@ -1470,7 +1470,7 @@ mod tests {
         ] {
             assert_eq!(
                 classify_startup_route(&args(&[
-                    "LetRecovery.exe",
+                    "R装机.exe",
                     switch,
                     "004c005200410064006d0069006e00310031",
                     "004c0072004f004f00420045002d003000310032003300340035003600370038003900610062",
@@ -1479,7 +1479,7 @@ mod tests {
             );
             assert_eq!(
                 classify_startup_route(&args(&[
-                    "LetRecovery.exe",
+                    "R装机.exe",
                     switch,
                     "004c005200410064006d0069006e00310031",
                 ])),
@@ -1488,7 +1488,7 @@ mod tests {
         }
         assert_eq!(
             classify_startup_route(&args(&[
-                "LetRecovery.exe",
+                "R装机.exe",
                 "--internal-begin-builtin-administrator-transition-with-personal-restore",
                 "004c005200410064006d0069006e00310031",
                 "004c0072004f004f00420045002d003000310032003300340035003600370038003900610062",
@@ -1498,7 +1498,7 @@ mod tests {
         );
         assert_eq!(
             classify_startup_route(&args(&[
-                "LetRecovery.exe",
+                "R装机.exe",
                 "--internal-begin-builtin-administrator-transition-with-personal-restore",
                 "004c005200410064006d0069006e00310031",
                 "004c0072004f004f00420045002d003000310032003300340035003600370038003900610062",
@@ -1511,14 +1511,14 @@ mod tests {
     fn temporary_oobe_cleanup_route_requires_exact_private_arity() {
         assert_eq!(
             classify_startup_route(&args(&[
-                "LetRecovery.exe",
+                "R装机.exe",
                 "--internal-cleanup-disabled-defaultuser0",
             ])),
             StartupRoute::InternalNativeHelper
         );
         assert_eq!(
             classify_startup_route(&args(&[
-                "LetRecovery.exe",
+                "R装机.exe",
                 "--internal-cleanup-disabled-defaultuser0",
                 "unexpected",
             ])),
@@ -1526,7 +1526,7 @@ mod tests {
         );
         assert_eq!(
             classify_startup_route(&args(&[
-                "LetRecovery.exe",
+                "R装机.exe",
                 "--internal-delete-temporary-oobe-account",
                 "004c0072004f004f00420045002d003000310032003300340035003600370038003900610062",
             ])),
@@ -1534,7 +1534,7 @@ mod tests {
         );
         assert_eq!(
             classify_startup_route(&args(&[
-                "LetRecovery.exe",
+                "R装机.exe",
                 "--internal-delete-temporary-oobe-account",
             ])),
             StartupRoute::UnsupportedArguments
@@ -1544,23 +1544,23 @@ mod tests {
     #[test]
     fn retired_pe_switches_are_case_insensitive_rejections_and_require_exact_arity() {
         assert_eq!(
-            classify_startup_route(&args(&["LetRecovery.exe", "/pebackup"])),
+            classify_startup_route(&args(&["R装机.exe", "/pebackup"])),
             StartupRoute::RejectedLegacyCli
         );
         assert_eq!(
-            classify_startup_route(&args(&["LetRecovery.exe", "/peinstall", "extra"])),
+            classify_startup_route(&args(&["R装机.exe", "/peinstall", "extra"])),
             StartupRoute::UnsupportedArguments
         );
     }
 
     #[test]
     fn only_plain_production_gui_launch_requests_elevation() {
-        let gui = classify_startup_route(&args(&["LetRecovery.exe"]));
+        let gui = classify_startup_route(&args(&["R装机.exe"]));
         assert_eq!(gui, StartupRoute::Gui);
         assert!(should_request_gui_elevation(gui, false, false));
         assert!(!should_request_gui_elevation(gui, true, false));
         assert!(!should_request_gui_elevation(gui, false, true));
-        let unknown = classify_startup_route(&args(&["LetRecovery.exe", "--unknown"]));
+        let unknown = classify_startup_route(&args(&["R装机.exe", "--unknown"]));
         assert_eq!(unknown, StartupRoute::UnsupportedArguments);
         assert!(!should_request_gui_elevation(unknown, false, false));
     }
@@ -1569,14 +1569,14 @@ mod tests {
     #[test]
     fn personal_restore_progress_preview_is_a_non_elevated_native_route() {
         let route = classify_startup_route(&args(&[
-            "LetRecovery.exe",
+            "R装机.exe",
             "--ui-personal-restore-progress-preview",
         ]));
         assert_eq!(route, StartupRoute::InternalNativeHelper);
         assert!(!should_request_gui_elevation(route, false, true));
         assert_eq!(
             classify_startup_route(&args(&[
-                "LetRecovery.exe",
+                "R装机.exe",
                 "--ui-personal-restore-progress-preview",
                 "extra",
             ])),
@@ -1587,7 +1587,7 @@ mod tests {
     #[cfg(feature = "non-elevated-tests")]
     #[test]
     fn progress_preview_is_an_explicit_non_elevated_gui_route() {
-        let route = classify_startup_route(&args(&["LetRecovery.exe", "--ui-progress-preview"]));
+        let route = classify_startup_route(&args(&["R装机.exe", "--ui-progress-preview"]));
         assert_eq!(route, StartupRoute::Gui);
         assert!(!should_request_gui_elevation(route, false, true));
     }
@@ -1596,7 +1596,7 @@ mod tests {
     #[test]
     fn pe_maintenance_preview_is_an_explicit_non_elevated_gui_route() {
         let route =
-            classify_startup_route(&args(&["LetRecovery.exe", "--ui-pe-maintenance-preview"]));
+            classify_startup_route(&args(&["R装机.exe", "--ui-pe-maintenance-preview"]));
         assert_eq!(route, StartupRoute::Gui);
         assert!(!should_request_gui_elevation(route, false, true));
     }
@@ -1604,7 +1604,7 @@ mod tests {
     #[cfg(feature = "non-elevated-tests")]
     #[test]
     fn about_preview_is_an_explicit_non_elevated_gui_route() {
-        let route = classify_startup_route(&args(&["LetRecovery.exe", "--ui-about-preview"]));
+        let route = classify_startup_route(&args(&["R装机.exe", "--ui-about-preview"]));
         assert_eq!(route, StartupRoute::Gui);
         assert!(!should_request_gui_elevation(route, false, true));
     }

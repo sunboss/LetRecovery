@@ -3520,7 +3520,7 @@ pub fn stage_account_helper(target_partition: &str) -> Result<PathBuf> {
     if source
         .file_name()
         .and_then(|value| value.to_str())
-        .is_some_and(|value| value.eq_ignore_ascii_case("LetRecoveryPE.exe"))
+        .is_some_and(|value| value.eq_ignore_ascii_case("R装机PE.exe"))
         && runtime_metadata.is_none()
     {
         anyhow::bail!("PE account helper runtime is missing");

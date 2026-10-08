@@ -1,8 +1,8 @@
 <div align="center">
 
-# LetRecovery
+# R装机
 
-**一款免费用于非商业场景、源代码公开的 Windows 系统重装工具**
+**一款免费用于非商业场景、源代码公开的 Windows 系统重装工具**（R智能旗下品牌）
 
 [English](README_en.md) | 简体中文
 
@@ -16,11 +16,11 @@
 
 ---
 
-> 💡 **LetRecovery 在 PolyForm Noncommercial 1.0.0 许可范围内免费使用并公开源代码。** 该许可证不是 OSI 认可的传统开源许可证，禁止商业用途。请仅从本页下方的官方渠道获取。
+> 💡 **R装机在 PolyForm Noncommercial 1.0.0 许可范围内免费使用并公开源代码。** 该许可证不是 OSI 认可的传统开源许可证，禁止商业用途。请仅从本页下方的官方渠道获取。
 
 > ⚠️ **严禁将本项目用于任何违反[用户协议](USER_TERMS.md)的行为。** 对侵权、违规分发、未经授权的商业定制及其他违约使用，作者保留依法追究责任的权利；作者同时保留在适用法律及既有许可约束允许的范围内，随时调整后续版本授权方式或停止公开后续版本源代码的权利。
 
-> 📢 **维护交接：** 原作者现已进入高中阶段，后续日常维护将由 [**hwyyds-skidder-team**](https://github.com/hwyyds-skidder-team) 接替。项目原有作者署名、许可证和使用条款不因此改变。
+> 📢 **二次开发说明：** 本仓库基于 [NORMAL-EX/LetRecovery](https://github.com/NORMAL-EX/LetRecovery) 二次开发（PolyForm Noncommercial 1.0.0，仅限非商业使用），品牌与功能由 R装机团队维护。上游原有作者署名、许可证和使用条款不变。
 
 ## ✨ 功能特性
 
@@ -70,7 +70,7 @@
 
 ### 使用方法
 
-1. **下载软件** - 从 [Releases](https://github.com/NORMAL-EX/LetRecovery/releases) 页面下载最新版本
+1. **下载软件** - 从 [Releases](https://github.com/sunboss/LetRecovery/releases) 页面下载最新版本
 2. **以管理员身份运行** - 右键点击程序，选择"以管理员身份运行"
 3. **选择镜像** - 在"系统安装"页面选择本地或在线镜像
 4. **选择目标分区** - 选择要安装系统的目标分区
@@ -121,7 +121,7 @@ LetRecovery/
 
 ```bash
 # 克隆仓库
-git clone https://github.com/NORMAL-EX/LetRecovery.git
+git clone https://github.com/sunboss/LetRecovery.git
 cd LetRecovery
 
 # 正常系统端必须使用 Win7 目标重编译标准库，并在构建后检查导入表
@@ -133,7 +133,7 @@ cargo +1.88.0 build -p letrecovery-pe --release --locked --target x86_64-pc-wind
 
 ```
 
-> 不要用 `cargo build --workspace --release` 生成要在 Windows 7 上运行的正常端程序。该命令会使用宿主机的 `x86_64-pc-windows-msvc` 标准库，可能静态导入 Windows 8+ API。本地与 Release 必须统一通过 `build-win7-normal.ps1` 生成并验证 `target/x86_64-win7-windows-msvc/release/LetRecovery.exe`。
+> 不要用 `cargo build --workspace --release` 生成要在 Windows 7 上运行的正常端程序。该命令会使用宿主机的 `x86_64-pc-windows-msvc` 标准库，可能静态导入 Windows 8+ API。本地与 Release 必须统一通过 `build-win7-normal.ps1` 生成并验证 `target/x86_64-win7-windows-msvc/release/R装机.exe`。
 
 提交前应运行：
 
@@ -184,8 +184,8 @@ CI 会在 Pull Request 和 `main` push 上编译全部测试目标并运行确�
 ## 🔗 相关链接
 
 - 🌐 **官网**: [letrecovery.net](https://letrecovery.net)
-- 📦 **发布页**: [GitHub Releases](https://github.com/NORMAL-EX/LetRecovery/releases)
-- 🐛 **问题反馈**: [GitHub Issues](https://github.com/NORMAL-EX/LetRecovery/issues)
+- 📦 **发布页**: [GitHub Releases](https://github.com/sunboss/LetRecovery/releases)
+- 🐛 **问题反馈**: [GitHub Issues](https://github.com/sunboss/LetRecovery/issues)
 
 ---
 

@@ -2330,7 +2330,7 @@ mod persistent_payload_tests {
 
     #[test]
     fn removed_pe_cli_is_case_insensitive_and_requires_exact_arity() {
-        let program = "LetRecoveryPE.exe".to_owned();
+        let program = "R装机PE.exe".to_owned();
         for argument in ["/PEINSTALL", "--Pe-Install", "/pebackup", "--PE-BACKUP"] {
             assert!(is_removed_pe_cli_invocation(&[
                 program.clone(),

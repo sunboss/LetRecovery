@@ -257,7 +257,7 @@ mod tests {
     fn pe() -> OnlinePE {
         OnlinePE {
             download_url: "https://example.invalid/pe.wim".to_owned(),
-            display_name: "LetRecovery PE".to_owned(),
+            display_name: "R装机 PE".to_owned(),
             filename: "LetRecovery_PE.wim".to_owned(),
             md5: None,
             sha256: Some("00".repeat(32)),

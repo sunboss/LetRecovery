@@ -195,7 +195,7 @@ fn write_support_bundle(
     reason: &str,
 ) -> Result<(), OperationError> {
     let mut builder = SupportBundleBuilder::new(
-        "LetRecovery",
+        "R装机",
         env!("BUILD_VERSION"),
         "pe",
         unix_time_millis(),

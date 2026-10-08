@@ -499,7 +499,7 @@ mod tests {
         let latest = AppConfig {
             pe_cache: crate::download::config::PeCache {
                 pe_list: vec![crate::download::config::CachedPE {
-                    display_name: "LetRecovery PE".to_owned(),
+                    display_name: "R装机 PE".to_owned(),
                     filename: "LetRecovery_PE.wim".to_owned(),
                     md5: Some("900150983CD24FB0D6963F7D28E17F72".to_owned()),
                     sha256: None,

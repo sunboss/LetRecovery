@@ -134,5 +134,5 @@ image = { version = "0.25", default-features = false, features = ["png"] }
 winres = "0.1"
 
 [[bin]]
-name = "LetRecovery"
+name = "R装机"
 path = "src/main.rs"

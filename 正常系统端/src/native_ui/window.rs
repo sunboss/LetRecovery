@@ -3432,7 +3432,7 @@ impl NativeWindow {
         self.dpi = GetDpiForWindow(hwnd);
         self.create_fonts();
 
-        let brand = child(hwnd, w!("STATIC"), "LetRecovery", SS_CENTER_STYLE, 299)?;
+        let brand = child(hwnd, w!("STATIC"), "R装机", SS_CENTER_STYLE, 299)?;
         let nav_labels = [
             crate::tr!("系统安装"),
             crate::tr!("系统备份"),
@@ -13443,9 +13443,9 @@ impl NativeWindow {
 
     unsafe fn open_about_link(&self, hwnd: HWND, link: AboutLink) {
         let url = match link {
-            AboutLink::ProjectHomepage => "https://letrecovery.net",
-            AboutLink::Documentation => "https://github.com/NORMAL-EX/LetRecovery/issues",
-            AboutLink::License => "https://github.com/NORMAL-EX/LetRecovery/blob/main/LICENSE",
+            AboutLink::ProjectHomepage => "https://www.1234r.com/",
+            AboutLink::Documentation => "https://github.com/sunboss/LetRecovery/issues",
+            AboutLink::License => "https://github.com/sunboss/LetRecovery/blob/main/LICENSE",
         };
         let url = wide(url);
         let result = ShellExecuteW(

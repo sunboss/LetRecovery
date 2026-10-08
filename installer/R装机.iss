@@ -1,4 +1,4 @@
-#define SourceDir GetEnv("LETRECOVERY_INSTALLER_SOURCE")
+﻿#define SourceDir GetEnv("LETRECOVERY_INSTALLER_SOURCE")
 #define OutputDir GetEnv("LETRECOVERY_INSTALLER_OUTPUT")
 #define AppVersion GetEnv("LETRECOVERY_INSTALLER_VERSION")
 #define AppDisplayVersion GetEnv("LETRECOVERY_INSTALLER_DISPLAY_VERSION")
@@ -19,25 +19,25 @@
 
 [Setup]
 AppId={{F0B9EACD-36A4-4D12-B07E-4D0CC87B4798}
-AppName=LetRecovery
+AppName=R装机
 AppVersion={#AppDisplayVersion}
-AppVerName=LetRecovery {#AppDisplayVersion}
-AppPublisher=NORMAL-EX
-AppPublisherURL=https://letrecovery.net/
-AppSupportURL=https://letrecovery.net/
-AppUpdatesURL=https://letrecovery.net/
-AppCopyright=© 2026-present Cloud-PE Dev.
-DefaultDirName={autopf}\LetRecovery
-DefaultGroupName=LetRecovery
+AppVerName=R装机 {#AppDisplayVersion}
+AppPublisher=中邦智能
+AppPublisherURL=https://www.1234r.com/
+AppSupportURL=https://www.1234r.com/
+AppUpdatesURL=https://www.1234r.com/
+AppCopyright=© 2026-present 中邦智能
+DefaultDirName={autopf}\R装机
+DefaultGroupName=R装机
 DisableProgramGroupPage=yes
 AllowNoIcons=yes
 LicenseFile=LICENSE.zh-CN.txt
 InfoBeforeFile=NOTICE.zh-CN.txt
 OutputDir={#OutputDir}
-OutputBaseFilename=LetRecovery-Setup-x64
+OutputBaseFilename=R装机-Setup-x64
 SetupIconFile={#AppIcon}
-UninstallDisplayIcon={app}\LetRecovery.exe
-UninstallDisplayName=LetRecovery
+UninstallDisplayIcon={app}\R装机.exe
+UninstallDisplayName=R装机
 PrivilegesRequired=admin
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
@@ -50,7 +50,7 @@ SolidCompression=yes
 CompressionThreads=auto
 LZMAUseSeparateProcess=yes
 CloseApplications=yes
-CloseApplicationsFilter=LetRecovery.exe
+CloseApplicationsFilter=R装机.exe
 RestartApplications=no
 UsePreviousAppDir=yes
 UsePreviousGroup=yes
@@ -60,11 +60,11 @@ DisableWelcomePage=no
 ShowLanguageDialog=no
 LanguageDetectionMethod=uilanguage
 VersionInfoVersion={#AppVersion}
-VersionInfoCompany=NORMAL-EX
-VersionInfoDescription=LetRecovery offline installer
-VersionInfoProductName=LetRecovery
+VersionInfoCompany=中邦智能
+VersionInfoDescription=R装机安装包
+VersionInfoProductName=R装机
 VersionInfoProductVersion={#AppDisplayVersion}
-VersionInfoCopyright=© 2026-present Cloud-PE Dev.
+VersionInfoCopyright=© 2026-present 中邦智能
 
 [Languages]
 Name: "chinesesimp"; MessagesFile: "languages\ChineseSimplified.isl"; LicenseFile: "LICENSE.zh-CN.txt"; InfoBeforeFile: "NOTICE.zh-CN.txt"
@@ -83,12 +83,12 @@ Source: "{#SourceDir}\*"; DestDir: "{app}"; Excludes: "config.json"; Flags: igno
 Source: "{#SourceDir}\config.json"; DestDir: "{app}"; Flags: onlyifdoesntexist
 
 [Icons]
-Name: "{group}\LetRecovery"; Filename: "{app}\LetRecovery.exe"; WorkingDir: "{app}"
-Name: "{group}\卸载 LetRecovery"; Filename: "{uninstallexe}"
-Name: "{autodesktop}\LetRecovery"; Filename: "{app}\LetRecovery.exe"; WorkingDir: "{app}"; Tasks: desktopicon
+Name: "{group}\R装机"; Filename: "{app}\R装机.exe"; WorkingDir: "{app}"
+Name: "{group}\卸载 R装机"; Filename: "{uninstallexe}"
+Name: "{autodesktop}\R装机"; Filename: "{app}\R装机.exe"; WorkingDir: "{app}"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\LetRecovery.exe"; Description: "启动 LetRecovery"; WorkingDir: "{app}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\R装机.exe"; Description: "启动 R装机"; WorkingDir: "{app}"; Flags: nowait postinstall skipifsilent
 
 [UninstallDelete]
 Type: files; Name: "{app}\config.json"

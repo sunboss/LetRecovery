@@ -2507,7 +2507,7 @@ impl PeManager {
     pub fn reboot() {
         log::info!("[PE] 执行重启");
         if let Err(error) =
-            lr_core::windows_shutdown::schedule_restart(3, "LetRecovery 正在重启到 PE 环境...")
+            lr_core::windows_shutdown::schedule_restart(3, "R装机 正在重启到 PE 环境...")
         {
             log::error!("[PE] 安排重启失败: {error}");
         }
@@ -2654,7 +2654,7 @@ pub(crate) fn enter_pe_maintenance_with_progress(
         .boot_to_pe_for_maintenance(&snapshot.path.to_string_lossy(), &pe.display_name, payload)?
         .commit()?;
     progress(PeMaintenanceProgress::SchedulingRestart);
-    lr_core::windows_shutdown::schedule_restart(3, "LetRecovery 正在重启到 PE 维护环境...")
+    lr_core::windows_shutdown::schedule_restart(3, "R装机 正在重启到 PE 维护环境...")
         .context("PE 维护环境已经准备完成，但 Windows 未能安排重启；下次手动重启仍会进入 PE")?;
     progress(PeMaintenanceProgress::RestartScheduled);
     Ok(())

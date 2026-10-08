@@ -243,7 +243,7 @@ fn recovery_content(
             row(
                 crate::tr!("支持信息"),
                 if checkpoint.support_bundle_available {
-                    crate::tr!("已生成 LetRecovery-support.json")
+                    crate::tr!("已生成 R装机-support.json")
                 } else {
                     crate::tr!("尚未生成")
                 },

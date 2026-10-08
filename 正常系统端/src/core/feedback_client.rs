@@ -8,7 +8,7 @@ pub fn upload_log(log: &str, stage: &str) -> Result<String> {
     let body = serde_json::to_vec(&envelope)?;
     let response = reqwest::blocking::Client::builder()
         .timeout(std::time::Duration::from_secs(12))
-        .user_agent(concat!("LetRecovery/", env!("BUILD_VERSION")))
+        .user_agent(concat!("R装机/", env!("BUILD_VERSION")))
         .build()?
         .post(FEEDBACK_URL)
         .header(reqwest::header::CONTENT_TYPE, "application/json")
