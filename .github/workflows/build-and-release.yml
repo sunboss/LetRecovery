@@ -80,10 +80,10 @@ jobs:
           GH_TOKEN: ${{ secrets.RELEASE_PAT }}
         run: |
           set -euo pipefail
-          gh release download base-package \
-            --repo sunboss/LetRecovery \
-            --pattern package-base.7z --dir .
-          mv package-base.7z package.7z
+          gh release download 2026.10.1 \
+            --repo NORMAL-EX/LetRecovery \
+            --pattern LetRecovery.7z --dir .
+          mv LetRecovery.7z package.7z
           ls -la package.7z
 
       - name: Extract base package
@@ -92,6 +92,10 @@ jobs:
           set -euo pipefail
           mkdir -p pkg
           7z x package.7z -opkg -y >/dev/null
+          # 原版包里是 LetRecovery.exe，重命名为 RZhuangJi.exe（后续会被新编译的覆盖）
+          if [ -f "pkg/LetRecovery.exe" ] && [ ! -f "pkg/RZhuangJi.exe" ]; then
+            mv "pkg/LetRecovery.exe" "pkg/RZhuangJi.exe"
+          fi
           test -f "pkg/RZhuangJi.exe"            || { echo "底包缺少 RZhuangJi.exe"; exit 1; }
           test -f "pkg/bin/pe/LetRecovery_PE.wim"  || { echo "底包缺少 bin/pe/LetRecovery_PE.wim"; exit 1; }
 
