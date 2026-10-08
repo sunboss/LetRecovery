@@ -80,9 +80,10 @@ jobs:
           GH_TOKEN: ${{ secrets.RELEASE_PAT }}
         run: |
           set -euo pipefail
-          gh release download release \
-            --repo NORMAL-EX/letrecovery-package \
-            --pattern package.7z --dir .
+          gh release download base-package \
+            --repo sunboss/LetRecovery \
+            --pattern package-base.7z --dir .
+          mv package-base.7z package.7z
           ls -la package.7z
 
       - name: Extract base package
