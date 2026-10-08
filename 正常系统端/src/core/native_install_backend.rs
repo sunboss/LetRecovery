@@ -5247,8 +5247,11 @@ impl ProductionInstallBackend {
         } else {
             intent.target_partition.clone()
         };
-        let mut config =
-            intent.to_install_config(staged_name, lr_core::active_engine().as_u8(), pca.as_ref());
+        let mut config = intent.to_install_config(
+            staged_name.clone(),
+            lr_core::active_engine().as_u8(),
+            pca.as_ref(),
+        );
         let staged_software = self
             .prepared_software_packages
             .as_deref()

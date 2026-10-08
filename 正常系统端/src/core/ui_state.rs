@@ -217,6 +217,9 @@ impl Default for AdvancedOptionsData {
             disable_device_encryption: true,
             remove_uwp_apps: false,
             preinstalled_software: Vec::new(),
+            online_image_source_url: None,
+            online_image_source_length: 0,
+            online_image_source_sha256: None,
             install_vmware_tools: true,
             // This is an intent default only. `apply_runtime_defaults` immediately captures the
             // current connected profile into session-only fields, or clears the intent when no
