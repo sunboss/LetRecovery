@@ -938,27 +938,73 @@ jobs:
             throw "Installer build did not produce RZhuangJi-Setup-x64.exe"
           }
 
-      - name: Verify the two Release assets
+      - name: Build x86 (32-bit) system-side exe
+        shell: pwsh
+        run: |
+          & .\.github\scripts\build-x86-normal.ps1
+
+      - name: Build x86 (32-bit) PE-side exe
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          Push-Location PE端
+          try {
+            & rustup target add i686-pc-windows-msvc --toolchain 1.88.0 2>&1 | Out-Null
+            $env:RUSTFLAGS = '-C target-feature=+crt-static'
+            & cargo +1.88.0 build -p letrecovery-pe --release --locked --target i686-pc-windows-msvc
+            if ($LASTEXITCODE -ne 0) { throw 'x86 PE-side build failed.' }
+          } finally {
+            Pop-Location
+            Remove-Item Env:RUSTFLAGS -ErrorAction SilentlyContinue
+          }
+
+      - name: Build x86 offline installer EXE
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          # 复制 x64 包目录，换上 32 位 exe
+          $pkgX86 = Join-Path $env:GITHUB_WORKSPACE "pkg-x86"
+          if (Test-Path -LiteralPath $pkgX86) { Remove-Item -LiteralPath $pkgX86 -Recurse -Force }
+          Copy-Item -LiteralPath (Join-Path $env:GITHUB_WORKSPACE "pkg") -Destination $pkgX86 -Recurse
+          Copy-Item -LiteralPath (Join-Path $env:GITHUB_WORKSPACE "target\i686-pc-windows-msvc\release\RZhuangJi.exe") `
+            -Destination (Join-Path $pkgX86 "RZhuangJi.exe") -Force
+
+          $output = Join-Path $env:GITHUB_WORKSPACE "installer\output"
+          & .\installer\build-installer.ps1 `
+            -SourceDirectory $pkgX86 `
+            -OutputDirectory $output `
+            -InnoCompiler $env:INNO_COMPILER `
+            -Architecture x86
+
+          $installer = Join-Path $output "RZhuangJi-Setup-x86.exe"
+          if (-not (Test-Path -LiteralPath $installer -PathType Leaf)) {
+            throw "Installer build did not produce RZhuangJi-Setup-x86.exe"
+          }
+
+      - name: Verify the Release assets
         shell: pwsh
         run: |
           $archive = (Resolve-Path .\RZhuangJi.7z).Path
           $installerDirectory = (Resolve-Path .\installer\output).Path
-          $installer = Join-Path $installerDirectory "RZhuangJi-Setup-x64.exe"
 
           & 7z t $archive
           if ($LASTEXITCODE -ne 0) {
             throw "RZhuangJi.7z integrity test failed with exit code $LASTEXITCODE"
           }
 
-          $installerFiles = @(Get-ChildItem -LiteralPath $installerDirectory -File)
-          if ($installerFiles.Count -ne 1 -or $installerFiles[0].Name -ne "RZhuangJi-Setup-x64.exe") {
-            $names = $installerFiles.Name -join ", "
-            throw "Installer output must contain exactly RZhuangJi-Setup-x64.exe; found: $names"
+          $expectedInstallers = @("RZhuangJi-Setup-x64.exe", "RZhuangJi-Setup-x86.exe")
+          $installerFiles = @(Get-ChildItem -LiteralPath $installerDirectory -File | Select-Object -ExpandProperty Name)
+          foreach ($name in $expectedInstallers) {
+            if ($installerFiles -notcontains $name) {
+              $names = $installerFiles -join ", "
+              throw "Installer output missing $name; found: $names"
+            }
           }
 
           $assets = @(
             Get-Item -LiteralPath $archive
-            Get-Item -LiteralPath $installer
+            Get-Item -LiteralPath (Join-Path $installerDirectory "RZhuangJi-Setup-x64.exe")
+            Get-Item -LiteralPath (Join-Path $installerDirectory "RZhuangJi-Setup-x86.exe")
           )
           foreach ($asset in $assets) {
             if ($asset.Length -le 0) {
@@ -1011,9 +1057,10 @@ jobs:
           gh release create "$TAG" \
             RZhuangJi.7z \
             installer/output/RZhuangJi-Setup-x64.exe \
+            installer/output/RZhuangJi-Setup-x86.exe \
             --repo "${{ github.repository }}" \
             --target "$SHA" \
             --title "$TAG" \
             --notes-file release_notes.md \
             $PRE
-          echo "Released $TAG with RZhuangJi.7z and RZhuangJi-Setup-x64.exe (prerelease: ${PRE:-no})"
+          echo "Released $TAG with RZhuangJi.7z, RZhuangJi-Setup-x64.exe and RZhuangJi-Setup-x86.exe (prerelease: ${PRE:-no})"
