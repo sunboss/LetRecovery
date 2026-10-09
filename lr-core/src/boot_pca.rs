@@ -117,7 +117,7 @@ fn verify_locked_file(
     Ok(())
 }
 
-/// Verify the exact UefiSeven payload shipped with LetRecovery.
+/// Verify the exact UefiSeven payload shipped with RZhuangJi.
 pub fn verify_uefiseven_package(directory: &Path) -> Result<(), String> {
     verify_locked_file(
         &directory.join("bootx64.efi"),
@@ -402,7 +402,7 @@ fn is_locked_uefiseven_ini(path: &Path) -> Result<bool, String> {
 
 /// Restore both native Windows EFI entry points when a confirmed VMware guest does
 /// not need UefiSeven. Existing non-UefiSeven loaders are preserved, while a shim
-/// installed by LetRecovery is replaced with its verified adjacent original.
+/// installed by RZhuangJi is replaced with its verified adjacent original.
 ///
 /// The operation snapshots and rolls back both entry points as one transaction. A
 /// missing or invalid original fails closed instead of leaving a partially native

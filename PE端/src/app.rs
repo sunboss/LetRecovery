@@ -619,7 +619,7 @@ fn cleanup_target_private_pe_residue(target_partition: &str) -> anyhow::Result<u
     {
         anyhow::bail!("invalid target partition before private PE cleanup");
     }
-    let root = std::path::PathBuf::from(format!(r"{drive}\LetRecovery_PE"));
+    let root = std::path::PathBuf::from(format!(r"{drive}\RZhuangJi_PE"));
     cleanup_private_pe_residue_root(&root)
 }
 
@@ -679,7 +679,7 @@ fn cleanup_private_pe_residue_root(root: &std::path::Path) -> anyhow::Result<usi
         retained.sort();
         retained.truncate(8);
         log::warn!(
-            "[PE INSTALL] 目标的 LetRecovery_PE 中含非任务文件，已保留: {}",
+            "[PE INSTALL] 目标的 RZhuangJi_PE 中含非任务文件，已保留: {}",
             retained.join(", ")
         );
     }
@@ -812,7 +812,7 @@ fn stage_authenticated_preinstalled_software(
         target_partition.trim_end_matches(['\\', '/'])
     ));
     let destination = target_root
-        .join("LetRecovery_Scripts")
+        .join("RZhuangJi_Scripts")
         .join(lr_core::software_install::STAGING_DIRECTORY_NAME);
     if destination.exists() {
         anyhow::bail!(
@@ -872,7 +872,7 @@ impl Drop for AutomationFailureShutdown {
         }
         match lr_core::windows_shutdown::schedule_shutdown(
             15,
-            "LetRecovery PE automation reached a terminal failure; this test machine will power off.",
+            "RZhuangJi PE automation reached a terminal failure; this test machine will power off.",
         ) {
             Ok(()) => log::info!(
                 "[AUTOMATION] terminal=failure action=shutdown status=accepted timeout_seconds=15"
@@ -1134,7 +1134,7 @@ fn execute_install_workflow(
         use lr_core::unattend_command::RequiredBuiltinUnattendError as Error;
         let message = match error {
             Error::UnattendedDisabled => {
-                tr!("预装软件、移除预装应用或移除 Windows 安全中心需要启用 LetRecovery 内置无人值守安装。")
+                tr!("预装软件、移除预装应用或移除 Windows 安全中心需要启用 RZhuangJi 内置无人值守安装。")
             }
             Error::CustomUnattend => {
                 tr!("预装软件、移除预装应用或移除 Windows 安全中心不能与自定义应答文件同时使用。")
@@ -1168,7 +1168,7 @@ fn execute_install_workflow(
         .to_string_lossy()
         .trim_end_matches(['\\', '/'])
         .to_owned();
-    let public_data_dir = public_data_root.join("LetRecovery_Data");
+    let public_data_dir = public_data_root.join("RZhuangJi_Data");
     if config.is_xp_i386 && !config.repair_boot {
         fail_prewrite!(tr!(
             "XP/2003 文本模式安装必须启用“添加引导”，尚未写入目标分区。"
@@ -1575,10 +1575,10 @@ fn execute_install_workflow(
     }
 
     if config.in_place_target_staging {
-        // In-place staging deliberately keeps the image inside the target's own LetRecovery_Data.
+        // In-place staging deliberately keeps the image inside the target's own RZhuangJi_Data.
         // The cross-volume dependency check would reject that, so only the target's physical
         // identity is confirmed here; the staged image stays locked and the old-system deletion
-        // below never touches LetRecovery_ directories.
+        // below never touches RZhuangJi_ directories.
         if let Err(error) =
             DiskManager::verify_partition_volume_identity(&target_partition, expected_target)
         {
@@ -1774,7 +1774,7 @@ fn execute_install_workflow(
     };
     if config.in_place_target_staging && config.format_partition && !personal_files_prepared {
         // Target-drive staging with a requested format: never format (that would erase the
-        // staged image); delete the old system in place instead. LetRecovery_ directories,
+        // staged image); delete the old system in place instead. RZhuangJi_ directories,
         // including the staged data, are preserved by the deletion routine.
         let _ = tx.send(WorkerMessage::SetStatus(tr!(
             "正在原地删除旧系统（保留已暂存的安装文件）..."
@@ -2303,7 +2303,7 @@ fn execute_install_workflow(
                             // has a PnP candidate without requiring the source INF name or version.
                             let scratch_dir = std::env::temp_dir();
                             let inventory_log = scratch_dir.join(format!(
-                                "LetRecovery-DismApi-driver-inventory-{}.log",
+                                "RZhuangJi-DismApi-driver-inventory-{}.log",
                                 std::process::id()
                             ));
                             match enumerate_target_offline_driver_candidates(
@@ -2699,8 +2699,8 @@ fn execute_install_workflow(
     } else {
         log::info!("未启用高级选项，跳过离线注册表加载");
     }
-    // Only LetRecovery's built-in answer file stages the first-logon finalizer that imports
-    // LR_WiFi.xml and then deletes LetRecovery_Scripts. With a custom answer file (or unattended
+    // Only RZhuangJi's built-in answer file stages the first-logon finalizer that imports
+    // LR_WiFi.xml and then deletes RZhuangJi_Scripts. With a custom answer file (or unattended
     // setup disabled) the plaintext-key profile would stay on the target and never be imported.
     let built_in_first_logon = config.unattended && config.custom_unattend_file.is_empty();
     if private_wifi_profile.is_some() && !built_in_first_logon {
@@ -3245,17 +3245,17 @@ pub(crate) fn generate_unattend_xml(
     // only invokes that fixed launcher, avoiding nested `cmd /s /c` quoting differences while the
     // launcher preserves failures and removes staging only after the PowerShell process exits.
     let first_logon_commands = lr_core::first_logon::render_command(1)?;
-    // The advanced "run script during deployment" payload is copied to LetRecovery_Scripts before
+    // The advanced "run script during deployment" payload is copied to RZhuangJi_Scripts before
     // this answer file is generated (see `apply_authenticated_advanced_inputs`).
     let deploy_specialize_command = if std::path::PathBuf::from(format!(
-        "{}\\LetRecovery_Scripts\\deploy.bat",
+        "{}\\RZhuangJi_Scripts\\deploy.bat",
         target_partition.trim_end_matches('\\')
     ))
     .is_file()
     {
         lr_core::unattend_command::render_specialize_run_synchronous_command(
             1,
-            r#"cmd /d /c if exist %SystemDrive%\LetRecovery_Scripts\deploy.bat call %SystemDrive%\LetRecovery_Scripts\deploy.bat"#,
+            r#"cmd /d /c if exist %SystemDrive%\RZhuangJi_Scripts\deploy.bat call %SystemDrive%\RZhuangJi_Scripts\deploy.bat"#,
             "Run custom deploy script",
         )
         .unwrap_or_else(|error| {
@@ -3396,7 +3396,7 @@ fn apply_authenticated_advanced_inputs(
 ) -> Vec<String> {
     let mut warnings = Vec::new();
     let root = std::path::PathBuf::from(format!("{}\\", target_partition.trim_end_matches('\\')));
-    let scripts = root.join("LetRecovery_Scripts");
+    let scripts = root.join("RZhuangJi_Scripts");
     let mut registry_files = Vec::new();
     for artifact in artifacts {
         let components = artifact
@@ -3458,7 +3458,7 @@ fn import_registry_file_offline(
     let converted =
         lr_core::reg_file::convert_reg_file_for_offline_hives(&std::fs::read(registry_file)?);
     let temporary = root
-        .join("LetRecovery_Scripts")
+        .join("RZhuangJi_Scripts")
         .join("lr-advanced-registry-import.reg");
     if let Some(parent) = temporary.parent() {
         std::fs::create_dir_all(parent)?;
@@ -3712,7 +3712,7 @@ fn generate_win10_unattend_xml(
 }
 
 /// Directory on the formatted target that receives an image rebuilt from scattered raw chunks.
-const REASSEMBLY_DIRECTORY: &str = "LetRecovery_Reassembly";
+const REASSEMBLY_DIRECTORY: &str = "RZhuangJi_Reassembly";
 
 fn reassembled_image_path(target_partition: &str, image_path: &str) -> std::path::PathBuf {
     let file_name = std::path::Path::new(image_path)
@@ -3790,7 +3790,7 @@ fn reassemble_chunked_image(
 }
 
 /// After an in-place target staging install, the staged payload sits inside the new system's
-/// `LetRecovery_Data`. Delete every entry except the handoff log directory; failures are only
+/// `RZhuangJi_Data`. Delete every entry except the handoff log directory; failures are only
 /// logged because the new system is already complete.
 fn remove_in_place_payload(public_data_dir: &std::path::Path) {
     let entries = match std::fs::read_dir(public_data_dir) {
@@ -4059,7 +4059,7 @@ mod workflow_session_tests {
             "pe-install-stale-private-residue",
         )
         .unwrap();
-        let root = workspace.path().join("LetRecovery_PE");
+        let root = workspace.path().join("RZhuangJi_PE");
         std::fs::create_dir(&root).unwrap();
         std::fs::write(root.join("boot.wim"), b"stale-wim").unwrap();
         std::fs::write(root.join("pe_guid.txt"), b"stale-journal").unwrap();
@@ -4084,7 +4084,7 @@ mod workflow_session_tests {
             "pe-install-empty-private-residue",
         )
         .unwrap();
-        let root = workspace.path().join("LetRecovery_PE");
+        let root = workspace.path().join("RZhuangJi_PE");
         std::fs::create_dir(&root).unwrap();
         std::fs::write(root.join("boot-01234567-abcd.wim"), b"stale-wim").unwrap();
         std::fs::write(root.join("pe_pending.txt"), b"stale-journal").unwrap();

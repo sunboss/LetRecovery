@@ -397,7 +397,7 @@ mod tests {
 
     #[test]
     fn redacts_credentials_recovery_keys_and_explicit_values() {
-        let mut builder = SupportBundleBuilder::new("LetRecovery", "1", "PE", 10).unwrap();
+        let mut builder = SupportBundleBuilder::new("RZhuangJi", "1", "PE", 10).unwrap();
         builder.redact_value("private-user-value");
         builder
             .add_text(
@@ -433,10 +433,10 @@ mod tests {
     fn file_attachment_keeps_only_name_and_truncated_tail() {
         let directory = temp_directory();
         fs::create_dir(&directory).unwrap();
-        let path = directory.join("LetRecovery PE.log");
+        let path = directory.join("RZhuangJi PE.log");
         fs::write(&path, "prefix-should-be-cut-secret=gone-TAIL").unwrap();
 
-        let mut builder = SupportBundleBuilder::new("LetRecovery", "1", "PE", 10)
+        let mut builder = SupportBundleBuilder::new("RZhuangJi", "1", "PE", 10)
             .unwrap()
             .attachment_limit(12)
             .unwrap();
@@ -444,7 +444,7 @@ mod tests {
         let attachment = &builder.build().attachments[0];
         assert_eq!(
             attachment.source_name.as_deref(),
-            Some("LetRecovery PE.log")
+            Some("RZhuangJi PE.log")
         );
         assert!(attachment.truncated);
         assert_eq!(attachment.content, "[TRUNCATED OVERLONG LINE OMITTED]");
@@ -477,7 +477,7 @@ mod tests {
             )
             .unwrap();
 
-        let mut builder = SupportBundleBuilder::new("LetRecovery", "1", "PE", 4).unwrap();
+        let mut builder = SupportBundleBuilder::new("RZhuangJi", "1", "PE", 4).unwrap();
         builder.set_operation(&checkpoint);
         let bundle = builder.build();
         bundle.write_json(&destination).unwrap();

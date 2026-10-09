@@ -338,12 +338,12 @@ pub fn scan_available_languages() -> Vec<LanguageInfo> {
     languages.push(LanguageInfo {
         code: String::from("zh-TW"),
         display_name: String::from("繁體中文 - 中國台灣"),
-        author: String::from("LetRecovery / Windows NLS"),
+        author: String::from("RZhuangJi / Windows NLS"),
     });
     languages.push(LanguageInfo {
         code: DPRK_EASTER_EGG_LANGUAGE.to_string(),
         display_name: String::from("조선말 - 조선민주주의인민공화국"),
-        author: String::from("LetRecovery Easter Egg"),
+        author: String::from("RZhuangJi Easter Egg"),
     });
 
     for (code, _) in EMBEDDED_LANGUAGE_CATALOGS {
@@ -474,7 +474,7 @@ pub fn translate_with_args(text: &str, args: &[String]) -> String {
 /// // 直接翻译字面量
 /// let text = tr!("你好");
 /// // 带参数：模板用 `{}` 占位，先翻译再按顺序填参
-/// let formatted = tr!("欢迎使用 {}", "LetRecovery");
+/// let formatted = tr!("欢迎使用 {}", "RZhuangJi");
 /// // 带格式说明的值需先预格式化为字符串再传入
 /// let formatted_size = format!("{:.1}", 12.34_f64);
 /// let size = tr!("已用 {} GB", formatted_size);
@@ -640,7 +640,7 @@ mod tests {
     #[test]
     fn test_tr_macro_with_args() {
         init("zh-CN");
-        assert_eq!(tr!("欢迎使用 {}", "LetRecovery"), "欢迎使用 LetRecovery");
+        assert_eq!(tr!("欢迎使用 {}", "RZhuangJi"), "欢迎使用 RZhuangJi");
         let formatted_size = format!("{:.1}", 12.34_f64);
         assert_eq!(tr!("已用 {} GB", formatted_size), "已用 12.3 GB");
     }

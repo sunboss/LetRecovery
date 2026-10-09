@@ -658,7 +658,7 @@ pub(crate) fn finalize_ci_failure(error_message: &str) {
     log::logger().flush();
     match lr_core::windows_shutdown::schedule_shutdown(
         5,
-        "LetRecovery PE CI reached a terminal failure; this disposable VM will power off.",
+        "RZhuangJi PE CI reached a terminal failure; this disposable VM will power off.",
     ) {
         Ok(()) => log::info!("[CI AUTOMATION] power-off accepted timeout_seconds=5"),
         Err(error) => log::error!("[CI AUTOMATION] power-off request failed: {error:#}"),
@@ -1104,7 +1104,7 @@ fn maintenance_volume_may_need_unlock(drive: &str) -> bool {
 }
 
 fn remain_in_hidden_pe_maintenance() -> ! {
-    log::info!("[PE MAINTENANCE] 自动解锁阶段结束；LetRecovery 窗口保持隐藏，PE 桌面可供维护");
+    log::info!("[PE MAINTENANCE] 自动解锁阶段结束；RZhuangJi 窗口保持隐藏，PE 桌面可供维护");
     loop {
         std::thread::park();
     }
@@ -1127,7 +1127,7 @@ fn record_personal_restore_ci_probe(
     let program_data = std::env::var_os("ProgramData")
         .map(std::path::PathBuf::from)
         .ok_or_else(|| anyhow::anyhow!("ProgramData is unavailable for the CI restore probe"))?;
-    let log_directory = program_data.join("LetRecovery").join("Logs");
+    let log_directory = program_data.join("RZhuangJi").join("Logs");
     std::fs::create_dir_all(&log_directory)?;
     let log_path = log_directory.join("FirstLogon-finalize.log");
     let expected = [
@@ -1159,7 +1159,7 @@ fn record_personal_restore_ci_probe(
         .get(1)
         .ok_or_else(|| anyhow::anyhow!("CI restore report has no Documents destination"))?;
     let inside_shortcut = desktop.join("LR-Preserve-Inside-Users.lnk");
-    let canary = documents.join("LetRecovery-CI-post-restore-canary.txt");
+    let canary = documents.join("RZhuangJi-CI-post-restore-canary.txt");
     std::fs::write(&canary, b"created-after-personal-restore")?;
     let canary_readback = std::fs::read(&canary)? == b"created-after-personal-restore";
     let mut log = std::fs::OpenOptions::new()
@@ -1188,7 +1188,7 @@ fn record_personal_restore_source_ci_probe(session_id: &str) -> anyhow::Result<(
     let volume_root = system_root
         .parent()
         .ok_or_else(|| anyhow::anyhow!("SystemRoot has no volume root for the CI source probe"))?;
-    let preserved = volume_root.join(format!("LetRecovery_Preserved_{session_id}"));
+    let preserved = volume_root.join(format!("RZhuangJi_Preserved_{session_id}"));
     let mut stack = vec![preserved.clone()];
     let mut files = Vec::new();
     let mut marker_count = 0_u32;
@@ -1223,7 +1223,7 @@ fn record_personal_restore_source_ci_probe(session_id: &str) -> anyhow::Result<(
     let program_data = std::env::var_os("ProgramData")
         .map(std::path::PathBuf::from)
         .ok_or_else(|| anyhow::anyhow!("ProgramData is unavailable for the CI source probe"))?;
-    let log_directory = program_data.join("LetRecovery").join("Logs");
+    let log_directory = program_data.join("RZhuangJi").join("Logs");
     std::fs::create_dir_all(&log_directory)?;
     let mut log = std::fs::OpenOptions::new()
         .create(true)
@@ -1503,7 +1503,7 @@ fn main() -> anyhow::Result<()> {
     // 必须把 panic 记到日志。
     install_panic_hook();
 
-    log::info!("==================== LetRecovery PE 启动 ====================");
+    log::info!("==================== RZhuangJi PE 启动 ====================");
     log::info!(
         "版本: {} | 日志文件: {}",
         env!("BUILD_VERSION"),
@@ -1634,7 +1634,7 @@ fn main() -> anyhow::Result<()> {
     log::info!("进入 PE 原生 Win32 进度界面");
     if let Err(error) = native_ui::progress::run(operation_type, authenticated_handoff) {
         log::error!("PE 原生 Win32 进度界面运行失败: {error}");
-        show_error_message(&tr!("启动失败: {} - {}", "LetRecovery PE", error));
+        show_error_message(&tr!("启动失败: {} - {}", "RZhuangJi PE", error));
     }
     Ok(())
 }
@@ -1655,7 +1655,7 @@ fn validate_persistent_pe_payload(path: &std::path::Path, extension: &str) -> an
         .file_name()
         .and_then(|name| name.to_str())
         .ok_or_else(|| anyhow::anyhow!("PE payload parent name is invalid"))?;
-    if !path.is_absolute() || !parent_name.eq_ignore_ascii_case("LetRecovery_PE") {
+    if !path.is_absolute() || !parent_name.eq_ignore_ascii_case("RZhuangJi_PE") {
         anyhow::bail!("PE payload path is outside the persistent PE directory");
     }
     let name = path
@@ -1684,8 +1684,8 @@ fn persistent_pe_payloads_from_journal(contents: &str) -> anyhow::Result<Vec<std
             .all(|line| line.starts_with('{') && line.ends_with('}'))
     {
         return Ok(vec![
-            std::path::PathBuf::from(r"C:\LetRecovery_PE\boot.wim"),
-            std::path::PathBuf::from(r"C:\LetRecovery_PE\boot.sdi"),
+            std::path::PathBuf::from(r"C:\RZhuangJi_PE\boot.wim"),
+            std::path::PathBuf::from(r"C:\RZhuangJi_PE\boot.sdi"),
         ]);
     }
     let mut payloads = Vec::new();
@@ -2018,7 +2018,7 @@ fn persistent_record_matches_running(
 }
 
 fn persistent_pe_root_for_volume(volume_guid_root: &str) -> std::path::PathBuf {
-    std::path::PathBuf::from(volume_guid_root).join("LetRecovery_PE")
+    std::path::PathBuf::from(volume_guid_root).join("RZhuangJi_PE")
 }
 
 fn remove_empty_private_pe_root(root: &std::path::Path) -> anyhow::Result<bool> {
@@ -2178,7 +2178,7 @@ pub(crate) fn save_only_driver_destination(
         anyhow::bail!("SaveOnly requires a valid non-empty installation SessionId");
     }
     Ok(std::path::PathBuf::from(format!(
-        "{}\\LetRecovery_Drivers\\session-{}",
+        "{}\\RZhuangJi_Drivers\\session-{}",
         target_partition,
         token.to_ascii_lowercase()
     )))
@@ -2201,7 +2201,7 @@ fn show_error_message(message: &str) {
             .encode_wide()
             .chain(std::iter::once(0))
             .collect();
-        let wide_title: Vec<u16> = OsStr::new("LetRecovery PE 错误")
+        let wide_title: Vec<u16> = OsStr::new("RZhuangJi PE 错误")
             .encode_wide()
             .chain(std::iter::once(0))
             .collect();
@@ -2352,8 +2352,8 @@ mod persistent_payload_tests {
         let record = parse_trusted_persistent_pe_record(concat!(
             "LRPE4\t{11111111-1111-1111-1111-111111111111}\t",
             "{22222222-2222-2222-2222-222222222222}\t",
-            "C:\\LetRecovery_PE\\boot-session.wim\t",
-            "C:\\LetRecovery_PE\\boot-session.sdi\t",
+            "C:\\RZhuangJi_PE\\boot-session.wim\t",
+            "C:\\RZhuangJi_PE\\boot-session.sdi\t",
             "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\t",
             "1111111111111111111111111111111111111111111111111111111111111111\t",
             "1048576\t8000000\tGPT\t33333333333333333333333333333333\t",
@@ -2376,8 +2376,8 @@ mod persistent_payload_tests {
         let record = parse_trusted_persistent_pe_record(concat!(
             "LRPE4\t{11111111-1111-1111-1111-111111111111}\t",
             "{22222222-2222-2222-2222-222222222222}\t",
-            "D:\\LetRecovery_PE\\boot-session.wim\t",
-            "D:\\LetRecovery_PE\\boot-session.sdi\t",
+            "D:\\RZhuangJi_PE\\boot-session.wim\t",
+            "D:\\RZhuangJi_PE\\boot-session.sdi\t",
             "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\t",
             "1111111111111111111111111111111111111111111111111111111111111111\t",
             "1048576\t8000000\tGPT\t33333333333333333333333333333333\t",
@@ -2398,8 +2398,8 @@ mod persistent_payload_tests {
         let record = parse_trusted_persistent_pe_record(concat!(
             "LRPE4\t{11111111-1111-1111-1111-111111111111}\t",
             "{22222222-2222-2222-2222-222222222222}\t",
-            "C:\\LetRecovery_PE\\boot-session.wim\t",
-            "C:\\LetRecovery_PE\\boot-session.sdi\t",
+            "C:\\RZhuangJi_PE\\boot-session.wim\t",
+            "C:\\RZhuangJi_PE\\boot-session.sdi\t",
             "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\t",
             // Deliberately unrelated historical disk/layout values. They remain parseable for
             // journal compatibility but are not part of the running-session match.
@@ -2434,7 +2434,7 @@ mod persistent_payload_tests {
         assert_eq!(
             persistent_pe_root_for_volume(r"\\?\Volume{12345678-1234-1234-1234-123456789abc}\"),
             std::path::PathBuf::from(
-                r"\\?\Volume{12345678-1234-1234-1234-123456789abc}\LetRecovery_PE"
+                r"\\?\Volume{12345678-1234-1234-1234-123456789abc}\RZhuangJi_PE"
             )
         );
     }
@@ -2479,8 +2479,8 @@ mod persistent_payload_tests {
         let payloads = persistent_pe_payloads_from_journal(concat!(
             "LRPE2\t{11111111-1111-1111-1111-111111111111}\t",
             "{22222222-2222-2222-2222-222222222222}\t",
-            "C:\\LetRecovery_PE\\boot-session.wim\t",
-            "C:\\LetRecovery_PE\\boot-session.sdi\r\n"
+            "C:\\RZhuangJi_PE\\boot-session.wim\t",
+            "C:\\RZhuangJi_PE\\boot-session.sdi\r\n"
         ))
         .unwrap();
         assert_eq!(payloads.len(), 2);
@@ -2495,7 +2495,7 @@ mod persistent_payload_tests {
             "LRPE2\t{11111111-1111-1111-1111-111111111111}\t",
             "{22222222-2222-2222-2222-222222222222}\t",
             "C:\\Windows\\boot-session.wim\t",
-            "C:\\LetRecovery_PE\\boot-session.sdi\r\n"
+            "C:\\RZhuangJi_PE\\boot-session.sdi\r\n"
         ))
         .is_err());
     }
@@ -2505,8 +2505,8 @@ mod persistent_payload_tests {
         let pending = concat!(
             "LRPE2\t{11111111-1111-1111-1111-111111111111}\t",
             "{22222222-2222-2222-2222-222222222222}\t",
-            "C:\\LetRecovery_PE\\boot-pending.wim\t",
-            "C:\\LetRecovery_PE\\boot-pending.sdi\r\n"
+            "C:\\RZhuangJi_PE\\boot-pending.wim\t",
+            "C:\\RZhuangJi_PE\\boot-pending.sdi\r\n"
         );
 
         let payloads = merge_persistent_pe_payload_journals(None, Some(pending)).unwrap();
@@ -2521,8 +2521,8 @@ mod persistent_payload_tests {
         let record = concat!(
             "LRPE2\t{11111111-1111-1111-1111-111111111111}\t",
             "{22222222-2222-2222-2222-222222222222}\t",
-            "C:\\LetRecovery_PE\\boot-pending.wim\t",
-            "C:\\LetRecovery_PE\\boot-pending.sdi\r\n"
+            "C:\\RZhuangJi_PE\\boot-pending.wim\t",
+            "C:\\RZhuangJi_PE\\boot-pending.sdi\r\n"
         );
         assert!(
             merge_persistent_pe_payload_journals(None, Some(&format!("{record}{record}"))).is_err()
@@ -2539,7 +2539,7 @@ mod persistent_payload_tests {
         let destination =
             save_only_driver_destination("C:", "{11111111-1111-1111-1111-111111111111}").unwrap();
         assert!(destination
-            .ends_with("LetRecovery_Drivers\\session-11111111-1111-1111-1111-111111111111"));
+            .ends_with("RZhuangJi_Drivers\\session-11111111-1111-1111-1111-111111111111"));
         assert!(save_only_driver_destination("C:", "../escape").is_err());
         assert!(save_only_driver_destination("C:", "").is_err());
     }

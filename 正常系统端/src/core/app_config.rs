@@ -500,7 +500,7 @@ mod tests {
             pe_cache: crate::download::config::PeCache {
                 pe_list: vec![crate::download::config::CachedPE {
                     display_name: "R装机 PE".to_owned(),
-                    filename: "LetRecovery_PE.wim".to_owned(),
+                    filename: "RZhuangJi_PE.wim".to_owned(),
                     md5: Some("900150983CD24FB0D6963F7D28E17F72".to_owned()),
                     sha256: None,
                 }],
@@ -512,6 +512,6 @@ mod tests {
         let merged = stale_ui.merge_latest_pe_cache(latest);
         assert_eq!(merged.language, "en-US");
         assert_eq!(merged.pe_cache.pe_list.len(), 1);
-        assert_eq!(merged.pe_cache.pe_list[0].filename, "LetRecovery_PE.wim");
+        assert_eq!(merged.pe_cache.pe_list[0].filename, "RZhuangJi_PE.wim");
     }
 }

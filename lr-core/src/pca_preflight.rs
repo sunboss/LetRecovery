@@ -63,7 +63,7 @@ impl fmt::Display for PcaPreflightError {
             Self::UnsupportedArchitecture(architecture) => {
                 write!(
                     f,
-                    "LetRecovery 不支持安装 architecture {architecture} 的系统镜像"
+                    "RZhuangJi 不支持安装 architecture {architecture} 的系统镜像"
                 )
             }
             Self::MissingSource(generation) => {
@@ -228,7 +228,7 @@ fn verify_legacy_windows_firmware(
 }
 
 /// PCA generation selection is exposed only for Windows 10/11 and Server
-/// 2016+, on architectures supported by LetRecovery's bundled toolchain.
+/// 2016+, on architectures supported by RZhuangJi's bundled toolchain.
 pub const fn supports_pca_selection(major: Option<u16>, architecture: Option<u16>) -> bool {
     matches!(major, Some(10)) && matches!(architecture, Some(0 | 9))
 }
@@ -301,7 +301,7 @@ pub fn inspect_wim_boot_source_details(
         return Ok(WimBootSourceDetails::default());
     }
 
-    let temp_dir = ScopedTempDir::create_in(&std::env::temp_dir(), "LetRecovery-PcaPreflight")
+    let temp_dir = ScopedTempDir::create_in(&std::env::temp_dir(), "RZhuangJi-PcaPreflight")
         .map_err(|error| format!("create PCA preflight temporary directory failed: {error}"))?;
     let target = temp_dir.path().to_string_lossy();
     manager.extract_paths(image, index, &target, &paths)?;
@@ -555,7 +555,7 @@ mod tests {
         let base = root.join("missing").join("temp");
         assert!(!base.exists());
 
-        let directory = ScopedTempDir::create_in(&base, "LetRecovery-PcaPreflight").unwrap();
+        let directory = ScopedTempDir::create_in(&base, "RZhuangJi-PcaPreflight").unwrap();
         assert!(base.is_dir());
         assert!(directory.path().is_dir());
         assert_eq!(directory.path().parent(), Some(base.as_path()));

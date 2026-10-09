@@ -241,7 +241,7 @@ struct StagingVolume {
     placed_bytes: u64,
     /// 次要分区的随机定位码；主分区始终为 None。
     token: Option<String>,
-    /// 次要分区上本次创建的 `LetRecovery_Scatter_<token>` 目录。
+    /// 次要分区上本次创建的 `RZhuangJi_Scatter_<token>` 目录。
     root: Option<PathBuf>,
 }
 

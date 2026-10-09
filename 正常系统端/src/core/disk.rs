@@ -134,7 +134,7 @@ fn volume_file_system_name(_root: &str) -> Option<String> {
 }
 
 /// 自动创建分区的标志文件名
-pub const AUTO_CREATED_PARTITION_MARKER: &str = "LetRecovery_AutoCreated.marker";
+pub const AUTO_CREATED_PARTITION_MARKER: &str = "RZhuangJi_AutoCreated.marker";
 
 /// 分区表类型
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -2113,7 +2113,7 @@ impl DiskManager {
         std::fs::write(
             &marker_path,
             format!(
-                "LetRecovery Auto Created Partition\n\
+                "RZhuangJi Auto Created Partition\n\
                 Created: {}\n\
                 Source: {}:\n\
                 SourceDisk: {}\n\

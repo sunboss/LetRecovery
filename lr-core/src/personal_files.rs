@@ -166,7 +166,7 @@ pub fn restore_preserved_personal_files_for_current_user(
     let (system_root, destinations) = current_user_restore_context()?;
 
     validate_session_id(session_id)?;
-    let preserved_root = system_root.join(format!("LetRecovery_Preserved_{session_id}"));
+    let preserved_root = system_root.join(format!("RZhuangJi_Preserved_{session_id}"));
     restore_preserved_personal_files_to(&preserved_root, &destinations)
 }
 
@@ -233,7 +233,7 @@ pub fn plan_personal_file_preservation(
     }
     reject_reparse_or_remote_data(&users, true)?;
 
-    let preserved_root = target_root.join(format!("LetRecovery_Preserved_{session_id}"));
+    let preserved_root = target_root.join(format!("RZhuangJi_Preserved_{session_id}"));
     if preserved_root.exists() {
         bail!("the session preservation root already exists");
     }
@@ -350,7 +350,7 @@ pub fn execute_personal_file_preservation(
 
     let readme = plan.preserved_root.join("README.txt");
     let readme_body =
-        "LetRecovery preserved local personal files here before reinstalling Windows.\r\n\
+        "RZhuangJi preserved local personal files here before reinstalling Windows.\r\n\
 Only Desktop, Documents, Downloads, Pictures, Music and Videos were preserved.\r\n\
 This directory is not a complete system backup.\r\n";
     if let Err(error) =
@@ -1573,11 +1573,11 @@ fn enumerate_directory(directory: &Path) -> Result<Vec<DirectoryEntry>> {
 }
 
 /// Irreversibly delete the old Windows installation on `target_root` in place, without formatting
-/// and without touching any `LetRecovery_*` staging directory or unrelated user data. This is the
+/// and without touching any `RZhuangJi_*` staging directory or unrelated user data. This is the
 /// clean-reinstall counterpart of personal-file preservation: it lets a payload staged on the same
 /// volume survive while the previous system is removed just before the image is applied.
 ///
-/// Returns the number of deleted top-level roots and total entries. Every `LetRecovery_` prefixed
+/// Returns the number of deleted top-level roots and total entries. Every `RZhuangJi_` prefixed
 /// entry (staging data, reassembly directory, preserved-file roots, PE residue) is kept, so this
 /// is safe to call after the payload has been staged onto the target itself.
 pub fn delete_old_system_in_place(target_root: &Path) -> Result<InPlaceDeletionReport> {
@@ -1976,7 +1976,7 @@ mod tests {
             .collect::<BTreeSet<_>>();
         assert!(names.contains("Windows"));
         assert!(names.contains("Users"));
-        assert!(!names.contains("LetRecovery_Preserved_session"));
+        assert!(!names.contains("RZhuangJi_Preserved_session"));
         assert!(!names.contains("Data"));
     }
 
@@ -2089,7 +2089,7 @@ mod tests {
             )
         }
         .unwrap();
-        let preserved_root = root.join("LetRecovery_Preserved_test");
+        let preserved_root = root.join("RZhuangJi_Preserved_test");
         let plan = PreservationPlan {
             target_root: root.clone(),
             preserved_root: preserved_root.clone(),
@@ -2142,7 +2142,7 @@ mod tests {
         .unwrap();
         std::fs::create_dir_all(root.join("Data")).unwrap();
         std::fs::write(root.join("Data").join("keep.txt"), b"keep").unwrap();
-        let preserved_root = root.join("LetRecovery_Preserved_test");
+        let preserved_root = root.join("RZhuangJi_Preserved_test");
         let plan = PreservationPlan {
             target_root: root.clone(),
             preserved_root: preserved_root.clone(),
@@ -2200,7 +2200,7 @@ mod tests {
         std::fs::create_dir_all(&documents).unwrap();
         std::fs::write(desktop.join("desktop.txt"), b"desktop").unwrap();
         std::fs::write(documents.join("document.txt"), b"document").unwrap();
-        let preserved_root = root.join("LetRecovery_Preserved_test");
+        let preserved_root = root.join("RZhuangJi_Preserved_test");
         let duplicate_destination = preserved_root.join("Alice").join("Desktop");
         let plan = PreservationPlan {
             target_root: root.clone(),
@@ -2254,7 +2254,7 @@ mod tests {
     #[test]
     fn restore_maps_an_old_profile_to_the_actual_current_profile_and_public_known_folders() {
         let root = temp_root("restore-profile-name");
-        let preserved = root.join("LetRecovery_Preserved_test");
+        let preserved = root.join("RZhuangJi_Preserved_test");
         std::fs::create_dir_all(preserved.join("VMware").join("Desktop")).unwrap();
         std::fs::create_dir_all(preserved.join("VMware").join("Documents").join("Nested")).unwrap();
         std::fs::create_dir_all(preserved.join("Public").join("Downloads")).unwrap();
@@ -2308,7 +2308,7 @@ mod tests {
     #[test]
     fn restore_discards_desktop_ini_instead_of_creating_visible_conflicts() {
         let root = temp_root("restore-ignore-desktop-ini");
-        let preserved = root.join("LetRecovery_Preserved_test");
+        let preserved = root.join("RZhuangJi_Preserved_test");
         let old_personal_desktop = preserved.join("VMware").join("Desktop");
         let old_public_desktop = preserved.join("Public").join("Desktop");
         std::fs::create_dir_all(&old_personal_desktop).unwrap();
@@ -2409,7 +2409,7 @@ mod tests {
         };
 
         let root = temp_root("restore-reset-dacl");
-        let preserved = root.join("LetRecovery_Preserved_test");
+        let preserved = root.join("RZhuangJi_Preserved_test");
         let old_desktop = preserved.join("OldAlice").join("Desktop");
         std::fs::create_dir_all(&old_desktop).unwrap();
         let source = old_desktop.join("marker.txt");
@@ -2462,7 +2462,7 @@ mod tests {
     #[test]
     fn restore_creates_a_new_file_object_instead_of_renaming_the_old_profile_object() {
         let root = temp_root("restore-new-file-object");
-        let preserved = root.join("LetRecovery_Preserved_test");
+        let preserved = root.join("RZhuangJi_Preserved_test");
         let old_desktop = preserved.join("OldAlice").join("Desktop");
         std::fs::create_dir_all(&old_desktop).unwrap();
         let old_marker = old_desktop.join("marker.txt");
@@ -2494,7 +2494,7 @@ mod tests {
         };
 
         let root = temp_root("restore-folder-attributes");
-        let preserved = root.join("LetRecovery_Preserved_test");
+        let preserved = root.join("RZhuangJi_Preserved_test");
         let old_desktop = preserved.join("VMware").join("Desktop");
         std::fs::create_dir_all(&old_desktop).unwrap();
         std::fs::write(old_desktop.join("marker.txt"), b"desktop").unwrap();
@@ -2523,7 +2523,7 @@ mod tests {
     #[test]
     fn restore_never_overwrites_a_new_profile_collision() {
         let root = temp_root("restore-conflict");
-        let preserved = root.join("LetRecovery_Preserved_test");
+        let preserved = root.join("RZhuangJi_Preserved_test");
         std::fs::create_dir_all(preserved.join("OldAlice").join("Documents")).unwrap();
         std::fs::write(
             preserved

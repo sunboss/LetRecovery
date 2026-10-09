@@ -1340,7 +1340,7 @@ fn expand_c_run(invocation: &ToolInvocation) -> Result<Value> {
             super::native_expand_c_executor::ExpandCWorkerMessage::ReadyToReboot => {
                 lr_core::windows_shutdown::schedule_restart(
                     3,
-                    "LetRecovery 正在重启到 PE 扩容环境...",
+                    "RZhuangJi 正在重启到 PE 扩容环境...",
                 )
                 .map_err(|error| {
                     anyhow!(
@@ -1425,7 +1425,7 @@ fn pe_maintenance_run() -> Result<Value> {
 fn select_cached_pe(official_only: bool) -> Result<crate::download::config::OnlinePE> {
     let mut catalogue = crate::download::config::PeCache::load_strict()?.unwrap_or_default();
     if official_only {
-        catalogue.retain(|pe| pe.filename.eq_ignore_ascii_case("LetRecovery_PE.wim"));
+        catalogue.retain(|pe| pe.filename.eq_ignore_ascii_case("RZhuangJi_PE.wim"));
     }
     if let Some(pe) = catalogue.into_iter().find(|pe| {
         matches!(
@@ -1439,7 +1439,7 @@ fn select_cached_pe(official_only: bool) -> Result<crate::download::config::Onli
     }) {
         return Ok(pe);
     }
-    let filename = "LetRecovery_PE.wim";
+    let filename = "RZhuangJi_PE.wim";
     if matches!(
         super::pe::PeManager::find_cached_pe(filename, None, None),
         Ok(lr_core::cached_artifact::CachedArtifactPresence::Present { .. })

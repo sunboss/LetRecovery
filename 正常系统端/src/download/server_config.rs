@@ -225,7 +225,7 @@ impl RemoteConfig {
             Err(native_error) => {
                 // Windows 7 frequently has a stale WinHTTP/IE proxy or a Schannel installation
                 // without a currently usable TLS credential chain. This retry is deliberately
-                // limited to LetRecovery's fixed HTTPS catalogue: it bypasses the machine proxy
+                // limited to RZhuangJi's fixed HTTPS catalogue: it bypasses the machine proxy
                 // and uses the bundled WebPKI root set, without weakening certificate checks or
                 // changing the transport policy for user-provided URLs.
                 log::warn!(
@@ -434,9 +434,9 @@ mod tests {
       "data": {
         "pe": [
           {
-            "download_url": "https://example.com/LetRecovery_PE.wim",
-            "display_name": "LetRecovery PE",
-            "filename": "LetRecovery_PE.wim",
+            "download_url": "https://example.com/RZhuangJi_PE.wim",
+            "display_name": "RZhuangJi PE",
+            "filename": "RZhuangJi_PE.wim",
             "md5": "900150983CD24FB0D6963F7D28E17F72",
             "sha256": "BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD",
             "enabled": true
@@ -629,7 +629,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "requires the live LetRecovery v4 catalogue service"]
+    #[ignore = "requires the live RZhuangJi v4 catalogue service"]
     fn live_missing_mode_defaults_to_the_api_catalogue() {
         let config = RemoteConfig::load_from_server();
         assert!(config.loaded, "{:?}", config.error);

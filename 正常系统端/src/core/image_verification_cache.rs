@@ -186,7 +186,7 @@ fn probe_at(
 fn default_cache_path() -> Option<PathBuf> {
     dirs::data_local_dir().map(|directory| {
         directory
-            .join("LetRecovery")
+            .join("RZhuangJi")
             .join("cache")
             .join("image-verification-v1.json")
     })

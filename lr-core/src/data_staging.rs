@@ -543,8 +543,8 @@ mod tests {
 // or the user enabled `scattered_staging_enabled`), the ViaPE payload is stored on the volumes
 // that already exist. One volume is the *primary* data volume: it carries the authenticated
 // control files, the PCA package, UefiSeven and every component that fits there. Other volumes
-// receive a directory named `LetRecovery_Scatter_<locator token>` whose inner layout mirrors the
-// primary `LetRecovery_Data` directory. The locator token is also written into a marker file in
+// receive a directory named `RZhuangJi_Scatter_<locator token>` whose inner layout mirrors the
+// primary `RZhuangJi_Data` directory. The locator token is also written into a marker file in
 // that directory, so WinPE can find the volume again even when drive letters change.
 //
 // A single image file that fits on no volume is split into raw byte chunks. Chunks never need a
@@ -554,11 +554,11 @@ mod tests {
 
 /// Directory prefix of a scattered-staging root. The full name is the prefix plus the
 /// 64-character lowercase hexadecimal locator token of that volume.
-pub const SCATTER_DIRECTORY_PREFIX: &str = "LetRecovery_Scatter_";
+pub const SCATTER_DIRECTORY_PREFIX: &str = "RZhuangJi_Scatter_";
 /// Locator marker inside every scattered-staging root. Its exact content is the token.
-pub const SCATTER_MARKER_NAME: &str = "LetRecovery_Scatter.marker";
+pub const SCATTER_MARKER_NAME: &str = "RZhuangJi_Scatter.marker";
 /// Data directory mirrored below every scattered-staging root.
-pub const SCATTER_DATA_DIRECTORY: &str = "LetRecovery_Data";
+pub const SCATTER_DATA_DIRECTORY: &str = "RZhuangJi_Data";
 /// Directory (below the data directory) that holds raw chunks of a single image file.
 pub const IMAGE_CHUNK_DIRECTORY: &str = "image_chunks";
 /// Headroom left free on the primary scattered volume (control files, logs, rounding).
@@ -582,7 +582,7 @@ fn is_locator_token(value: &str) -> bool {
     value.len() == 64 && value.bytes().all(|byte| byte.is_ascii_hexdigit())
 }
 
-/// Split `LetRecovery_Scatter_<token>\<rest>` into `(token, rest)`.
+/// Split `RZhuangJi_Scatter_<token>\<rest>` into `(token, rest)`.
 ///
 /// Any other form, including an unexpected token length, returns `None` so the caller keeps its
 /// historical single-volume interpretation of the path.
@@ -600,7 +600,7 @@ pub fn split_scatter_prefix(relative_path: &str) -> Option<(&str, &str)> {
 }
 
 /// Return the data-volume-relative form of a manifest path: scattered paths lose their
-/// `LetRecovery_Scatter_<token>\` prefix, every other path is returned unchanged.
+/// `RZhuangJi_Scatter_<token>\` prefix, every other path is returned unchanged.
 pub fn strip_scatter_prefix(relative_path: &str) -> &str {
     split_scatter_prefix(relative_path).map_or(relative_path, |(_, rest)| rest)
 }
@@ -950,22 +950,22 @@ mod scatter_tests {
     fn scatter_prefix_round_trips_only_exact_tokens() {
         let token = "a".repeat(64);
         let path = format!(
-            "{}\\LetRecovery_Data\\drivers\\x.inf",
+            "{}\\RZhuangJi_Data\\drivers\\x.inf",
             scatter_root_name(&token)
         );
         assert_eq!(
             split_scatter_prefix(&path),
-            Some((token.as_str(), "LetRecovery_Data\\drivers\\x.inf"))
+            Some((token.as_str(), "RZhuangJi_Data\\drivers\\x.inf"))
         );
         assert_eq!(
             strip_scatter_prefix(&path),
-            "LetRecovery_Data\\drivers\\x.inf"
+            "RZhuangJi_Data\\drivers\\x.inf"
         );
         assert_eq!(
-            strip_scatter_prefix("LetRecovery_Data\\a.wim"),
-            "LetRecovery_Data\\a.wim"
+            strip_scatter_prefix("RZhuangJi_Data\\a.wim"),
+            "RZhuangJi_Data\\a.wim"
         );
-        assert_eq!(split_scatter_prefix("LetRecovery_Scatter_abc\\x"), None);
+        assert_eq!(split_scatter_prefix("RZhuangJi_Scatter_abc\\x"), None);
         let upper = format!("letrecovery_scatter_{}/y", "B".repeat(64));
         assert_eq!(
             split_scatter_prefix(&upper).map(|(_, rest)| rest),

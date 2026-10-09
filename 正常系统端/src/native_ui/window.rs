@@ -159,7 +159,7 @@ use crate::download::config::{ConfigManager, OnlinePE, PeCache};
 use crate::PreloadedConfig;
 use lr_core::windows_hardware::MachineEnvironment;
 
-const CLASS_NAME: PCWSTR = w!("LetRecovery.Native.MainWindow");
+const CLASS_NAME: PCWSTR = w!("RZhuangJi.Native.MainWindow");
 const SS_CENTER_STYLE: i32 = 0x0000_0001;
 
 fn catalogue_status_message(state: &CatalogueState) -> String {
@@ -174,7 +174,7 @@ fn catalogue_status_message(state: &CatalogueState) -> String {
 fn maintenance_pe_from_catalogue(catalogue: &[OnlinePE]) -> Option<OnlinePE> {
     catalogue
         .iter()
-        .find(|pe| pe.filename.eq_ignore_ascii_case("LetRecovery_PE.wim"))
+        .find(|pe| pe.filename.eq_ignore_ascii_case("RZhuangJi_PE.wim"))
         .cloned()
 }
 
@@ -703,7 +703,7 @@ fn quick_partition_visual_fixture() -> Vec<crate::core::quick_partition::Physica
     vec![PhysicalDisk {
         disk_number: 0,
         size_bytes,
-        model: "LetRecovery UI QA Disk".into(),
+        model: "RZhuangJi UI QA Disk".into(),
         partition_style: PartitionStyle::GPT,
         is_initialized: true,
         partitions,
@@ -6574,7 +6574,7 @@ impl NativeWindow {
             let options = &mut self.app_config.install_prefs.advanced_options;
             options.preserve_personal_files = false;
         }
-        // LetRecovery imports a migrated Wi-Fi profile only through its own first-logon
+        // RZhuangJi imports a migrated Wi-Fi profile only through its own first-logon
         // finalizer, which exists only with the built-in answer file.
         let builtin_unattend = unattended_enabled && self.custom_unattend_path.trim().is_empty();
         let wifi_detected = self
@@ -6838,7 +6838,7 @@ impl NativeWindow {
                 let allow_insecure_http =
                     self.app_config.allow_insecure_http_downloads || manually_allowed_http;
                 let download_directory = dirs::download_dir()
-                    .unwrap_or_else(|| std::env::temp_dir().join("LetRecovery"));
+                    .unwrap_or_else(|| std::env::temp_dir().join("RZhuangJi"));
                 match crate::core::native_download_controller::plan_remote_system_image(
                     path,
                     download_directory,
@@ -7438,7 +7438,7 @@ impl NativeWindow {
                         stable_identity: partition.stable_identity,
                     });
                 let download_directory = dirs::download_dir()
-                    .unwrap_or_else(|| std::env::temp_dir().join("LetRecovery"));
+                    .unwrap_or_else(|| std::env::temp_dir().join("RZhuangJi"));
                 match self.easy_controller.start_install_intent(
                     system_partition,
                     &download_directory,
@@ -7471,7 +7471,7 @@ impl NativeWindow {
                         }
                         let url = match lr_core::download_integrity::validate_download_url(
                             &intent.download_url,
-                            // Easy-mode entries are loaded only from LetRecovery's fixed HTTPS
+                            // Easy-mode entries are loaded only from RZhuangJi's fixed HTTPS
                             // service. That service still publishes historical Microsoft HTTP
                             // payload URLs, so give those verbatim catalogue entries the same
                             // scoped compatibility exception as the normal download controller.
@@ -8838,13 +8838,13 @@ impl NativeWindow {
         let _ = SetTimer(hwnd, TOOL_DIALOG_TIMER_ID, 100, None);
         let pe = maintenance_pe_from_catalogue(&self.pe_catalogue).or_else(|| {
             matches!(
-                crate::core::pe::PeManager::find_cached_pe("LetRecovery_PE.wim", None, None),
+                crate::core::pe::PeManager::find_cached_pe("RZhuangJi_PE.wim", None, None),
                 Ok(lr_core::cached_artifact::CachedArtifactPresence::Present { .. })
             )
             .then(|| OnlinePE {
                 download_url: String::new(),
                 display_name: "R装机 PE".to_owned(),
-                filename: "LetRecovery_PE.wim".to_owned(),
+                filename: "RZhuangJi_PE.wim".to_owned(),
                 md5: None,
                 sha256: None,
             })
@@ -10271,7 +10271,7 @@ impl NativeWindow {
                     window_title: crate::tr!("确认导入存储控制器驱动"),
                     title: crate::tr!("确认导入存储控制器驱动"),
                     description: crate::tr!(
-                        "将把 LetRecovery 随包提供的存储控制器驱动导入离线 Windows：{}\n\n继续前请确认目标系统分区正确。",
+                        "将把 RZhuangJi 随包提供的存储控制器驱动导入离线 Windows：{}\n\n继续前请确认目标系统分区正确。",
                         request.target
                     ),
                     width: 620,
@@ -10463,7 +10463,7 @@ impl NativeWindow {
                     window_title: crate::tr!("确认修复 Windows 引导"),
                     title: crate::tr!("确认修复 Windows 引导"),
                     description: crate::tr!(
-                        "目标系统分区：{}\n\nLetRecovery 将自动根据目标磁盘和系统环境选择正确的引导修复方式。",
+                        "目标系统分区：{}\n\nRZhuangJi 将自动根据目标磁盘和系统环境选择正确的引导修复方式。",
                         request.target_partition
                     ),
                     width: 620,
@@ -13444,8 +13444,8 @@ impl NativeWindow {
     unsafe fn open_about_link(&self, hwnd: HWND, link: AboutLink) {
         let url = match link {
             AboutLink::ProjectHomepage => "https://www.1234r.com/",
-            AboutLink::Documentation => "https://github.com/sunboss/LetRecovery/issues",
-            AboutLink::License => "https://github.com/sunboss/LetRecovery/blob/main/LICENSE",
+            AboutLink::Documentation => "https://github.com/sunboss/RZhuangJi/issues",
+            AboutLink::License => "https://github.com/sunboss/RZhuangJi/blob/main/LICENSE",
         };
         let url = wide(url);
         let result = ShellExecuteW(
@@ -13660,7 +13660,7 @@ impl NativeWindow {
         };
         let Some(path) = rfd::FileDialog::new()
             .add_filter("Text", &["txt"])
-            .set_file_name("LetRecovery-hardware-info.txt")
+            .set_file_name("RZhuangJi-hardware-info.txt")
             .save_file()
         else {
             return;
@@ -13768,7 +13768,7 @@ impl NativeWindow {
         match lr_core::windows_diagnostics::show_error_log_prompt(
             hwnd,
             &crate::tr!("操作出错"),
-            &crate::tr!("LetRecovery 遇到错误"),
+            &crate::tr!("RZhuangJi 遇到错误"),
             &content,
             &crate::tr!("打开文件"),
         ) {
@@ -14485,13 +14485,13 @@ fn run_with_presentation(
         center_window_in_nearest_work_area(hwnd, corrected_width, corrected_height);
         // The main shell must remain a normal opaque input owner from creation onward. A temporary
         // WS_EX_LAYERED first-frame barrier proved capable of leaking hit testing to a window
-        // behind LetRecovery on both Windows 7 and Windows 11. Build the complete child tree while
+        // behind RZhuangJi on both Windows 7 and Windows 11. Build the complete child tree while
         // hidden, then publish one synchronous ordinary-window frame instead.
         if !main_window_ex_style_owns_input(GetWindowLongPtrW(hwnd, GWL_EXSTYLE)) {
             let _ = DestroyWindow(hwnd);
             return Err(windows::core::Error::new(
                 HRESULT(0x8000_4005_u32 as i32),
-                "LetRecovery main window has an unsafe click-through extended style",
+                "RZhuangJi main window has an unsafe click-through extended style",
             ));
         }
         redraw::show_top_level_without_flash(hwnd);
@@ -14512,7 +14512,7 @@ fn run_with_presentation(
             let _ = DestroyWindow(hwnd);
             return Err(windows::core::Error::new(
                 HRESULT(0x8000_4005_u32 as i32),
-                "LetRecovery main window entered an unsafe click-through state",
+                "RZhuangJi main window entered an unsafe click-through state",
             ));
         }
         super::syscolor_hook::install();

@@ -128,7 +128,7 @@ impl SecurePublishSession {
             .context("verify backup publish target parent pins")?;
         let parent = open_directory_locked(target_parent)
             .with_context(|| format!("open backup target parent {}", target_parent.display()))?;
-        let prefix = format!("LetRecovery-BackupPublish-{}", session_id.as_str());
+        let prefix = format!("RZhuangJi-BackupPublish-{}", session_id.as_str());
         let guard = ScopedTempDir::create_system_administrators_in(target_parent, &prefix)
             .context("create secure backup publish session")?;
         guard.verify_system_administrators_custody()?;
@@ -176,8 +176,8 @@ impl SecurePublishSession {
         let pins = pin_existing_parent_directory_ancestors(target_parent)
             .context("pin backup publish target parent")?;
         let parent = open_directory_locked(target_parent)?;
-        let publish_prefix = format!("LetRecovery-BackupPublish-{}-", session_id.as_str());
-        let committed_prefix = format!("LetRecovery-BackupCommitted-{}-", session_id.as_str());
+        let publish_prefix = format!("RZhuangJi-BackupPublish-{}-", session_id.as_str());
+        let committed_prefix = format!("RZhuangJi-BackupCommitted-{}-", session_id.as_str());
         let mut candidates = Vec::new();
         for entry in std::fs::read_dir(target_parent)? {
             let entry = entry?;
@@ -466,7 +466,7 @@ impl SecurePublishSession {
             .file_name()
             .and_then(|value| value.to_str())
             .ok_or_else(|| anyhow!("backup publish session name is not Unicode"))?;
-        let prefix = format!("LetRecovery-BackupCommitted-{}-", self.session_id.as_str());
+        let prefix = format!("RZhuangJi-BackupCommitted-{}-", self.session_id.as_str());
         let Some(fields) = name.strip_prefix(&prefix) else {
             return Ok(None);
         };
@@ -506,7 +506,7 @@ impl SecurePublishSession {
         enforce_custody: bool,
     ) -> Result<()> {
         let name = format!(
-            "LetRecovery-BackupCommitted-{}-{}-{}-{}-{:08x}-{:016x}",
+            "RZhuangJi-BackupCommitted-{}-{}-{}-{}-{:08x}-{:016x}",
             self.session_id.as_str(),
             mode.as_str(),
             identity.expectation.length,
@@ -2252,7 +2252,7 @@ mod tests {
             ));
             std::fs::create_dir(&root).unwrap();
             let session_path = root.join(format!(
-                ".LetRecovery-BackupPublish-{}",
+                ".RZhuangJi-BackupPublish-{}",
                 session_id.as_str()
             ));
             std::fs::create_dir(&session_path).unwrap();
@@ -2364,7 +2364,7 @@ mod tests {
         let fixture = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .parent()
             .unwrap()
-            .join(r"pkg\bin\pe\LetRecovery_PE.wim");
+            .join(r"pkg\bin\pe\RZhuangJi_PE.wim");
         assert!(fixture.is_file());
         let root = std::env::temp_dir().join(format!(
             "lr-backup-wimlib-publish-{}-{}",
@@ -2413,7 +2413,7 @@ mod tests {
         let fixture = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .parent()
             .unwrap()
-            .join(r"pkg\bin\pe\LetRecovery_PE.wim");
+            .join(r"pkg\bin\pe\RZhuangJi_PE.wim");
         assert!(fixture.is_file());
         std::fs::copy(&fixture, source.join("large-payload.wim")).unwrap();
 

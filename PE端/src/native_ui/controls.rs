@@ -42,15 +42,15 @@ use super::theme::{Palette, ThemeContext};
 
 pub const MICROSOFT_YAHEI_UI: &str = "Microsoft YaHei UI";
 
-const BUTTON_HOT_PROPERTY: PCWSTR = w!("LetRecovery.PE.InnoButton.Hot");
+const BUTTON_HOT_PROPERTY: PCWSTR = w!("RZhuangJi.PE.InnoButton.Hot");
 const OWNER_DRAW_BUTTON_SUBCLASS_ID: usize = 0x5045_4254;
 const ROUNDED_CONTROL_SUBCLASS_ID: usize = 0x5045_5243;
 const COMBO_PARENT_SUBCLASS_BASE: usize = 0x5045_4300;
 const LIST_PARENT_SUBCLASS_BASE: usize = 0x5045_4c00;
-const COMBO_HOT_ITEM_PROPERTY: PCWSTR = w!("LetRecovery.PE.Combo.HotItem");
-const COMBO_TRACKING_PROPERTY: PCWSTR = w!("LetRecovery.PE.Combo.Tracking");
-const LIST_HOT_ITEM_PROPERTY: PCWSTR = w!("LetRecovery.PE.List.HotItem");
-const LIST_TRACKING_PROPERTY: PCWSTR = w!("LetRecovery.PE.List.Tracking");
+const COMBO_HOT_ITEM_PROPERTY: PCWSTR = w!("RZhuangJi.PE.Combo.HotItem");
+const COMBO_TRACKING_PROPERTY: PCWSTR = w!("RZhuangJi.PE.Combo.Tracking");
+const LIST_HOT_ITEM_PROPERTY: PCWSTR = w!("RZhuangJi.PE.List.HotItem");
+const LIST_TRACKING_PROPERTY: PCWSTR = w!("RZhuangJi.PE.List.Tracking");
 const LIST_HOVER_SUBCLASS_ID: usize = 0x5045_4c48;
 
 const fn rgb(red: u8, green: u8, blue: u8) -> COLORREF {

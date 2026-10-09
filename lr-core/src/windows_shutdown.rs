@@ -123,7 +123,7 @@ pub fn schedule_graceful_shutdown(timeout_seconds: u32, message: &str) -> anyhow
 
 /// Schedule a planned local power-off for an explicitly unattended automation run. The force flag
 /// is enabled only for this opt-in path so a disposable VM cannot remain blocked by an invisible
-/// first-logon process after all LetRecovery terminal diagnostics have been flushed.
+/// first-logon process after all RZhuangJi terminal diagnostics have been flushed.
 #[cfg(windows)]
 pub fn schedule_shutdown(timeout_seconds: u32, message: &str) -> anyhow::Result<()> {
     schedule_power_action(timeout_seconds, message, true, false)

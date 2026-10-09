@@ -414,7 +414,7 @@ pub struct AuthenticatedOperationTask {
     guard: AuthenticatedOperationGuard,
     data_volume_root: PathBuf,
     _data_locator: AuthenticatedLocatedVolume,
-    /// Volumes found through `LetRecovery_Scatter_<token>` markers, keyed by token.
+    /// Volumes found through `RZhuangJi_Scatter_<token>` markers, keyed by token.
     scatter_locators: Vec<(String, AuthenticatedLocatedVolume)>,
     install_target: Option<AuthenticatedInstallTarget>,
     install_target_mount: Option<TemporaryLocatorMount>,
@@ -702,7 +702,7 @@ impl AuthenticatedOperationTask {
         self.install_artifact_paths(lr_core::handoff_manifest::ArtifactRole::InstallImageChunk)
     }
 
-    /// `LetRecovery_Scatter_<token>` directories on the other volumes of this task.
+    /// `RZhuangJi_Scatter_<token>` directories on the other volumes of this task.
     pub fn scatter_roots(&self) -> Vec<PathBuf> {
         self.scatter_locators
             .iter()
@@ -974,7 +974,7 @@ pub struct InstallConfig {
     pub image_source_sha256: String,
     /// 所选镜像卷释放后约占用的字节数；0 表示未知。
     pub image_expanded_bytes: u64,
-    /// 目标盘内暂存：PE 不格式化目标分区，先原地删除旧系统（保留 LetRecovery_ 暂存目录）再释放镜像。
+    /// 目标盘内暂存：PE 不格式化目标分区，先原地删除旧系统（保留 RZhuangJi_ 暂存目录）再释放镜像。
     pub in_place_target_staging: bool,
     /// 是否为GHO格式
     pub is_gho: bool,
@@ -1493,7 +1493,7 @@ impl ConfigFileManager {
                 continue;
             }
             let current_path = record.relative_path.clone();
-            // Scattered artifacts carry `LetRecovery_Scatter_<token>\` in front of the mirrored
+            // Scattered artifacts carry `RZhuangJi_Scatter_<token>\` in front of the mirrored
             // data layout; the token's marker identifies their volume independent of letters.
             let artifact_root =
                 match lr_core::data_staging::split_scatter_prefix(&record.relative_path) {
@@ -1823,7 +1823,7 @@ impl ConfigFileManager {
                 if software_records.len() != expected_software.len() {
                     bail!("preinstalled-software manifest count does not match the authenticated selection");
                 }
-                let software_prefix = "LetRecovery_Data\\preinstalled_software\\";
+                let software_prefix = "RZhuangJi_Data\\preinstalled_software\\";
                 let mut actual_software = std::collections::BTreeSet::new();
                 for record in software_records {
                     let filename =
@@ -1843,12 +1843,12 @@ impl ConfigFileManager {
                     bail!("preinstalled-software manifest filenames do not match the authenticated selection");
                 }
                 for (role, prefix) in [
-                    (ArtifactRole::PreservedDriver, "LetRecovery_Data\\drivers\\"),
-                    (ArtifactRole::UserDriver, "LetRecovery_Data\\user_drivers\\"),
-                    (ArtifactRole::UefiSevenFile, "LetRecovery_Data\\uefiseven\\"),
+                    (ArtifactRole::PreservedDriver, "RZhuangJi_Data\\drivers\\"),
+                    (ArtifactRole::UserDriver, "RZhuangJi_Data\\user_drivers\\"),
+                    (ArtifactRole::UefiSevenFile, "RZhuangJi_Data\\uefiseven\\"),
                     (
                         ArtifactRole::PreinstalledSoftware,
-                        "LetRecovery_Data\\preinstalled_software\\",
+                        "RZhuangJi_Data\\preinstalled_software\\",
                     ),
                 ] {
                     if manifest
@@ -1895,10 +1895,10 @@ impl ConfigFileManager {
         Ok(())
     }
     /// 临时数据目录名
-    const DATA_DIR: &'static str = "LetRecovery_Data";
+    const DATA_DIR: &'static str = "RZhuangJi_Data";
 
     /// Resolve a file staged by the desktop client without allowing an INI value to escape the
-    /// LetRecovery data directory. Staged images and custom unattend files are single files, not
+    /// RZhuangJi data directory. Staged images and custom unattend files are single files, not
     /// arbitrary relative paths.
     pub fn resolve_staged_file(data_dir: &str, file_name: &str) -> Result<PathBuf> {
         lr_core::download_integrity::validate_download_filename(file_name)
@@ -1919,7 +1919,7 @@ impl ConfigFileManager {
     }
 
     /// Resolve a two-level staged XP source while keeping both INI-controlled path components
-    /// confined to the LetRecovery data directory.
+    /// confined to the RZhuangJi data directory.
     #[cfg(test)]
     pub fn resolve_staged_xp_source(
         data_dir: &str,
@@ -2320,7 +2320,7 @@ mod tests {
                 role: ArtifactRole::InstallImageSpan,
                 location: ArtifactLocation::PublicData,
                 ordinal: ordinal as u32,
-                relative_path: format!("LetRecovery_Data\\install-image-set-session\\{name}"),
+                relative_path: format!("RZhuangJi_Data\\install-image-set-session\\{name}"),
                 length_bytes: 3,
                 sha256: [ordinal as u8 + 1; 32],
             })

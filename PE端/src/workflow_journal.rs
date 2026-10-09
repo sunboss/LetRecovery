@@ -211,7 +211,7 @@ fn write_support_bundle(
 fn pe_log_path() -> Option<PathBuf> {
     std::env::current_exe().ok().and_then(|path| {
         path.parent()
-            .map(|directory| directory.join("LetRecoveryPE.log"))
+            .map(|directory| directory.join("RZhuangJiPE.log"))
     })
 }
 

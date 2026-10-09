@@ -97,11 +97,11 @@ try {
     try {
         & git.exe -c core.autocrlf=false -c core.eol=lf apply --check $patch
         if ($LASTEXITCODE -ne 0) {
-            throw "The LetRecovery wimlib patch does not apply cleanly"
+            throw "The RZhuangJi wimlib patch does not apply cleanly"
         }
         & git.exe -c core.autocrlf=false -c core.eol=lf apply $patch
         if ($LASTEXITCODE -ne 0) {
-            throw "Failed to apply the LetRecovery wimlib patch"
+            throw "Failed to apply the RZhuangJi wimlib patch"
         }
     } finally {
         Pop-Location

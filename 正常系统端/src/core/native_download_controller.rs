@@ -148,7 +148,7 @@ impl std::error::Error for DownloadPlanError {}
 #[derive(Clone, Debug, Default)]
 pub struct NativeDownloadController {
     state: CatalogueState,
-    /// Only the catalogue fetched through LetRecovery's fixed HTTPS endpoint
+    /// Only the catalogue fetched through RZhuangJi's fixed HTTPS endpoint
     /// may opt its selected legacy entries into HTTP transport.  This is kept
     /// separate from the user's explicit compatibility switch so arbitrary or
     /// locally constructed catalogues remain HTTPS-only by default.
@@ -185,7 +185,7 @@ impl NativeDownloadController {
         self.replace_catalogue_inner(config, false);
     }
 
-    /// Replaces the catalogue obtained from LetRecovery's fixed HTTPS service.
+    /// Replaces the catalogue obtained from RZhuangJi's fixed HTTPS service.
     ///
     /// The service still publishes historical HTTP URLs for some Microsoft
     /// images and third-party software.  Only URLs selected verbatim from this

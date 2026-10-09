@@ -28,7 +28,7 @@ const LEGACY_OWNED_UPDATE_CONTROL_SCHEMA: u32 = 4;
 pub const UPDATE_CONTROL_DIRECTORY: &str = "UpdateControl";
 pub const UPDATE_CONTROL_MANIFEST: &str = "restore-v1.json";
 pub const DISABLED_SERVICE_START: u32 = 4;
-const INSTALLATION_BINDING_KEY: &str = "LetRecovery\\UpdateControl";
+const INSTALLATION_BINDING_KEY: &str = "RZhuangJi\\UpdateControl";
 const INSTALLATION_BINDING_VALUE: &str = "InstallationId";
 
 const MAX_MANIFEST_BYTES: u64 = 128 * 1024;
@@ -51,7 +51,7 @@ pub struct CapturedDword {
     pub value: String,
     pub previous: Option<u32>,
     pub applied: u32,
-    /// True only after LetRecovery wrote this exact value, verified the registry readback and
+    /// True only after RZhuangJi wrote this exact value, verified the registry readback and
     /// durably committed this ownership bit to the manifest. Restore must never infer ownership
     /// merely because the current registry value happens to equal `applied`.
     #[serde(default)]
@@ -62,7 +62,7 @@ pub struct CapturedDword {
 pub struct UpdateControlManifest {
     pub schema: u32,
     /// Identifies the session which originally captured the baseline. A later session reuses a
-    /// valid baseline so the original pre-LetRecovery values are not overwritten.
+    /// valid baseline so the original pre-RZhuangJi values are not overwritten.
     pub session_id: String,
     /// Random identifier also written into this Windows installation's SOFTWARE hive. Applying a
     /// new image replaces the hive but can leave ProgramData behind when formatting is disabled;
@@ -142,7 +142,7 @@ fn new_installation_id() -> Result<String> {
 fn manifest_path(target_root: &Path) -> PathBuf {
     target_root
         .join("ProgramData")
-        .join("LetRecovery")
+        .join("RZhuangJi")
         .join(UPDATE_CONTROL_DIRECTORY)
         .join(UPDATE_CONTROL_MANIFEST)
 }
@@ -456,7 +456,7 @@ fn upgrade_policy_baseline(
         return Ok(false);
     }
     // Schemas 2-5 included UX/WSUS policies and service Start mutations that do not mean
-    // "disable automatic updates". Restore only values durably owned by LetRecovery and still
+    // "disable automatic updates". Restore only values durably owned by RZhuangJi and still
     // equal to the applied value, then drop those entries. A user/admin change is never undone.
     for value in manifest
         .policy_values
@@ -723,7 +723,7 @@ fn apply_value(key: &str, value: &CapturedDword, report: &mut UpdateControlRepor
         }
         Ok(ApplyPlan::SkipOwnershipLost) => {
             report.warnings.push(format!(
-                "{key}\\{} changed after LetRecovery applied it; reapply skipped and durable ownership will be cleared",
+                "{key}\\{} changed after RZhuangJi applied it; reapply skipped and durable ownership will be cleared",
                 value.value
             ));
             return ApplyOutcome::OwnershipLost;
@@ -841,7 +841,7 @@ fn commit_applied_ownership(
 /// Capture the original state, then apply the reversible `NoAutoUpdate` policy.
 ///
 /// A corrupt baseline causes a zero-write error. A valid baseline from an older session is reused
-/// deliberately, preserving the real pre-LetRecovery values. Individual mutations are best-effort
+/// deliberately, preserving the real pre-RZhuangJi values. Individual mutations are best-effort
 /// and are returned as warnings so installation can continue without a dialog.
 pub fn apply_offline_update_control(
     target_root: &Path,
@@ -1011,7 +1011,7 @@ fn restore_value_online(value: &CapturedDword, report: &mut UpdateControlReport)
         RestorePlan::SkipUnowned => return RestoreOutcome::Skipped,
         RestorePlan::SkipChanged => {
             report.warnings.push(format!(
-                "{key}\\{} changed after LetRecovery applied it; restore skipped and durable ownership will be cleared",
+                "{key}\\{} changed after RZhuangJi applied it; restore skipped and durable ownership will be cleared",
                 value.value
             ));
             return RestoreOutcome::OwnershipLost;
@@ -1049,7 +1049,7 @@ fn restore_value_online(value: &CapturedDword, report: &mut UpdateControlReport)
 ///
 /// The manifest path selects only the baseline file. Registry destinations are reconstructed from
 /// the validated scope and fixed allowlist, and always resolve to online HKLM\\SOFTWARE or
-/// HKLM\\SYSTEM. Values are restored only while they still equal LetRecovery's applied state.
+/// HKLM\\SYSTEM. Values are restored only while they still equal RZhuangJi's applied state.
 pub fn restore_online_update_control(target_root: &Path) -> Result<UpdateControlReport> {
     let path = manifest_path(target_root);
     let mut manifest = read_manifest(&path)?;

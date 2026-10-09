@@ -740,7 +740,7 @@ fn volume_file_system(letter: char) -> Result<String> {
 
 /// 写一行 journal 便于失败诊断（best-effort）。
 fn journal(data_partition: &str, line: &str) {
-    let dir = format!("{}\\LetRecovery_Data", data_partition);
+    let dir = format!("{}\\RZhuangJi_Data", data_partition);
     let _ = std::fs::create_dir_all(&dir);
     let path = format!("{}\\expand_move.journal", dir);
     use std::io::Write;

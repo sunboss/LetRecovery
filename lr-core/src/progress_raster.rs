@@ -1,4 +1,4 @@
-//! Shared, platform-neutral rasterizer for the rounded LetRecovery progress bar.
+//! Shared, platform-neutral rasterizer for the rounded RZhuangJi progress bar.
 //!
 //! Both the PE window and the first-logon Shell paint the returned top-down BGRA pixels through
 //! their own Win32 device contexts. Keeping the supersampled geometry here prevents the two

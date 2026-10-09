@@ -88,7 +88,7 @@ impl BootManager {
             .map(|directory| directory.join("bcdedit.exe"))
             .unwrap_or_else(|error| {
                 log::error!("[BOOT] 无法解析宿主 System32，bcdedit 将失败关闭: {error}");
-                PathBuf::from("__LetRecovery_missing_System32__").join("bcdedit.exe")
+                PathBuf::from("__RZhuangJi_missing_System32__").join("bcdedit.exe")
             });
         Self {
             bcdedit_path: bcdedit_path.to_string_lossy().to_string(),

@@ -6,7 +6,7 @@ pub fn reboot_pe() {
     log::info!("正在通过 Win32 shutdown API 请求系统重启...");
     match crate::windows_shutdown::schedule_restart_for_automation(
         0,
-        "LetRecovery PE completed the requested operation; Windows will restart now.",
+        "RZhuangJi PE completed the requested operation; Windows will restart now.",
     ) {
         Ok(()) => log::info!("系统已接受立即重启请求"),
         Err(error) => {

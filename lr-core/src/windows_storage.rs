@@ -966,7 +966,7 @@ pub fn disk_layout_snapshot_digest(snapshot: &DiskLayoutSnapshot) -> [u8; 32] {
     use sha2::{Digest, Sha256};
 
     let mut hasher = Sha256::new();
-    hasher.update(b"LetRecovery.DiskLayoutSnapshot.V2\0");
+    hasher.update(b"RZhuangJi.DiskLayoutSnapshot.V2\0");
     hasher.update(snapshot.disk_size_bytes.to_le_bytes());
     match snapshot.disk {
         StableDiskIdentity::Raw => hasher.update([0]),
@@ -3209,7 +3209,7 @@ mod platform {
             return Ok(None);
         }
         let mut hasher = Sha256::new();
-        hasher.update(b"LetRecovery.StorageDeviceId.V1\0");
+        hasher.update(b"RZhuangJi.StorageDeviceId.V1\0");
         for (identifier_type, code_set, value) in identifiers {
             hasher.update(identifier_type.to_le_bytes());
             hasher.update(code_set.to_le_bytes());
@@ -10375,7 +10375,7 @@ mod platform {
         #[test]
         fn desired_request_geometry_is_not_a_hard_boundary_inside_the_authorized_envelope() {
             const MIB: u64 = 1024 * 1024;
-            // Regression from LetRecoveryPE.log: QueryFreeExtents(0) returned a provider extent at
+            // Regression from RZhuangJiPE.log: QueryFreeExtents(0) returned a provider extent at
             // 1 MiB, while the desired offset was 17,408 bytes. The old selector incorrectly used
             // desired_offset + 300 MiB (314,590,208) as an authorization end, then rejected the
             // provider's actual, legal 1 MiB + 300 MiB extent (end 315,621,376).

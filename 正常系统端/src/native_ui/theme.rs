@@ -206,7 +206,7 @@ const fn native_theme_class(kind: NativeControlKind, dark: bool) -> NativeThemeC
 /// Field frames (Edit / ComboBox / ListBox) use the host Windows 11 visual styles only. A previous
 /// owner-drawn rounded overlay left residual system-accent “blue feet” at the four rectangular
 /// corners and fought the Fluent control chrome, so it is no longer installed on those HWNDs.
-const APPLIED_THEME_PROPERTY: windows::core::PCWSTR = windows::core::w!("LetRecovery.AppliedTheme");
+const APPLIED_THEME_PROPERTY: windows::core::PCWSTR = windows::core::w!("RZhuangJi.AppliedTheme");
 
 static LAST_PALETTE_DARK: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
@@ -858,15 +858,15 @@ const ROUNDED_CONTROL_SUBCLASS_ID: usize = 0x4c52_5243;
 const SINGLE_LINE_EDIT_SUBCLASS_ID: usize = 0x4c52_4544;
 const SINGLE_LINE_EDIT_FRAME_SUBCLASS_ID: usize = 0x4c52_4546;
 const COMBO_SELECTION_ITEM_SUBCLASS_ID: usize = 0x4c52_4353;
-const LIST_BOX_HOT_PROPERTY: PCWSTR = w!("LetRecovery.InnoListBox.HotItem");
-const ROUNDED_CONTROL_HOT_PROPERTY: PCWSTR = w!("LetRecovery.InnoControl.Hot");
-const COMBO_CARET_HIDDEN_PROPERTY: PCWSTR = w!("LetRecovery.InnoCombo.CaretHidden");
-const COMBO_TRACKING_DROPPED_PROPERTY: PCWSTR = w!("LetRecovery.InnoCombo.TrackingDropped");
+const LIST_BOX_HOT_PROPERTY: PCWSTR = w!("RZhuangJi.InnoListBox.HotItem");
+const ROUNDED_CONTROL_HOT_PROPERTY: PCWSTR = w!("RZhuangJi.InnoControl.Hot");
+const COMBO_CARET_HIDDEN_PROPERTY: PCWSTR = w!("RZhuangJi.InnoCombo.CaretHidden");
+const COMBO_TRACKING_DROPPED_PROPERTY: PCWSTR = w!("RZhuangJi.InnoCombo.TrackingDropped");
 const COMBO_SELECTION_ITEM_PREPARED_PROPERTY: PCWSTR =
-    w!("LetRecovery.InnoCombo.SelectionPrepared");
-const RADIO_BUTTON_HOT_PROPERTY: PCWSTR = w!("LetRecovery.InnoRadio.Hot");
+    w!("RZhuangJi.InnoCombo.SelectionPrepared");
+const RADIO_BUTTON_HOT_PROPERTY: PCWSTR = w!("RZhuangJi.InnoRadio.Hot");
 const PALETTE_REFERENCE_DARK: usize = 0x1;
-const CHECK_BOX_HOT_PROPERTY: PCWSTR = w!("LetRecovery.InnoCheck.Hot");
+const CHECK_BOX_HOT_PROPERTY: PCWSTR = w!("RZhuangJi.InnoCheck.Hot");
 const WM_MOUSELEAVE_MESSAGE: u32 = 0x02a3;
 const WM_NCMOUSEMOVE_MESSAGE: u32 = 0x00a0;
 const WM_NCMOUSELEAVE_MESSAGE: u32 = 0x02a2;
@@ -2179,7 +2179,7 @@ fn list_view_frame_header_side_borders(header_band: RECT, side_band: i32) -> [RE
 }
 
 const WM_FIT_LIST_COLUMNS: u32 = 0x8000 + 0x4e5;
-const LIST_FIT_PENDING_PROPERTY: PCWSTR = w!("LetRecovery.InnoListView.FitPending");
+const LIST_FIT_PENDING_PROPERTY: PCWSTR = w!("RZhuangJi.InnoListView.FitPending");
 
 thread_local! {
     /// Width each report column needs for its header and its widest cell, per list.
@@ -2528,7 +2528,7 @@ unsafe extern "system" fn list_view_subclass(
 }
 
 const LIST_VIEW_HOLD_PROPERTY: windows::core::PCWSTR =
-    windows::core::w!("LetRecovery.ListViewHold");
+    windows::core::w!("RZhuangJi.ListViewHold");
 
 fn list_view_hold_release_message() -> u32 {
     use std::sync::atomic::{AtomicU32, Ordering};
@@ -2539,7 +2539,7 @@ fn list_view_hold_release_message() -> u32 {
     }
     let registered = unsafe {
         windows::Win32::UI::WindowsAndMessaging::RegisterWindowMessageW(windows::core::w!(
-            "LetRecovery.ListViewHoldRelease"
+            "RZhuangJi.ListViewHoldRelease"
         ))
     };
     MESSAGE.store(registered, Ordering::Relaxed);
@@ -2935,7 +2935,7 @@ unsafe extern "system" fn single_line_edit_subclass(
             result
         }
         _ if edit_selection_message(message, wparam) => {
-            // Clicks, drags, keys and EM_SETSEL: one buffered frame with LetRecovery's selection
+            // Clicks, drags, keys and EM_SETSEL: one buffered frame with RZhuangJi's selection
             // colours instead of USER32's direct system-blue drawing.
             run_single_line_edit_message(hwnd, message, wparam, lparam)
         }
@@ -2946,7 +2946,7 @@ unsafe extern "system" fn single_line_edit_subclass(
 /// Runs a message that can change what a single-line field shows (selection, caret position,
 /// text) with USER32's immediate drawing suspended - it would draw the selection in the system
 /// highlight colours straight onto the screen - and then publishes the field once through the
-/// buffered painter, which draws the selection in LetRecovery's colours. The caret is hidden
+/// buffered painter, which draws the selection in RZhuangJi's colours. The caret is hidden
 /// while text is selected.
 unsafe fn run_single_line_edit_message(
     hwnd: HWND,
@@ -2986,7 +2986,7 @@ unsafe extern "system" fn combo_selection_item_subclass(
     let palette = palette_from_reference(reference_data);
     match message {
         WM_LBUTTONDOWN | 0x0203 => {
-            // A click on the closed selection child opens LetRecovery's list for its combo.
+            // A click on the closed selection child opens RZhuangJi's list for its combo.
             if let Ok(combo) = GetParent(hwnd) {
                 if is_drop_down_list(combo) {
                     if windows::Win32::UI::Input::KeyboardAndMouse::GetFocus() != combo {
@@ -3065,7 +3065,7 @@ unsafe extern "system" fn rounded_control_subclass(
     const WM_SHOWWINDOW_MESSAGE: u32 = 0x0018;
     const WM_LBUTTONDBLCLK_MESSAGE: u32 = 0x0203;
     const DLGC_WANTALLKEYS_CODE: isize = 0x0004;
-    // The drop-down list is LetRecovery's own popup (see combo_popup). It closes whenever the
+    // The drop-down list is RZhuangJi's own popup (see combo_popup). It closes whenever the
     // field loses focus, is disabled, hidden or destroyed.
     if (matches!(message, WM_KILLFOCUS | WM_NCDESTROY)
         || (matches!(message, WM_ENABLE | WM_SHOWWINDOW_MESSAGE) && wparam.0 == 0))
@@ -3377,7 +3377,7 @@ unsafe fn uses_frame_band(hwnd: HWND) -> bool {
 }
 
 const FRAMED_EDIT_SUBCLASS_ID: usize = 0x4c52_4645;
-const EDIT_LAYOUT_BUSY_PROPERTY: PCWSTR = w!("LetRecovery.FramedEdit.LayoutBusy");
+const EDIT_LAYOUT_BUSY_PROPERTY: PCWSTR = w!("RZhuangJi.FramedEdit.LayoutBusy");
 
 /// Paints an Edit off-screen and publishes it with one BitBlt. USER32 erased the whole field and
 /// then drew the text on top of the screen pixels, so every text update (a progress line, a
@@ -3495,7 +3495,7 @@ unsafe extern "system" fn static_text_subclass(
     }
 }
 
-const EDIT_SELECTION_PROPERTY: PCWSTR = w!("LetRecovery.Edit.PaintedSelection");
+const EDIT_SELECTION_PROPERTY: PCWSTR = w!("RZhuangJi.Edit.PaintedSelection");
 
 unsafe fn edit_selection(edit: HWND) -> (u32, u32) {
     let mut start = 0u32;
@@ -3509,7 +3509,7 @@ unsafe fn edit_selection(edit: HWND) -> (u32, u32) {
     (start.min(end), start.max(end))
 }
 
-/// Selected text in LetRecovery's selection colours (the same as selected list rows) instead of
+/// Selected text in RZhuangJi's selection colours (the same as selected list rows) instead of
 /// the system highlight: after the Edit's own painter, every selected segment is filled and its
 /// text drawn again on top, line by line, at the positions the Edit reports.
 unsafe fn overlay_edit_selection(edit: HWND, dc: HDC, palette: Palette) {
@@ -3642,7 +3642,7 @@ unsafe fn store_edit_selection_key(edit: HWND) {
     let _ = SetPropW(edit, EDIT_SELECTION_PROPERTY, HANDLE(key as *mut _));
 }
 
-const EDIT_CARET_HIDDEN_PROPERTY: PCWSTR = w!("LetRecovery.Edit.CaretHidden");
+const EDIT_CARET_HIDDEN_PROPERTY: PCWSTR = w!("RZhuangJi.Edit.CaretHidden");
 
 /// Hides the blinking caret while the focused field has selected text and shows it again once
 /// the selection is collapsed. USER32 counts HideCaret/ShowCaret, so exactly one hide is held

@@ -227,7 +227,7 @@ mod tests {
 
     #[test]
     fn command_metacharacters_are_rejected() {
-        assert!(validate_executable_filename("LetRecovery&calc.exe").is_err());
+        assert!(validate_executable_filename("RZhuangJi&calc.exe").is_err());
         assert!(validate_token("install & calc", "test").is_err());
     }
 }

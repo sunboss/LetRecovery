@@ -424,8 +424,8 @@ pub struct InstallConfig {
     pub image_source_sha256: String,
     /// 所选镜像卷释放后大约占用的字节数（0 表示未知），供 PE 在写盘前核对目标分区容量。
     pub image_expanded_bytes: u64,
-    /// 目标盘内暂存：分散暂存找不到其他分区时，把安装文件放在目标分区自身的 LetRecovery_Data 里。
-    /// PE 不格式化目标分区，而是先原地删除旧系统（保留 LetRecovery_ 前缀的暂存目录），再拼回/释放镜像。
+    /// 目标盘内暂存：分散暂存找不到其他分区时，把安装文件放在目标分区自身的 RZhuangJi_Data 里。
+    /// PE 不格式化目标分区，而是先原地删除旧系统（保留 RZhuangJi_ 前缀的暂存目录），再拼回/释放镜像。
     pub in_place_target_staging: bool,
     /// 是否为GHO格式
     pub is_gho: bool,
@@ -606,7 +606,7 @@ pub struct ConfigFileManager;
 
 impl ConfigFileManager {
     /// 临时数据目录名
-    const DATA_DIR: &'static str = "LetRecovery_Data";
+    const DATA_DIR: &'static str = "RZhuangJi_Data";
 
     fn validate_ini_value(field: &str, value: &str) -> Result<()> {
         if value
@@ -711,7 +711,7 @@ impl ConfigFileManager {
     }
 
     /// 自动创建分区的标志文件名（与 disk.rs 中的常量保持一致）
-    const AUTO_CREATED_PARTITION_MARKER: &'static str = "LetRecovery_AutoCreated.marker";
+    const AUTO_CREATED_PARTITION_MARKER: &'static str = "RZhuangJi_AutoCreated.marker";
 
     pub(crate) fn new_session_id() -> Result<String> {
         Ok(lr_core::handoff_auth::generate_session_id()?
@@ -1034,7 +1034,7 @@ impl ConfigFileManager {
                 source_length_before_bytes,
             });
             let bound_marker = format!(
-                "LetRecovery Auto Created Partition\r\nMarkerVersion=3\r\nSessionId={}\r\nSource={}:\r\nSourceDisk={}\r\nSourceOffsetBytes={}\r\nSourceLengthBytes={}\r\nSourceLengthBeforeBytes={}\r\nTemporaryDisk={}\r\nTemporaryOffsetBytes={}\r\nTemporaryLengthBytes={}\r\nCanonicalDiskLayoutSha256={}\r\n",
+                "RZhuangJi Auto Created Partition\r\nMarkerVersion=3\r\nSessionId={}\r\nSource={}:\r\nSourceDisk={}\r\nSourceOffsetBytes={}\r\nSourceLengthBytes={}\r\nSourceLengthBeforeBytes={}\r\nTemporaryDisk={}\r\nTemporaryOffsetBytes={}\r\nTemporaryLengthBytes={}\r\nCanonicalDiskLayoutSha256={}\r\n",
                 config.session_id,
                 target_letter,
                 target.extent.disk_number,
@@ -2137,7 +2137,7 @@ mod tests {
             role: lr_core::handoff_manifest::ArtifactRole::InstallImageSpan,
             location: lr_core::handoff_manifest::ArtifactLocation::PublicData,
             ordinal: 0,
-            relative_path: "LetRecovery_Data\\install.wim".into(),
+            relative_path: "RZhuangJi_Data\\install.wim".into(),
             length_bytes: 123,
             sha256: [9; 32],
         };
@@ -2148,7 +2148,7 @@ mod tests {
         .unwrap();
 
         let mut wrong_path = identity.clone();
-        wrong_path.relative_path = "LetRecovery_Data\\other.wim".into();
+        wrong_path.relative_path = "RZhuangJi_Data\\other.wim".into();
         assert!(
             ConfigFileManager::validate_verified_source_manifest(&config, &[wrong_path]).is_err()
         );
@@ -2278,7 +2278,7 @@ mod tests {
             role: lr_core::handoff_manifest::ArtifactRole::InstallImageSpan,
             location: lr_core::handoff_manifest::ArtifactLocation::PublicData,
             ordinal: 0,
-            relative_path: "LetRecovery_Data\\install.wim".into(),
+            relative_path: "RZhuangJi_Data\\install.wim".into(),
             length_bytes: 1,
             sha256: [1; 32],
         }];
@@ -2354,7 +2354,7 @@ mod tests {
             data.display(),
             lr_core::install_handoff::DATA_VOLUME_MARKER_NAME
         ));
-        let ini = data_dir.join("LetRecovery_Install.ini");
+        let ini = data_dir.join("RZhuangJi_Install.ini");
         let custom = data_dir.join("custom_unattend.xml");
         std::fs::write(&marker, b"old marker").unwrap();
         std::fs::write(&ini, b"old config").unwrap();
@@ -2403,7 +2403,7 @@ mod tests {
             data.display(),
             lr_core::install_handoff::DATA_VOLUME_MARKER_NAME
         ));
-        let ini = data_dir.join("LetRecovery_Install.ini");
+        let ini = data_dir.join("RZhuangJi_Install.ini");
         let target_marker = target.join(lr_core::install_handoff::INSTALL_TARGET_MARKER_NAME);
         std::fs::write(&marker, b"old marker").unwrap();
         std::fs::write(&ini, b"old config").unwrap();
@@ -2419,7 +2419,7 @@ mod tests {
             role: lr_core::handoff_manifest::ArtifactRole::InstallImageSpan,
             location: lr_core::handoff_manifest::ArtifactLocation::PublicData,
             ordinal: 0,
-            relative_path: "LetRecovery_Data\\install.wim".into(),
+            relative_path: "RZhuangJi_Data\\install.wim".into(),
             length_bytes: 1,
             sha256: [1; 32],
         }];
@@ -2474,7 +2474,7 @@ mod tests {
         let data_dir = root.join(ConfigFileManager::DATA_DIR);
         std::fs::create_dir_all(&data_dir).unwrap();
         let marker = root.join(lr_core::install_handoff::DATA_VOLUME_MARKER_NAME);
-        let config_path = data_dir.join("LetRecovery_Backup.ini");
+        let config_path = data_dir.join("RZhuangJi_Backup.ini");
         let unrelated = data_dir.join("user-owned.txt");
         std::fs::write(&marker, b"old marker").unwrap();
         std::fs::write(&config_path, b"old config").unwrap();
@@ -2487,7 +2487,7 @@ mod tests {
             &BackupConfig {
                 save_path: "D:\\backup.wim".to_owned(),
                 name: "System Backup".to_owned(),
-                description: "Created by LetRecovery".to_owned(),
+                description: "Created by RZhuangJi".to_owned(),
                 source_partition: "C:".to_owned(),
                 incremental: true,
                 format: 0,
@@ -2532,7 +2532,7 @@ mod tests {
         .unwrap();
         let marker = root.join(lr_core::install_handoff::DATA_VOLUME_MARKER_NAME);
         let data_dir = root.join(ConfigFileManager::DATA_DIR);
-        let config_path = data_dir.join("LetRecovery_Backup.ini");
+        let config_path = data_dir.join("RZhuangJi_Backup.ini");
         assert!(marker.exists());
         assert!(!config_path.exists());
 
@@ -2593,7 +2593,7 @@ mod tests {
         let data_dir = root.join(ConfigFileManager::DATA_DIR);
         std::fs::create_dir_all(&data_dir).unwrap();
         let marker = root.join(lr_core::install_handoff::DATA_VOLUME_MARKER_NAME);
-        let config_path = data_dir.join("LetRecovery_Expand.ini");
+        let config_path = data_dir.join("RZhuangJi_Expand.ini");
         let unrelated = data_dir.join("user-owned.txt");
         std::fs::write(&marker, b"old marker").unwrap();
         std::fs::write(&config_path, b"old config").unwrap();
@@ -2663,7 +2663,7 @@ mod tests {
         .unwrap();
         let marker = root.join(lr_core::install_handoff::DATA_VOLUME_MARKER_NAME);
         let data_dir = root.join(ConfigFileManager::DATA_DIR);
-        let config_path = data_dir.join("LetRecovery_Expand.ini");
+        let config_path = data_dir.join("RZhuangJi_Expand.ini");
         assert!(marker.exists());
         assert!(!config_path.exists());
 

@@ -314,7 +314,7 @@ unsafe fn read_u64(base: *const c_void, off: usize) -> u64 {
 }
 
 /// wimlib 压缩、解压和校验用的最优线程数 = 逻辑 CPU 数；探测失败回退 0
-/// （由 LetRecovery 的 wimlib 扩展按在线处理器数选择）。
+/// （由 RZhuangJi 的 wimlib 扩展按在线处理器数选择）。
 fn optimal_threads() -> c_uint {
     std::thread::available_parallelism()
         .map(|n| n.get() as c_uint)

@@ -60,18 +60,18 @@ const WHEEL_DELTA: i32 = 120;
 const WM_NCMOUSEMOVE_MESSAGE: u32 = 0x00a0;
 const WM_NCMOUSELEAVE_MESSAGE: u32 = 0x02a2;
 const WM_MOUSELEAVE_MESSAGE: u32 = 0x02a3;
-const ADVANCED_SCROLLBAR_STATE_PROPERTY: PCWSTR = w!("LetRecovery.AdvancedScrollbarThemeState");
-const ADVANCED_SCROLLBAR_OVERLAY_PROPERTY: PCWSTR = w!("LetRecovery.AdvancedScrollbarOverlay");
+const ADVANCED_SCROLLBAR_STATE_PROPERTY: PCWSTR = w!("RZhuangJi.AdvancedScrollbarThemeState");
+const ADVANCED_SCROLLBAR_OVERLAY_PROPERTY: PCWSTR = w!("RZhuangJi.AdvancedScrollbarOverlay");
 const ADVANCED_SCROLLBAR_DRAG_OFFSET_PROPERTY: PCWSTR =
-    w!("LetRecovery.AdvancedScrollbarDragOffset");
+    w!("RZhuangJi.AdvancedScrollbarDragOffset");
 const ADVANCED_SCROLLBAR_PROXY_POSITION_PROPERTY: PCWSTR =
-    w!("LetRecovery.AdvancedScrollbarProxyPosition");
+    w!("RZhuangJi.AdvancedScrollbarProxyPosition");
 const ADVANCED_SCROLLBAR_PENDING_POSITION_PROPERTY: PCWSTR =
-    w!("LetRecovery.AdvancedScrollbarPendingPosition");
+    w!("RZhuangJi.AdvancedScrollbarPendingPosition");
 const ADVANCED_SCROLLBAR_PENDING_CODE_PROPERTY: PCWSTR =
-    w!("LetRecovery.AdvancedScrollbarPendingCode");
+    w!("RZhuangJi.AdvancedScrollbarPendingCode");
 const ADVANCED_SCROLLBAR_FRAME_PENDING_PROPERTY: PCWSTR =
-    w!("LetRecovery.AdvancedScrollbarFramePending");
+    w!("RZhuangJi.AdvancedScrollbarFramePending");
 const WM_ADVANCED_SCROLLBAR_FRAME: u32 = WM_APP + 0x2d;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

@@ -26,7 +26,7 @@ fn validation_installer_path(filename: &str) -> PathBuf {
     // This path is used only to parse and validate the server template. It is deliberately a
     // non-existent namespaced path rather than a guessed system drive; no filesystem access occurs.
     PathBuf::from(format!(
-        r"\\?\LetRecoveryTemplate\LetRecovery_Scripts\PreinstalledSoftware\{filename}"
+        r"\\?\RZhuangJiTemplate\RZhuangJi_Scripts\PreinstalledSoftware\{filename}"
     ))
 }
 
@@ -330,7 +330,7 @@ mod tests {
 
     #[test]
     fn parses_downloaded_executable_with_quoted_arguments() {
-        let path = Path::new(r"C:\LetRecovery Scripts\AnyDesk.exe");
+        let path = Path::new(r"C:\RZhuangJi Scripts\AnyDesk.exe");
         let parsed = parse_silent_install_template(
             r#""{installer}" --install "C:\Program Files (x86)\AnyDesk" --silent"#,
             path,

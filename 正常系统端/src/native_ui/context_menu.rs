@@ -1,9 +1,9 @@
-//! LetRecovery's own right-click menu for edit fields.
+//! RZhuangJi's own right-click menu for edit fields.
 //!
 //! The layout is the one of the native Windows edit menu: the system menu font, the native row and
 //! separator heights, the native text inset on the left and the reserved space on the right, and
 //! access keys shown as "复制(R)" (pressing the letter picks the item). Colours, outline and the
-//! highlighted row stay LetRecovery's own. Only the editing commands are offered - none of the
+//! highlighted row stay RZhuangJi's own. Only the editing commands are offered - none of the
 //! native reading-order, Unicode control character or IME entries.
 //!
 //! Editable fields offer Undo, Cut, Copy, Paste, Delete and Select All; read-only fields Copy and
@@ -45,7 +45,7 @@ use super::controls::rounded_control_frame_geometry;
 use super::theme::Palette;
 use crate::native_ui::{GetDpiForSystem, GetDpiForWindow};
 
-const CLASS_NAME: PCWSTR = w!("LetRecovery.ContextMenu");
+const CLASS_NAME: PCWSTR = w!("RZhuangJi.ContextMenu");
 
 #[link(name = "user32")]
 extern "system" {
@@ -364,7 +364,7 @@ unsafe fn track(
             (geometry.radius, geometry.side_band.max(1))
         });
     // Native rows (never lower than the text plus the native breathing room for a larger
-    // system menu font), native separators and native insets inside LetRecovery's frame.
+    // system menu font), native separators and native insets inside RZhuangJi's frame.
     let row_height = native(NATIVE_ROW, dpi).max(text_line + native(11, dpi));
     let separator_height = native(NATIVE_SEPARATOR, dpi);
     let vertical_pad = native(NATIVE_VERTICAL_PAD, dpi).max(1);

@@ -1,7 +1,7 @@
 //! Documented NetAPI boundary for local-account inventory and updates.
 //!
 //! Account enumeration uses `NetUserEnum` level 1. RID-directed rename inventory uses level 20,
-//! whose `usri20_user_id` is the local SAM relative identifier on supported LetRecovery systems
+//! whose `usri20_user_id` is the local SAM relative identifier on supported RZhuangJi systems
 //! (Windows 7+). Rename uses the documented `NetUserSetInfo` level 0 / `USER_INFO_0` contract and
 //! reads level 20 back. Password and flag changes use separate levels 1003 and 1008 so unrelated
 //! account fields are never reset.
@@ -11,7 +11,7 @@ use std::fmt;
 #[cfg(not(windows))]
 use zeroize::Zeroizing;
 
-const BUILTIN_TRANSITION_LSA_SECRET_NAME: &str = "L$LetRecoveryBuiltinAdministratorPassword";
+const BUILTIN_TRANSITION_LSA_SECRET_NAME: &str = "L$RZhuangJiBuiltinAdministratorPassword";
 const MAX_BUILTIN_TRANSITION_PASSWORD_UTF16: usize = 127;
 const DEFAULT_OOBE_ACCOUNT_NAME: &str = "defaultuser0";
 

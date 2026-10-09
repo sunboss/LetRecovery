@@ -63,7 +63,7 @@ use super::window::{
     fit_window_to_work_area, monitor_work_area, scaled,
 };
 
-const CLASS_NAME: PCWSTR = w!("LetRecovery.PE.Native.Progress");
+const CLASS_NAME: PCWSTR = w!("RZhuangJi.PE.Native.Progress");
 const WORKER_TIMER_ID: usize = 1;
 const WORKER_POLL_INTERVAL_MS: u32 = 50;
 const ANIMATION_FRAME_INTERVAL_MS: i32 = 16;
@@ -1296,9 +1296,9 @@ fn launch_progress(
 
 fn progress_title(workflow: WorkflowKind) -> String {
     match workflow {
-        WorkflowKind::Install => crate::tr!("LetRecovery PE 安装助手"),
-        WorkflowKind::Backup => crate::tr!("LetRecovery PE 备份助手"),
-        WorkflowKind::Expand => crate::tr!("LetRecovery PE 扩容助手"),
+        WorkflowKind::Install => crate::tr!("RZhuangJi PE 安装助手"),
+        WorkflowKind::Backup => crate::tr!("RZhuangJi PE 备份助手"),
+        WorkflowKind::Expand => crate::tr!("RZhuangJi PE 扩容助手"),
         WorkflowKind::Missing => crate::tr!("R装机 PE"),
     }
 }

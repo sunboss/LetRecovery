@@ -36,7 +36,7 @@ $requiredFiles = @(
     "RZhuangJi.exe",
     "config.json",
     "README.txt",
-    "bin\pe\LetRecovery_PE.wim"
+    "bin\pe\RZhuangJi_PE.wim"
 )
 foreach ($relativePath in $requiredFiles) {
     Resolve-ExistingFile -Path (Join-Path $source $relativePath) -Description "Required package file" | Out-Null
@@ -75,7 +75,7 @@ $icon = Get-ChildItem -LiteralPath $repoRoot -Directory | ForEach-Object {
     $candidate = Join-Path $_.FullName "assets\icon.ico"
     if ((Test-Path -LiteralPath $manifest -PathType Leaf) -and
         (Test-Path -LiteralPath $candidate -PathType Leaf) -and
-        ((Get-Content -LiteralPath $manifest -Raw) -match 'name\s*=\s*"LetRecovery"')) {
+        ((Get-Content -LiteralPath $manifest -Raw) -match 'name\s*=\s*"RZhuangJi"')) {
         $candidate
     }
 } | Select-Object -First 1

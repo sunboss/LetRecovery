@@ -395,7 +395,7 @@ impl Dism {
 
         let scratch_dir = std::env::temp_dir();
         let inventory_log = scratch_dir.join(format!(
-            "LetRecovery-DismApi-offline-export-{}.log",
+            "RZhuangJi-DismApi-offline-export-{}.log",
             std::process::id()
         ));
         let inventory = match lr_core::dism_driver_inventory::enumerate_offline_driver_candidates(
@@ -726,7 +726,7 @@ impl Dism {
             .map_err(|e| anyhow::anyhow!("{}", tr!("wimlib 初始化失败: {}", e)))?;
 
         let extract_dir = std::env::temp_dir().join(format!(
-            "LetRecovery_WimExtract_{}_{}",
+            "RZhuangJi_WimExtract_{}_{}",
             std::process::id(),
             index
         ));

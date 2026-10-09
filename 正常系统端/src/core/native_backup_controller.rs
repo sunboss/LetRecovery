@@ -244,7 +244,7 @@ mod tests {
         BackupConfig {
             save_path: format!("D:\\backup.{extension}"),
             name: "System Backup".to_owned(),
-            description: "Created by LetRecovery".to_owned(),
+            description: "Created by RZhuangJi".to_owned(),
             source_partition: "C:".to_owned(),
             incremental: true,
             format,
@@ -258,7 +258,7 @@ mod tests {
         OnlinePE {
             download_url: "https://example.invalid/pe.wim".to_owned(),
             display_name: "R装机 PE".to_owned(),
-            filename: "LetRecovery_PE.wim".to_owned(),
+            filename: "RZhuangJi_PE.wim".to_owned(),
             md5: None,
             sha256: Some("00".repeat(32)),
         }
@@ -285,7 +285,7 @@ mod tests {
             panic!("expected PE handoff intent");
         };
         assert_eq!(intent.config.wim_engine, 1);
-        assert_eq!(intent.pe.filename, "LetRecovery_PE.wim");
+        assert_eq!(intent.pe.filename, "RZhuangJi_PE.wim");
     }
 
     #[test]

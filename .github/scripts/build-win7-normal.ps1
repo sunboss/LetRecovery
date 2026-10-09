@@ -37,7 +37,7 @@ try {
     $env:RUSTFLAGS = '-C target-feature=+crt-static'
 
     & cargo $toolchainArgument build `
-        -p LetRecovery `
+        -p RZhuangJi `
         --release `
         --locked `
         --target x86_64-win7-windows-msvc `

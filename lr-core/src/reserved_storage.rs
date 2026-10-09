@@ -3,7 +3,7 @@
 //! Microsoft documents `/Set-ReservedStorageState` and `/Get-ReservedStorageState` as online-only
 //! operations available starting with Windows 10 version 2004. Consequently this module never
 //! edits ReserveManager's implementation-detail registry values in an offline image. It stages a
-//! fixed script that may only be wired into LetRecovery's built-in Win10/11 specialize pass.
+//! fixed script that may only be wired into RZhuangJi's built-in Win10/11 specialize pass.
 //!
 //! Microsoft references checked for this boundary:
 //! <https://learn.microsoft.com/windows-hardware/manufacture/desktop/dism-storage-reserve>
@@ -49,7 +49,7 @@ param()
 $ErrorActionPreference = 'Stop'
 $operationTimeoutMilliseconds = 120000
 $result = [ordered]@{
-    schema = 'LetRecovery.ReservedStorage.v1'
+    schema = 'RZhuangJi.ReservedStorage.v1'
     status = 'warning'
     reason = 'not_started'
     os_build = [System.Environment]::OSVersion.Version.Build
@@ -59,8 +59,8 @@ $result = [ordered]@{
     exception_type = $null
     hresult = $null
 }
-Write-Host '[LetRecovery] Reserved Storage: checking the target Windows version...'
-$logDirectory = [System.IO.Path]::Combine($env:ProgramData, 'LetRecovery', 'Logs')
+Write-Host '[RZhuangJi] Reserved Storage: checking the target Windows version...'
+$logDirectory = [System.IO.Path]::Combine($env:ProgramData, 'RZhuangJi', 'Logs')
 $logPath = [System.IO.Path]::Combine($logDirectory, 'ReservedStorage-disable.json')
 $temporaryLogPath = $logPath + '.tmp'
 
@@ -77,7 +77,7 @@ function Invoke-BoundedDism {
         throw [System.TimeoutException]::new('Reserved Storage operation exceeded the bounded specialize timeout')
     }
 
-    Write-Host ('[LetRecovery] Reserved Storage: {0} (remaining timeout {1} seconds)...' -f $Stage, [int][Math]::Ceiling($remainingMilliseconds / 1000.0))
+    Write-Host ('[RZhuangJi] Reserved Storage: {0} (remaining timeout {1} seconds)...' -f $Stage, [int][Math]::Ceiling($remainingMilliseconds / 1000.0))
     $process = $null
     try {
         # Do not use Start-Process -Wait. Microsoft documents that it follows the entire process
@@ -150,9 +150,9 @@ try {
 }
 
 if ($result.status -eq 'completed') {
-    Write-Host '[LetRecovery] Reserved Storage: completed.'
+    Write-Host '[RZhuangJi] Reserved Storage: completed.'
 } else {
-    Write-Host ('[LetRecovery] Reserved Storage: warning ({0}); Windows Setup will continue.' -f $result.reason)
+    Write-Host ('[RZhuangJi] Reserved Storage: warning ({0}); Windows Setup will continue.' -f $result.reason)
 }
 
 try {
@@ -163,7 +163,7 @@ try {
 } catch {
     try {
         [Console]::Error.WriteLine(
-            ('LETRECOVERY_RESERVED_STORAGE_WARNING schema=LetRecovery.ReservedStorage.v1 code=structured_log_persist_failed exception_type={0} hresult={1}' -f
+            ('LETRECOVERY_RESERVED_STORAGE_WARNING schema=RZhuangJi.ReservedStorage.v1 code=structured_log_persist_failed exception_type={0} hresult={1}' -f
                 $_.Exception.GetType().FullName,
                 $_.Exception.HResult)
         )
@@ -180,7 +180,7 @@ pub const fn is_supported_target_version(major: u32, minor: u32, build: u32) -> 
 pub fn online_script_path(target_partition: &str) -> Result<PathBuf> {
     let root = normalized_target_root(target_partition)?;
     Ok(root
-        .join("LetRecovery_Scripts")
+        .join("RZhuangJi_Scripts")
         .join(ONLINE_SCRIPT_FILE_NAME))
 }
 
@@ -245,7 +245,7 @@ pub fn online_script_is_staged(target_partition: &str) -> Result<bool> {
 /// target and a built-in answer file.
 pub fn render_specialize_command(order: u32) -> Result<String> {
     let path = format!(
-        r#"powershell.exe -NoP -NonI -WindowStyle Hidden -EP Bypass -File "%SystemDrive%\LetRecovery_Scripts\{ONLINE_SCRIPT_FILE_NAME}""#
+        r#"powershell.exe -NoP -NonI -WindowStyle Hidden -EP Bypass -File "%SystemDrive%\RZhuangJi_Scripts\{ONLINE_SCRIPT_FILE_NAME}""#
     );
     crate::unattend_command::render_specialize_run_synchronous_command(
         order,

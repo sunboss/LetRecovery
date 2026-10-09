@@ -2,9 +2,9 @@
 //!
 //! `WM_SETREDRAW(FALSE)` is implemented by DefWindowProc by clearing `WS_VISIBLE`. On a top-level
 //! window that removes the window from hit testing, so a click lands on whatever window is behind
-//! LetRecovery, and DWM may stop presenting it for a frame, which shows up as a full-window flash.
+//! RZhuangJi, and DWM may stop presenting it for a frame, which shows up as a full-window flash.
 //! Redraw is therefore only suspended on child windows; a top-level transaction repaints once.
-//! Repaints never request `RDW_ERASE`: every LetRecovery surface paints its own background, and an
+//! Repaints never request `RDW_ERASE`: every RZhuangJi surface paints its own background, and an
 //! erase pass with a class brush is exactly the intermediate frame that is seen as flicker.
 
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
@@ -219,7 +219,7 @@ unsafe fn resume_with_flags(
 
 /// Many WinPE builds, and some desktops, turn off "Show window contents while dragging". Windows
 /// then moves and resizes with an outline only and applies the new size when the mouse button is
-/// released. For the duration of one move/size loop on a LetRecovery window, full-window dragging
+/// released. For the duration of one move/size loop on a RZhuangJi window, full-window dragging
 /// is enabled for the current session only (never written to the user profile, no graphics driver
 /// involved) and the previous value is restored as soon as the loop ends.
 pub(crate) unsafe fn nc_left_button_down_with_live_drag(
@@ -734,7 +734,7 @@ impl Drop for ScreenCover {
     }
 }
 
-const SCREEN_COVER_CLASS: windows::core::PCWSTR = windows::core::w!("LetRecoveryScreenCover");
+const SCREEN_COVER_CLASS: windows::core::PCWSTR = windows::core::w!("RZhuangJiScreenCover");
 
 unsafe extern "system" fn screen_cover_proc(
     hwnd: HWND,

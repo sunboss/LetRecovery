@@ -172,7 +172,7 @@ impl std::fmt::Display for InstallValidationError {
                 )
             }
             Self::RequiredCleanupRequiresUnattended => crate::tr!(
-                "移除预装应用或 Windows 安全中心需要启用 LetRecovery 内置无人值守安装。"
+                "移除预装应用或 Windows 安全中心需要启用 RZhuangJi 内置无人值守安装。"
             ),
             Self::RequiredCleanupConflictsWithCustomUnattend => crate::tr!(
                 "移除预装应用或 Windows 安全中心不能与自定义应答文件同时使用。"
@@ -181,7 +181,7 @@ impl std::fmt::Display for InstallValidationError {
                 "移除预装应用或 Windows 安全中心不支持 GHO/GHS 或 XP 文本模式来源。"
             ),
             Self::PreinstalledSoftwareRequiresUnattended => {
-                crate::tr!("安装所选软件需要启用 LetRecovery 内置无人值守安装。")
+                crate::tr!("安装所选软件需要启用 RZhuangJi 内置无人值守安装。")
             }
             Self::PreinstalledSoftwareConflictsWithCustomUnattend => {
                 crate::tr!("安装所选软件不能与自定义应答文件同时使用。")
@@ -565,9 +565,9 @@ impl NativeInstallState {
         let builtin_unattend =
             self.prefs.unattended_install && self.custom_unattend_path.trim().is_empty();
         if advanced_options.migrate_wifi && !builtin_unattend {
-            // The profile is imported only by LetRecovery's own first-logon finalizer, which is
+            // The profile is imported only by RZhuangJi's own first-logon finalizer, which is
             // staged exclusively with the built-in answer file. Without it the XML (including its
-            // plaintext key) would stay in LetRecovery_Scripts on the new system and never be
+            // plaintext key) would stay in RZhuangJi_Scripts on the new system and never be
             // imported. Skip the optional migration instead of shipping the secret.
             let reason = "built_in_unattend_not_used";
             log::warn!("[ADVANCED WIFI] status=skipped reason={reason}; installation continues");
@@ -1426,7 +1426,7 @@ mod tests {
         let mut state = base_state();
         state.prefs.driver_action = DriverAction::AutoImport;
         state.prefs.advanced_options.custom_username = true;
-        state.prefs.advanced_options.username = "LetRecovery".to_string();
+        state.prefs.advanced_options.username = "RZhuangJi".to_string();
         state.prefs.run_diskpart_scripts = true;
         state.advanced_options_enabled = true;
         let intent = state.start_intent().unwrap();
@@ -1439,7 +1439,7 @@ mod tests {
         };
         let config = intent.to_install_config("images\\install.wim", 1, Some(&pca));
         assert_eq!(config.driver_action_mode, 2);
-        assert_eq!(config.custom_username, "LetRecovery");
+        assert_eq!(config.custom_username, "RZhuangJi");
         assert_eq!(config.format_partition, state.prefs.format_partition);
         assert_eq!(config.repair_boot, state.prefs.repair_boot);
         assert!(!config.run_diskpart_scripts);

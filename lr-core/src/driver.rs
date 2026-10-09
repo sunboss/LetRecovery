@@ -427,7 +427,7 @@ impl PresentDeviceState {
     }
 }
 
-pub const STORAGE_DRIVER_REQUIREMENTS_FILE: &str = "LetRecovery-storage-drivers.json";
+pub const STORAGE_DRIVER_REQUIREMENTS_FILE: &str = "RZhuangJi-storage-drivers.json";
 const FILE_ATTRIBUTE_REPARSE_POINT_VALUE: u32 = 0x0000_0400;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -1165,7 +1165,7 @@ impl DriverManager {
     /// Windows publishes third-party packages as `oemN.inf` under `%Windows%\INF`.
     /// `SetupGetInfDriverStoreLocationW` resolves each published INF to its existing Driver Store
     /// package, whose complete ordinary-file tree is counted once. The exact storage-controller
-    /// manifest appended by LetRecovery is included as well.
+    /// manifest appended by RZhuangJi is included as well.
     pub fn estimate_online_oem_driver_export(&self) -> Result<DriverExportEstimate> {
         let windows = windows_directory()?;
         let inf_directory = windows.join("INF");

@@ -116,7 +116,7 @@ fn run() -> Result<(), String> {
     let capture_result = manager.capture_image(
         &source.to_string_lossy(),
         &output.to_string_lossy(),
-        &format!("LetRecovery PCA2023 {architecture}"),
+        &format!("RZhuangJi PCA2023 {architecture}"),
         "Offline Microsoft BootEx compatibility resources",
         2,
         None,

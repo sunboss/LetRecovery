@@ -1,7 +1,7 @@
 //! Warning-only removal of the Win32 OneDrive sync client during Windows specialize.
 //!
 //! Microsoft documents `OneDriveSetup.exe /uninstall` as the supported setup boundary. This
-//! module stages one fixed script for LetRecovery's built-in Windows 10/11 unattend. The script
+//! module stages one fixed script for RZhuangJi's built-in Windows 10/11 unattend. The script
 //! only considers setup executables at the two Windows-owned locations used by supported x86/x64
 //! installations, requires a valid Microsoft Authenticode signature, executes the single fixed
 //! `/uninstall` argument, and performs fresh typed readback of fixed uninstall keys and executable
@@ -26,7 +26,7 @@ param()
 $ErrorActionPreference = 'Stop'
 $operationTimeoutMilliseconds = 120000
 $result = [ordered]@{
-    schema = 'LetRecovery.OneDriveWin32Removal.v1'
+    schema = 'RZhuangJi.OneDriveWin32Removal.v1'
     status = 'warning'
     reason = 'not_started'
     candidates = [System.Collections.Generic.List[object]]::new()
@@ -42,7 +42,7 @@ $result = [ordered]@{
     hresult = $null
 }
 
-Write-Host '[LetRecovery] OneDrive cleanup: inspecting the official Windows uninstaller...'
+Write-Host '[RZhuangJi] OneDrive cleanup: inspecting the official Windows uninstaller...'
 
 function Write-SetupWarning {
     param(
@@ -53,7 +53,7 @@ function Write-SetupWarning {
 
     try {
         [Console]::Error.WriteLine(
-            'LETRECOVERY_ONEDRIVE_WARNING schema=LetRecovery.OneDriveWin32Removal.v1 code={0} exception_type={1} hresult={2}' -f
+            'LETRECOVERY_ONEDRIVE_WARNING schema=RZhuangJi.OneDriveWin32Removal.v1 code={0} exception_type={1} hresult={2}' -f
                 $Code,
                 $ExceptionType.Replace(' ', '_'),
                 $HResult
@@ -69,7 +69,7 @@ try {
     if ([string]::IsNullOrWhiteSpace($env:ProgramData)) {
         throw [System.IO.IOException]::new('ProgramData is unavailable for OneDrive removal logging')
     }
-    $logDirectory = [System.IO.Path]::Combine($env:ProgramData, 'LetRecovery', 'Logs')
+    $logDirectory = [System.IO.Path]::Combine($env:ProgramData, 'RZhuangJi', 'Logs')
     $logPath = [System.IO.Path]::Combine($logDirectory, 'OneDrive-win32-removal.json')
     $temporaryLogPath = $logPath + '.' + [Guid]::NewGuid().ToString('N') + '.tmp'
 } catch {
@@ -318,7 +318,7 @@ try {
                 throw [System.Security.SecurityException]::new('OneDriveSetup changed after trust validation')
             }
 
-            Write-Host ('[LetRecovery] OneDrive cleanup: running the official uninstaller (timeout {0} seconds)...' -f [int]($operationTimeoutMilliseconds / 1000))
+            Write-Host ('[RZhuangJi] OneDrive cleanup: running the official uninstaller (timeout {0} seconds)...' -f [int]($operationTimeoutMilliseconds / 1000))
             $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
             # Deliberately omit Start-Process -Wait: Microsoft documents that -Wait follows the
             # entire descendant tree and can therefore retain this Setup console indefinitely.
@@ -407,9 +407,9 @@ try {
 }
 
 if ($result.status -eq 'completed') {
-    Write-Host '[LetRecovery] OneDrive cleanup: completed.'
+    Write-Host '[RZhuangJi] OneDrive cleanup: completed.'
 } else {
-    Write-Host ('[LetRecovery] OneDrive cleanup: warning ({0}); Windows Setup will continue.' -f $result.reason)
+    Write-Host ('[RZhuangJi] OneDrive cleanup: warning ({0}); Windows Setup will continue.' -f $result.reason)
 }
 
 if ($null -ne $logPath -and $null -ne $temporaryLogPath) {
@@ -457,7 +457,7 @@ fn classify_attempt(
 pub fn online_script_path(target_partition: &str) -> Result<PathBuf> {
     let root = normalized_target_root(target_partition)?;
     Ok(root
-        .join("LetRecovery_Scripts")
+        .join("RZhuangJi_Scripts")
         .join(ONLINE_SCRIPT_FILE_NAME))
 }
 
@@ -515,7 +515,7 @@ pub fn online_script_is_staged(target_partition: &str) -> Result<bool> {
 /// Windows 10/11 answer file after the script has passed byte-for-byte staging verification.
 pub fn render_specialize_command(order: u32) -> Result<String> {
     let path = format!(
-        r#"powershell.exe -NoLogo -NoProfile -NonInteractive -WindowStyle Hidden -ExecutionPolicy Bypass -File "%SystemDrive%\LetRecovery_Scripts\{ONLINE_SCRIPT_FILE_NAME}""#
+        r#"powershell.exe -NoLogo -NoProfile -NonInteractive -WindowStyle Hidden -ExecutionPolicy Bypass -File "%SystemDrive%\RZhuangJi_Scripts\{ONLINE_SCRIPT_FILE_NAME}""#
     );
     crate::unattend_command::render_specialize_run_synchronous_command(
         order,
@@ -638,7 +638,7 @@ mod tests {
     fn logging_failures_emit_fixed_setup_warning_without_changing_exit_policy() {
         assert!(ONLINE_REMOVAL_SCRIPT.contains("[Console]::Error.WriteLine("));
         assert!(ONLINE_REMOVAL_SCRIPT
-            .contains("LETRECOVERY_ONEDRIVE_WARNING schema=LetRecovery.OneDriveWin32Removal.v1"));
+            .contains("LETRECOVERY_ONEDRIVE_WARNING schema=RZhuangJi.OneDriveWin32Removal.v1"));
         assert!(ONLINE_REMOVAL_SCRIPT.contains("log_path_initialization_failed"));
         assert!(ONLINE_REMOVAL_SCRIPT.contains("structured_log_persist_failed"));
         assert!(ONLINE_REMOVAL_SCRIPT.trim_end().ends_with("exit 0"));

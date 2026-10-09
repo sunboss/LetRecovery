@@ -1006,7 +1006,7 @@ mod tests {
         BackupConfig {
             save_path: format!("D:\\backup.{extension}"),
             name: "System Backup".to_owned(),
-            description: "LetRecovery backup".to_owned(),
+            description: "RZhuangJi backup".to_owned(),
             source_partition: "C:".to_owned(),
             incremental: true,
             format,

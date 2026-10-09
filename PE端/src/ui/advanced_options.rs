@@ -405,7 +405,7 @@ pub fn apply_advanced_options(
     }
 
     // 9. Curated AppX servicing is deferred until every externally loaded offline hive has
-    // been unloaded. DISM must not service an image while LetRecovery still owns hive handles.
+    // been unloaded. DISM must not service an image while RZhuangJi still owns hive handles.
 
     // 10. 导入磁盘控制器驱动（Win10/Win11 x64）
     if config.import_storage_controller_drivers {
@@ -1057,11 +1057,11 @@ mod tests {
     #[test]
     fn user_driver_filter_uses_only_the_authenticated_version_subtree() {
         assert!(user_driver_path_matches_version(
-            std::path::Path::new(r"R:\LetRecovery_Data\user_drivers\win11\net.inf"),
+            std::path::Path::new(r"R:\RZhuangJi_Data\user_drivers\win11\net.inf"),
             "win11"
         ));
         assert!(!user_driver_path_matches_version(
-            std::path::Path::new(r"R:\LetRecovery_Data\user_drivers\win10\net.inf"),
+            std::path::Path::new(r"R:\RZhuangJi_Data\user_drivers\win10\net.inf"),
             "win11"
         ));
         assert!(!user_driver_path_matches_version(

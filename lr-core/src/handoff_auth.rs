@@ -26,7 +26,7 @@ pub const AUTH_CAPSULE_MAGIC: &str = "LRHC1";
 pub const AUTH_CAPSULE_MAX_BYTES: usize = 4 * 1024;
 pub const AUTH_CONFIG_MAX_BYTES: usize = 4 * 1024 * 1024;
 
-/// Returns whether a plain file name belongs exclusively to LetRecovery's private PE staging
+/// Returns whether a plain file name belongs exclusively to RZhuangJi's private PE staging
 /// namespace and can therefore be removed as an orphan after all journal-authorized BCD cleanup
 /// has completed. Journals are intentionally excluded and must be handled by their transaction
 /// parser. Arbitrary names, directories and reparse points never become eligible through this
@@ -78,7 +78,7 @@ pub fn is_orphaned_private_pe_file_name(name: &str) -> bool {
 }
 
 const HMAC_BLOCK_BYTES: usize = 64;
-const PROTOCOL_LABEL: &[u8] = b"LetRecovery\0cross-reboot-handoff\0HMAC-SHA256\0v1";
+const PROTOCOL_LABEL: &[u8] = b"RZhuangJi\0cross-reboot-handoff\0HMAC-SHA256\0v1";
 const SESSION_FIELD_LABEL: &[u8] = b"session";
 const CONFIG_FIELD_LABEL: &[u8] = b"config";
 
@@ -793,7 +793,7 @@ mod tests {
             .unwrap();
 
         for invalid in [
-            "LetRecovery Install Marker\r\nSessionId=00112233445566778899aabbccddeeff\r\n",
+            "RZhuangJi Install Marker\r\nSessionId=00112233445566778899aabbccddeeff\r\n",
             "LRHA1\r\nSessionId=00112233445566778899aabbccddeeff\r\nPurpose=install\r\nConfigHmacSha256=0000000000000000000000000000000000000000000000000000000000000000\r\n",
             "LRHA1\r\nPurpose=install\r\nSessionId=00112233445566778899aabbccddeeff\r\nSessionId=00112233445566778899aabbccddeeff\r\nConfigHmacSha256=0000000000000000000000000000000000000000000000000000000000000000\r\n",
             "LRHA1\r\nPurpose=install\r\nSessionId=00112233445566778899aabbccddeeff\r\nConfigHmacSha256=0000000000000000000000000000000000000000000000000000000000000000\r\nUnknown=true\r\n",

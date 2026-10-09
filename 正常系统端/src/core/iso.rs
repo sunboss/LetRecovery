@@ -313,7 +313,7 @@ impl IsoMounter {
         }
     }
 
-    /// Run a read-only operation against an ISO mounted by LetRecovery and always detach the
+    /// Run a read-only operation against an ISO mounted by RZhuangJi and always detach the
     /// exact image path before returning. The operation never scans or ejects unrelated media.
     pub fn with_mounted_iso<T>(
         iso_path: &str,

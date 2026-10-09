@@ -35,7 +35,7 @@ const READ_TIMEOUT: Duration = Duration::from_secs(120);
 /// Chunk size for body streaming.
 const STREAM_BUF: usize = 64 * 1024;
 
-const USER_AGENT: &str = "LetRecovery-PE-Fetch/1.0";
+const USER_AGENT: &str = "RZhuangJi-PE-Fetch/1.0";
 
 /// What to download and how to verify it.
 #[derive(Debug, Clone)]

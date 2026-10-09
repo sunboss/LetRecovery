@@ -55,11 +55,11 @@ jobs:
           cargo check --workspace --all-targets --locked
           # Rust 1.88 reports this style-only lint differently from newer supported toolchains.
           # Keep every behavioral warning blocking while avoiding a version-dependent rewrite.
-          cargo clippy --workspace --all-targets --locked --features "LetRecovery/non-elevated-tests,letrecovery-pe/non-elevated-tests" -- -D warnings -A clippy::uninlined_format_args
-          cargo test --workspace --no-run --locked --features "LetRecovery/non-elevated-tests,letrecovery-pe/non-elevated-tests"
+          cargo clippy --workspace --all-targets --locked --features "RZhuangJi/non-elevated-tests,letrecovery-pe/non-elevated-tests" -- -D warnings -A clippy::uninlined_format_args
+          cargo test --workspace --no-run --locked --features "RZhuangJi/non-elevated-tests,letrecovery-pe/non-elevated-tests"
           cargo test -p lr-core --locked
           cargo test -p letrecovery-pe --locked --features non-elevated-tests
-          cargo test -p LetRecovery --locked --features non-elevated-tests
+          cargo test -p RZhuangJi --locked --features non-elevated-tests
 
       - name: Build and verify system-side exe (RZhuangJi.exe)
         shell: pwsh
@@ -97,7 +97,11 @@ jobs:
             mv "pkg/LetRecovery.exe" "pkg/RZhuangJi.exe"
           fi
           test -f "pkg/RZhuangJi.exe"            || { echo "底包缺少 RZhuangJi.exe"; exit 1; }
-          test -f "pkg/bin/pe/LetRecovery_PE.wim"  || { echo "底包缺少 bin/pe/LetRecovery_PE.wim"; exit 1; }
+          # WIM 文件名统一为 RZhuangJi_PE.wim
+          if [ -f "pkg/bin/pe/LetRecovery_PE.wim" ] && [ ! -f "pkg/bin/pe/RZhuangJi_PE.wim" ]; then
+            mv "pkg/bin/pe/LetRecovery_PE.wim" "pkg/bin/pe/RZhuangJi_PE.wim"
+          fi
+          test -f "pkg/bin/pe/RZhuangJi_PE.wim"  || { echo "底包缺少 bin/pe/RZhuangJi_PE.wim"; exit 1; }
 
       - name: Rebuild package config from generated release defaults
         shell: pwsh
@@ -470,7 +474,7 @@ jobs:
           dism /Get-WimInfo /WimFile:"$wim" /Index:1
           # 挂载提交会在 WIM 内留下被替换文件的旧数据流（7z/Bandizip 显示为 [DELETED]）。
           # /Export-Image 仅复制被引用的数据流到新 WIM，去掉孤立流；并保留映像名称与可启动标记。
-          $tmp = "pkg\bin\pe\_LetRecovery_PE.clean.wim"
+          $tmp = "pkg\bin\pe\_RZhuangJi_PE.clean.wim"
           if (Test-Path $tmp) { Remove-Item -Force $tmp }
           dism /Export-Image /SourceImageFile:"$wim" /SourceIndex:1 /DestinationImageFile:"$tmp" /Compress:max
           if ($LASTEXITCODE -ne 0) { throw "DISM export failed" }

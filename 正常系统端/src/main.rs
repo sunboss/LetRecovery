@@ -493,7 +493,7 @@ fn main() -> anyhow::Result<()> {
         }
     }
 
-    log::info!("LetRecovery 启动中...");
+    log::info!("RZhuangJi 启动中...");
     log::info!(
         "[诊断环境] 软件版本: version={} | channel={} | arch={}",
         env!("BUILD_VERSION"),
@@ -616,9 +616,9 @@ fn main() -> anyhow::Result<()> {
 
     // 防止重复运行
     #[cfg(not(feature = "non-elevated-tests"))]
-    let mutex_name = "LetRecovery-mutex-2025";
+    let mutex_name = "RZhuangJi-mutex-2025";
     #[cfg(feature = "non-elevated-tests")]
-    let mutex_name = "LetRecovery-native-ui-preview-mutex";
+    let mutex_name = "RZhuangJi-native-ui-preview-mutex";
 
     let _mutex = match single_instance::SingleInstance::new(mutex_name) {
         Ok(m) => {
@@ -1142,7 +1142,7 @@ fn show_error_message(message: &str) {
             .encode_wide()
             .chain(std::iter::once(0))
             .collect();
-        let wide_title: Vec<u16> = OsStr::new("LetRecovery 错误")
+        let wide_title: Vec<u16> = OsStr::new("RZhuangJi 错误")
             .encode_wide()
             .chain(std::iter::once(0))
             .collect();
@@ -1303,7 +1303,7 @@ mod tests {
                 "RZhuangJi.exe",
                 "--internal-register-personal-files-at-shell",
                 "0123456789abcdef0123456789abcdef",
-                r"C:\LetRecovery-first-logon.cmd",
+                r"C:\RZhuangJi-first-logon.cmd",
             ][..],
             &[
                 "RZhuangJi.exe",
@@ -1385,7 +1385,7 @@ mod tests {
                 "RZhuangJi.exe",
                 "--internal-register-personal-files-at-shell",
                 "0123456789abcdef0123456789abcdef",
-                r"C:\LetRecovery-first-logon.cmd",
+                r"C:\RZhuangJi-first-logon.cmd",
             ])),
             StartupRoute::InternalNativeHelper
         );

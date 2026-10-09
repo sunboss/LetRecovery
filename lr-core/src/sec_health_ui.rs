@@ -1,7 +1,7 @@
 //! Narrow Windows Security UI removal support for the Defender advanced option.
 //!
 //! The offline phase delegates to the exact-identity provisioned AppX boundary. The online
-//! phase is a fixed, staged PowerShell script used only by LetRecovery's built-in Win10/11
+//! phase is a fixed, staged PowerShell script used only by RZhuangJi's built-in Win10/11
 //! unattend. It never deletes package directories or changes WindowsApps/AppRepository ACLs. The
 //! script uses exact AppX retirement identities and can hide only the currently discoverable
 //! non-mandatory KB5007651 Windows Update offer; it never claims a permanent update blacklist.
@@ -38,18 +38,18 @@ pub const SEC_HEALTH_UI_IDENTITIES: &[CuratedAppxIdentity] = &[
 const ONLINE_REMOVAL_SCRIPT: &str = r#"[CmdletBinding()]
 param(
     [switch]$SuppressCurrentSecurityUpdate,
-    [switch]$LetRecoveryWorker
+    [switch]$RZhuangJiWorker
 )
 
 $ErrorActionPreference = 'Stop'
-if (-not $LetRecoveryWorker) {
+if (-not $RZhuangJiWorker) {
     # Windows Setup waits for RunSynchronous commands without any timeout. AppX servicing on a new
     # or damaged image can block indefinitely and would leave Setup on its wait screen forever.
     # Run the real work in a bounded child PowerShell and always let Windows Setup continue.
     $workerTimeoutMilliseconds = if ($SuppressCurrentSecurityUpdate) { 170000 } else { 900000 }
     try {
         $workerPowerShell = [System.IO.Path]::Combine($env:SystemRoot, 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe')
-        $workerArguments = @('-NoP', '-NonI', '-ExecutionPolicy', 'Bypass', '-File', ('"{0}"' -f $PSCommandPath), '-LetRecoveryWorker')
+        $workerArguments = @('-NoP', '-NonI', '-ExecutionPolicy', 'Bypass', '-File', ('"{0}"' -f $PSCommandPath), '-RZhuangJiWorker')
         if ($SuppressCurrentSecurityUpdate) { $workerArguments += '-SuppressCurrentSecurityUpdate' }
         $worker = Start-Process -FilePath $workerPowerShell -ArgumentList $workerArguments -WindowStyle Hidden -PassThru
         try { $null = $worker.Handle } catch {}
@@ -66,13 +66,13 @@ if (-not $LetRecoveryWorker) {
     exit 0
 }
 $result = [ordered]@{
-    schema = 'LetRecovery.SecHealthUIRemoval.v1'
+    schema = 'RZhuangJi.SecHealthUIRemoval.v1'
     status = 'warning'
     update_suppression = 'not_checked'
     items = [System.Collections.Generic.List[object]]::new()
 }
-Write-Host '[LetRecovery] Windows Security UI cleanup: reading the installed package inventory...'
-$logDirectory = [System.IO.Path]::Combine($env:ProgramData, 'LetRecovery', 'Logs')
+Write-Host '[RZhuangJi] Windows Security UI cleanup: reading the installed package inventory...'
+$logDirectory = [System.IO.Path]::Combine($env:ProgramData, 'RZhuangJi', 'Logs')
 $logPath = [System.IO.Path]::Combine($logDirectory, 'SecHealthUI-removal.json')
 $temporaryLogPath = $logPath + '.tmp'
 $allowed = @(
@@ -80,13 +80,13 @@ $allowed = @(
     [ordered]@{ Name = 'Microsoft.Windows.SecHealthUI'; Family = 'Microsoft.Windows.SecHealthUI_cw5n1h2txyewy' }
 )
 
-function Test-LetRecoveryAppxToken([string]$value) {
+function Test-RZhuangJiAppxToken([string]$value) {
     return (-not [string]::IsNullOrWhiteSpace($value)) -and
         $value.Length -le 512 -and
         $value -match '\A[A-Za-z0-9._~-]+\z'
 }
 
-function Set-LetRecoverySecHealthUiUpdateSuppression() {
+function Set-RZhuangJiSecHealthUiUpdateSuppression() {
     # KB5007651 is Microsoft's Windows Security app/platform update. Windows Update Agent has no
     # supported permanent PFN blacklist: IsHidden applies only to a currently discoverable,
     # non-mandatory update object. A future update with a new identity must not be reported as
@@ -94,7 +94,7 @@ function Set-LetRecoverySecHealthUiUpdateSuppression() {
     $targetKb = '5007651'
     try {
         $session = New-Object -ComObject 'Microsoft.Update.Session' -ErrorAction Stop
-        $session.ClientApplicationID = 'LetRecovery.SecHealthUIRemoval'
+        $session.ClientApplicationID = 'RZhuangJi.SecHealthUIRemoval'
         $searcher = $session.CreateUpdateSearcher()
         $searcher.Online = $true
         $searcher.IncludePotentiallySupersededUpdates = $true
@@ -219,8 +219,8 @@ function Set-LetRecoverySecHealthUiUpdateSuppression() {
     }
 }
 
-function Import-LetRecoveryAppxRetirementMarkers([string]$family, [object[]]$packages) {
-    if (-not (Test-LetRecoveryAppxToken $family)) {
+function Import-RZhuangJiAppxRetirementMarkers([string]$family, [object[]]$packages) {
+    if (-not (Test-RZhuangJiAppxToken $family)) {
         throw ('unsafe package family name: {0}' -f $family)
     }
     [void][System.IO.Directory]::CreateDirectory($logDirectory)
@@ -235,7 +235,7 @@ function Import-LetRecoveryAppxRetirementMarkers([string]$family, [object[]]$pac
     foreach ($package in $packages) {
         $fullName = [string]$package.PackageFullName
         if ([string]::IsNullOrWhiteSpace($fullName)) { $fullName = [string]$package.PackageName }
-        if (-not (Test-LetRecoveryAppxToken $fullName)) {
+        if (-not (Test-RZhuangJiAppxToken $fullName)) {
             throw ('unsafe package full name: {0}' -f $fullName)
         }
         $sids = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
@@ -275,8 +275,8 @@ function Import-LetRecoveryAppxRetirementMarkers([string]$family, [object[]]$pac
 
 try {
     if ($SuppressCurrentSecurityUpdate) {
-        Write-Host '[LetRecovery] Windows Security UI cleanup: suppressing the current KB5007651 offer...'
-        Set-LetRecoverySecHealthUiUpdateSuppression
+        Write-Host '[RZhuangJi] Windows Security UI cleanup: suppressing the current KB5007651 offer...'
+        Set-RZhuangJiSecHealthUiUpdateSuppression
     } else {
         $result.update_suppression = 'deferred_to_first_logon'
     }
@@ -302,7 +302,7 @@ try {
         foreach ($package in $provisionedCandidates) { $markerPackages.Add($package) }
         if ($markerPackages.Count -gt 0) {
             try {
-                Import-LetRecoveryAppxRetirementMarkers $identity.Family @($markerPackages)
+                Import-RZhuangJiAppxRetirementMarkers $identity.Family @($markerPackages)
                 $result.items.Add([ordered]@{ family = $identity.Family; package = $null; status = 'markers_imported'; reason = 'exact_deprovisioned_and_end_of_life_keys_imported' })
             } catch {
                 $result.items.Add([ordered]@{
@@ -414,7 +414,7 @@ try {
             }
         }
     }
-    Write-Host '[LetRecovery] Windows Security UI cleanup: verifying the final all-user and provisioning state...'
+    Write-Host '[RZhuangJi] Windows Security UI cleanup: verifying the final all-user and provisioning state...'
     $finalInventory = @(Get-AppxPackage -AllUsers -ErrorAction Stop)
     $finalProvisioned = @(Get-AppxProvisionedPackage -Online -ErrorAction Stop)
     $remainingCount = 0
@@ -447,9 +447,9 @@ try {
 }
 
 if ($result.status -eq 'completed') {
-    Write-Host '[LetRecovery] Windows Security UI cleanup: completed.'
+    Write-Host '[RZhuangJi] Windows Security UI cleanup: completed.'
 } else {
-    [Console]::Error.WriteLine('[LetRecovery] Windows Security UI cleanup did not reach the required absent state.')
+    [Console]::Error.WriteLine('[RZhuangJi] Windows Security UI cleanup did not reach the required absent state.')
 }
 
 try {
@@ -460,7 +460,7 @@ try {
 } catch {
     try {
         [Console]::Error.WriteLine(
-            ('LETRECOVERY_SEC_HEALTH_UI_WARNING schema=LetRecovery.SecHealthUIRemoval.v1 code=structured_log_persist_failed exception_type={0} hresult={1}' -f
+            ('LETRECOVERY_SEC_HEALTH_UI_WARNING schema=RZhuangJi.SecHealthUIRemoval.v1 code=structured_log_persist_failed exception_type={0} hresult={1}' -f
                 $_.Exception.GetType().FullName,
                 $_.Exception.HResult)
         )
@@ -479,7 +479,7 @@ pub fn remove_offline_provisioning(
 pub fn online_script_path(target_partition: &str) -> Result<PathBuf> {
     let root = normalized_target_root(target_partition)?;
     Ok(root
-        .join("LetRecovery_Scripts")
+        .join("RZhuangJi_Scripts")
         .join(ONLINE_SCRIPT_FILE_NAME))
 }
 
@@ -542,7 +542,7 @@ pub fn online_script_is_staged(target_partition: &str) -> Result<bool> {
 /// produces an unusable installation and prevents the bounded first-logon retry from running.
 pub fn render_specialize_command(order: u32) -> Result<String> {
     let path = format!(
-        r#"powershell.exe -NoP -NonI -W Hidden -EP Bypass -File "%SystemDrive%\LetRecovery_Scripts\{ONLINE_SCRIPT_FILE_NAME}""#
+        r#"powershell.exe -NoP -NonI -W Hidden -EP Bypass -File "%SystemDrive%\RZhuangJi_Scripts\{ONLINE_SCRIPT_FILE_NAME}""#
     );
     crate::unattend_command::render_specialize_run_synchronous_command(
         order,

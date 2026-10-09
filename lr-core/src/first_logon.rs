@@ -16,8 +16,8 @@ use subtle::ConstantTimeEq;
 use zeroize::Zeroizing;
 
 pub const SCRIPT_FILE_NAME: &str = "first-logon-finalize.ps1";
-pub const LAUNCHER_FILE_NAME: &str = "LetRecovery-first-logon.cmd";
-pub const ACCOUNT_HELPER_FILE_NAME: &str = "LetRecovery-account-helper.exe";
+pub const LAUNCHER_FILE_NAME: &str = "RZhuangJi-first-logon.cmd";
+pub const ACCOUNT_HELPER_FILE_NAME: &str = "RZhuangJi-account-helper.exe";
 pub const ACCOUNT_HELPER_RUNTIME_FILE_NAME: &str = "vcruntime140.dll";
 pub const PERSONAL_RESTORE_PENDING_FILE_NAME: &str = "personal-restore.pending";
 pub const PERSONAL_RESTORE_RECEIPT_FILE_NAME: &str = "personal-restore.completed";
@@ -28,12 +28,12 @@ pub const PERSONAL_RESTORE_SHELL_VERIFIED_FILE_NAME: &str =
     "personal-restore-shell-verified.receipt";
 pub const PERSONAL_RESTORE_FAILURE_FILE_NAME: &str = "personal-restore.failed";
 pub const PERSONAL_RESTORE_RUN_KEY: &str = r"HKCU\Software\Microsoft\Windows\CurrentVersion\Run";
-pub const PERSONAL_RESTORE_RUN_VALUE: &str = "LetRecoveryPersonalRestore";
+pub const PERSONAL_RESTORE_RUN_VALUE: &str = "RZhuangJiPersonalRestore";
 pub const BUILTIN_TRANSITION_MARKER_FILE_NAME: &str = "builtin-administrator-transition.pending";
 pub const BUILTIN_TRANSITION_SECRET_STAGING_FILE_NAME: &str =
     "builtin-administrator-secret.pending";
-pub const BUILTIN_TRANSITION_RUN_VALUE: &str = "LetRecoveryBuiltinAdministratorTransition";
-pub const PERSONAL_RESTORE_RUN_ONCE_VALUE: &str = "LetRecoveryPersonalRestoreGate";
+pub const BUILTIN_TRANSITION_RUN_VALUE: &str = "RZhuangJiBuiltinAdministratorTransition";
+pub const PERSONAL_RESTORE_RUN_ONCE_VALUE: &str = "RZhuangJiPersonalRestoreGate";
 pub const PRIVATE_WIFI_PROFILE_MAX_BYTES: u64 = 1024 * 1024;
 
 const WINLOGON_KEY: &str = r"HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon";
@@ -45,9 +45,9 @@ const PERSONAL_RESTORE_SHELL_GATE_MAX_BYTES: u64 = 16 * 1024;
 
 const LAUNCHER: &str = r#"@echo off
 setlocal EnableExtensions EnableDelayedExpansion
-set "lr_script=%SystemDrive%\LetRecovery_Scripts\first-logon-finalize.ps1"
+set "lr_script=%SystemDrive%\RZhuangJi_Scripts\first-logon-finalize.ps1"
 if /i "%~1"=="cleanup" goto :cleanup_after_restore
-set "lr_log_dir=%ProgramData%\LetRecovery\Logs"
+set "lr_log_dir=%ProgramData%\RZhuangJi\Logs"
 if not exist "%lr_log_dir%" md "%lr_log_dir%"
 if not exist "%lr_log_dir%" (
   echo LETRECOVERY_FIRST_LOGON_LOG_DIRECTORY_FAILURE 1>&2
@@ -77,20 +77,20 @@ if not "!lr_ec!"=="0" (
   exit /b !lr_ec!
 )
 if /i "%~1"=="restore" goto :cleanup_after_restore
-if exist "%SystemDrive%\LetRecovery_Scripts\builtin-administrator-transition.pending" (
+if exist "%SystemDrive%\RZhuangJi_Scripts\builtin-administrator-transition.pending" (
   echo Built-in Administrator transition: staging preserved for the final account logon 2>nul >>"%lr_log%"
   exit /b 0
 )
-if exist "%SystemDrive%\LetRecovery_Scripts\personal-restore.pending" (
+if exist "%SystemDrive%\RZhuangJi_Scripts\personal-restore.pending" (
   echo Personal files restore: pre-Explorer gate retained; staging cleanup deferred 2>nul >>"%lr_log%"
   exit /b 0
 )
-if exist "%SystemDrive%\LetRecovery_Scripts\personal-restore-shell-gate.state" (
+if exist "%SystemDrive%\RZhuangJi_Scripts\personal-restore-shell-gate.state" (
   echo Personal files restore: staging retained until the verified Explorer Shell takes over 2>nul >>"%lr_log%"
   exit /b 0
 )
-if exist "%SystemDrive%\LetRecovery_Scripts" rd /s /q "%SystemDrive%\LetRecovery_Scripts"
-if exist "%SystemDrive%\LetRecovery_Scripts" (
+if exist "%SystemDrive%\RZhuangJi_Scripts" rd /s /q "%SystemDrive%\RZhuangJi_Scripts"
+if exist "%SystemDrive%\RZhuangJi_Scripts" (
   echo LETRECOVERY_FIRST_LOGON_CLEANUP_FAILURE 1>&2
   exit /b 3
 )
@@ -102,8 +102,8 @@ exit /b 0
 set /a lr_cleanup_attempt=0
 :retry_cleanup_after_restore
 set /a lr_cleanup_attempt+=1
-if exist "%SystemDrive%\LetRecovery_Scripts" rd /s /q "%SystemDrive%\LetRecovery_Scripts" >nul 2>&1
-if exist "%SystemDrive%\LetRecovery_Scripts" (
+if exist "%SystemDrive%\RZhuangJi_Scripts" rd /s /q "%SystemDrive%\RZhuangJi_Scripts" >nul 2>&1
+if exist "%SystemDrive%\RZhuangJi_Scripts" (
   if !lr_cleanup_attempt! GEQ 120 (
     echo LETRECOVERY_FIRST_LOGON_CLEANUP_FAILURE 1>&2
     exit /b 3
@@ -215,7 +215,7 @@ $systemVolumeRoot = [System.IO.Path]::GetPathRoot($env:SystemRoot)
 if ([string]::IsNullOrWhiteSpace($systemVolumeRoot) -or -not [System.IO.Path]::IsPathRooted($systemVolumeRoot)) {
   throw 'system volume root is unavailable'
 }
-$directory = [System.IO.Path]::Combine($systemVolumeRoot, 'LetRecovery_Scripts')
+$directory = [System.IO.Path]::Combine($systemVolumeRoot, 'RZhuangJi_Scripts')
 $secHealth = [System.IO.Path]::Combine($directory, 'remove-sec-health-ui.ps1')
 $curated = [System.IO.Path]::Combine($directory, 'remove-curated-appx.ps1')
 $softwareDirectory = [System.IO.Path]::Combine($directory, 'PreinstalledSoftware')
@@ -224,21 +224,21 @@ $automationShutdownOnTerminal = __LETRECOVERY_AUTOMATION_SHUTDOWN_ON_TERMINAL__
 $personalRestoreSessionId = '__LETRECOVERY_PERSONAL_RESTORE_SESSION_ID__'
 $temporaryOobeAccountHex = '__LETRECOVERY_TEMPORARY_OOBE_ACCOUNT_HEX__'
 $builtinAdministratorNameHex = '__LETRECOVERY_BUILTIN_ADMINISTRATOR_NAME_HEX__'
-$personalRestoreHelper = [System.IO.Path]::Combine($directory, 'LetRecovery-account-helper.exe')
-$personalRestoreLauncher = [System.IO.Path]::Combine($systemVolumeRoot, 'LetRecovery-first-logon.cmd')
+$personalRestoreHelper = [System.IO.Path]::Combine($directory, 'RZhuangJi-account-helper.exe')
+$personalRestoreLauncher = [System.IO.Path]::Combine($systemVolumeRoot, 'RZhuangJi-first-logon.cmd')
 $personalRestoreShellGate = [System.IO.Path]::Combine($directory, 'personal-restore-shell-gate.state')
 $personalRestoreShellReleased = [System.IO.Path]::Combine($directory, 'personal-restore-shell-gate.released')
 $personalRestoreShellVerified = [System.IO.Path]::Combine($directory, 'personal-restore-shell-verified.receipt')
 $wifi = [System.IO.Path]::Combine($directory, 'LR_WiFi.xml')
 $custom = [System.IO.Path]::Combine($directory, 'firstlogon.bat')
-$logDirectory = [System.IO.Path]::Combine($env:ProgramData, 'LetRecovery', 'Logs')
+$logDirectory = [System.IO.Path]::Combine($env:ProgramData, 'RZhuangJi', 'Logs')
 $logPath = [System.IO.Path]::Combine($logDirectory, 'FirstLogon-finalize.log')
 [void][System.IO.Directory]::CreateDirectory($logDirectory)
 $finalExitCode = 0
 $builtinTransitionScheduled = $false
 $personalRestoreRestartScheduled = $false
 function Convert-LrUtf16Hex([string]$Value) {
-  if ([string]::IsNullOrWhiteSpace($Value) -or (($Value.Length % 4) -ne 0) -or $Value -notmatch '\A[0-9a-f]+\z') { throw 'invalid LetRecovery UTF-16 hex field' }
+  if ([string]::IsNullOrWhiteSpace($Value) -or (($Value.Length % 4) -ne 0) -or $Value -notmatch '\A[0-9a-f]+\z') { throw 'invalid RZhuangJi UTF-16 hex field' }
   $builder = New-Object System.Text.StringBuilder -ArgumentList ([int]($Value.Length / 4))
   for ($offset = 0; $offset -lt $Value.Length; $offset += 4) {
     [void]$builder.Append([char][System.Convert]::ToUInt16($Value.Substring($offset, 4), 16))
@@ -433,7 +433,7 @@ try {
   if ([System.IO.File]::Exists($wifi)) {
     try {
     [System.IO.File]::AppendAllText($logPath, "Wi-Fi profile import: starting`r`n")
-    if (-not ('LetRecovery.NativeWifiProfile' -as [type])) {
+    if (-not ('RZhuangJi.NativeWifiProfile' -as [type])) {
       Add-Type -TypeDefinition @'
 using System;
 using System.Collections.Generic;
@@ -441,7 +441,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Xml;
 
-namespace LetRecovery {
+namespace RZhuangJi {
   public static class NativeWifiProfile {
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     private struct WLAN_INTERFACE_INFO {
@@ -524,7 +524,7 @@ namespace LetRecovery {
     $wifiError = $null
     for ($attempt = 1; $attempt -le 12; $attempt++) {
       try {
-        $wifiResult = [LetRecovery.NativeWifiProfile]::Import($wifi)
+        $wifiResult = [RZhuangJi.NativeWifiProfile]::Import($wifi)
         break
       } catch {
         $wifiError = $_.Exception.Message
@@ -619,13 +619,13 @@ namespace LetRecovery {
   [System.IO.File]::AppendAllText($logPath, "First-logon staging cleanup: deferred until the PowerShell process exits`r`n")
   if (-not $builtinTransitionScheduled -and -not $personalRestoreRestartScheduled -and $automationShutdownOnTerminal -and ([string]::IsNullOrWhiteSpace($personalRestoreSessionId) -or $PersonalRestoreAtShell -or [System.IO.File]::Exists($personalRestoreShellReleased))) {
     try {
-      if (-not ('LetRecovery.AutomationPower' -as [type])) {
+      if (-not ('RZhuangJi.AutomationPower' -as [type])) {
         Add-Type -TypeDefinition @'
 using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 
-namespace LetRecovery {
+namespace RZhuangJi {
   public static class AutomationPower {
     [StructLayout(LayoutKind.Sequential)] private struct LUID { public uint LowPart; public int HighPart; }
     [StructLayout(LayoutKind.Sequential)] private struct LUID_AND_ATTRIBUTES { public LUID Luid; public uint Attributes; }
@@ -660,7 +660,7 @@ namespace LetRecovery {
         int privilegeError = Marshal.GetLastWin32Error();
         if (privilegeError == ERROR_NOT_ALL_ASSIGNED) throw new Win32Exception(privilegeError, "SeShutdownPrivilege is not assigned");
         if (privilegeError != 0) throw new Win32Exception(privilegeError, "AdjustTokenPrivileges");
-        if (!InitiateSystemShutdownEx(null, "LetRecovery automation finished; this test machine will power off.", 300, false, false, REASON_APPLICATION_INSTALLATION_PLANNED)) {
+        if (!InitiateSystemShutdownEx(null, "RZhuangJi automation finished; this test machine will power off.", 300, false, false, REASON_APPLICATION_INSTALLATION_PLANNED)) {
           int shutdownError = Marshal.GetLastWin32Error();
           if (shutdownError != ERROR_SHUTDOWN_IN_PROGRESS) throw new Win32Exception(shutdownError, "InitiateSystemShutdownEx");
         }
@@ -672,7 +672,7 @@ namespace LetRecovery {
 }
 '@
       }
-      [LetRecovery.AutomationPower]::Schedule()
+      [RZhuangJi.AutomationPower]::Schedule()
       [System.IO.File]::AppendAllText($logPath, "Automation shutdown: accepted timeout=300s force_apps_closed=false reboot=false`r`n")
     } catch {
       [System.IO.File]::AppendAllText($logPath, ("Automation shutdown: failed detail={0}`r`n" -f $_.Exception.Message))
@@ -748,7 +748,7 @@ pub fn stage_with_software_shutdown_and_personal_restore_and_builtin(
         None => (None, None),
     };
     let root = normalized_target_root(target_partition)?;
-    let directory = root.join("LetRecovery_Scripts");
+    let directory = root.join("RZhuangJi_Scripts");
     std::fs::create_dir_all(&directory)?;
     reject_reparse_or_non_directory(&directory)?;
     verify_staged_software(&directory, packages)?;
@@ -997,8 +997,8 @@ fn builtin_transition_directory() -> Result<PathBuf> {
         .context("account helper has no parent directory")?
         .to_path_buf();
     reject_reparse_or_non_directory(&directory)?;
-    if directory.file_name().and_then(|name| name.to_str()) != Some("LetRecovery_Scripts") {
-        anyhow::bail!("account helper is outside the fixed LetRecovery staging directory");
+    if directory.file_name().and_then(|name| name.to_str()) != Some("RZhuangJi_Scripts") {
+        anyhow::bail!("account helper is outside the fixed RZhuangJi staging directory");
     }
     Ok(directory)
 }
@@ -1147,7 +1147,7 @@ fn begin_builtin_administrator_transition_inner(
 
     let launcher = directory
         .parent()
-        .context("LetRecovery staging directory has no volume root")?
+        .context("RZhuangJi staging directory has no volume root")?
         .join(LAUNCHER_FILE_NAME);
     let launcher_metadata = std::fs::symlink_metadata(&launcher)
         .with_context(|| format!("inspect first-logon launcher {}", launcher.display()))?;
@@ -1211,7 +1211,7 @@ fn begin_builtin_administrator_transition_inner(
     // available to preserve, so use the explicit unattended restart boundary.
     crate::windows_shutdown::schedule_restart_for_automation(
         0,
-        "LetRecovery is switching from its temporary OOBE account to the requested built-in Administrator account.",
+        "RZhuangJi is switching from its temporary OOBE account to the requested built-in Administrator account.",
     )?;
     Ok(())
 }
@@ -1400,7 +1400,7 @@ fn personal_restore_launcher_path(directory: &Path) -> Result<PathBuf> {
     directory
         .parent()
         .map(|root| root.join(LAUNCHER_FILE_NAME))
-        .ok_or_else(|| anyhow::anyhow!("LetRecovery staging directory has no volume root"))
+        .ok_or_else(|| anyhow::anyhow!("RZhuangJi staging directory has no volume root"))
 }
 
 fn personal_restore_shell_command(directory: &Path, session_id: &str) -> Result<String> {
@@ -1462,7 +1462,7 @@ fn first_logon_run_once_command(directory: &Path) -> Result<String> {
 
 fn personal_restore_task_name(session_id: &str) -> Result<String> {
     validate_personal_restore_session_id(session_id)?;
-    Ok(format!("LetRecovery Personal Restore {session_id}"))
+    Ok(format!("RZhuangJi Personal Restore {session_id}"))
 }
 
 fn personal_restore_task_arguments(launcher: &Path, session_id: &str) -> Result<String> {
@@ -1505,7 +1505,7 @@ fn personal_restore_task_xml(
     }
     let launcher = personal_restore_launcher_path(directory)?;
     let command_interpreter = crate::windows_compat::system_directory()?.join("cmd.exe");
-    let description = "Restore LetRecovery personal files before Windows Explorer starts.";
+    let description = "Restore RZhuangJi personal files before Windows Explorer starts.";
     let arguments = personal_restore_task_arguments(&launcher, session_id)?;
     let triggers = format!(
         "<Triggers><LogonTrigger><Enabled>true</Enabled><UserId>{}</UserId></LogonTrigger></Triggers>",
@@ -1748,7 +1748,7 @@ pub fn begin_personal_restore_second_logon(session_id: &str) -> Result<()> {
     // hold Winlogon on the "apps are preventing restart" screen indefinitely.
     crate::windows_shutdown::schedule_restart_for_automation(
         0,
-        "LetRecovery is restarting once so personal files can be restored before Windows Explorer starts.",
+        "RZhuangJi is restarting once so personal files can be restored before Windows Explorer starts.",
     )
 }
 
@@ -2462,9 +2462,9 @@ fn show_personal_restore_progress_fallback(error: &anyhow::Error) {
         MessageBoxW, MB_ICONERROR, MB_OK, MB_SETFOREGROUND, MB_TOPMOST,
     };
     let message = progress_shell_wide(&format!(
-        "LetRecovery 无法创建个人文件恢复进度窗口。\r\n\r\n{error:#}\r\n\r\n请重新启动 Windows 后重试。"
+        "RZhuangJi 无法创建个人文件恢复进度窗口。\r\n\r\n{error:#}\r\n\r\n请重新启动 Windows 后重试。"
     ));
-    let title = progress_shell_wide("LetRecovery 个人文件恢复");
+    let title = progress_shell_wide("RZhuangJi 个人文件恢复");
     unsafe {
         let _ = MessageBoxW(
             None,
@@ -2498,7 +2498,7 @@ fn run_personal_restore_progress_window(
     let _ = crate::windows_compat::enable_best_process_dpi_awareness();
     let initial_dpi = crate::windows_compat::dpi_for_system().max(96);
     let instance = unsafe { GetModuleHandleW(None) }.context("GetModuleHandleW(progress Shell)")?;
-    let class_name = w!("LetRecovery.PersonalRestoreProgressShell");
+    let class_name = w!("RZhuangJi.PersonalRestoreProgressShell");
     let class = WNDCLASSEXW {
         cbSize: size_of::<WNDCLASSEXW>() as u32,
         style: CS_HREDRAW | CS_VREDRAW,
@@ -2531,7 +2531,7 @@ fn run_personal_restore_progress_window(
     if state.background.is_invalid() || state.title_font.is_invalid() {
         anyhow::bail!("create progress Shell GDI resources");
     }
-    let title = progress_shell_wide("LetRecovery 恢复预览");
+    let title = progress_shell_wide("RZhuangJi 恢复预览");
     let screen_width = unsafe { GetSystemMetrics(SM_CXSCREEN) }.max(1);
     let screen_height = unsafe { GetSystemMetrics(SM_CYSCREEN) }.max(1);
     let (ex_style, style, x, y, width, height) = if preview {
@@ -3118,7 +3118,7 @@ fn append_first_logon_line(line: &str) -> Result<()> {
     let program_data = std::env::var_os("ProgramData")
         .map(PathBuf::from)
         .ok_or_else(|| anyhow::anyhow!("ProgramData is unavailable"))?;
-    let directory = program_data.join("LetRecovery").join("Logs");
+    let directory = program_data.join("RZhuangJi").join("Logs");
     std::fs::create_dir_all(&directory)?;
     reject_reparse_or_non_directory(&directory)?;
     let path = directory.join("FirstLogon-finalize.log");
@@ -3380,7 +3380,7 @@ pub fn restore_personal_files_after_shell(
             if automation_shutdown_on_terminal {
                 crate::windows_shutdown::schedule_graceful_shutdown(
                     30,
-                    "LetRecovery detected a non-persistent first-logon profile; this test machine will power off without consuming preserved personal files.",
+                    "RZhuangJi detected a non-persistent first-logon profile; this test machine will power off without consuming preserved personal files.",
                 )?;
                 let _ = append_first_logon_line(
                     "Automation shutdown: accepted timeout=30s force_apps_closed=false reboot=false reason=non_persistent_profile",
@@ -3400,7 +3400,7 @@ pub fn restore_personal_files_after_shell(
         if automation_shutdown_on_terminal {
             crate::windows_shutdown::schedule_graceful_shutdown(
                 300,
-                "LetRecovery automation finished; this test machine will power off.",
+                "RZhuangJi automation finished; this test machine will power off.",
             )?;
             let _ = append_first_logon_line(
                 "Automation shutdown: accepted timeout=300s force_apps_closed=false reboot=false",
@@ -3443,7 +3443,7 @@ fn verify_staged_software(
 pub fn stage_wifi_profile(target_partition: &str, bytes: &[u8]) -> Result<PathBuf> {
     PrivateWifiProfileBinding::from_bytes(bytes)?;
     let root = normalized_target_root(target_partition)?;
-    let directory = root.join("LetRecovery_Scripts");
+    let directory = root.join("RZhuangJi_Scripts");
     std::fs::create_dir_all(&directory)?;
     reject_reparse_or_non_directory(&directory)?;
     let target = directory.join("LR_WiFi.xml");
@@ -3467,7 +3467,7 @@ pub fn stage_wifi_profile(target_partition: &str, bytes: &[u8]) -> Result<PathBu
 /// Stage the currently running, already-built endpoint as a short-lived native account helper.
 /// Both endpoint binaries expose the same private post-OOBE account routes from
 /// `lr-core::windows_accounts`, including bounded disabled-`defaultuser0` cleanup and the optional
-/// RID-500 transition. The helper is deleted with the rest of `LetRecovery_Scripts` only after the
+/// RID-500 transition. The helper is deleted with the rest of `RZhuangJi_Scripts` only after the
 /// final account has logged on and first-logon finalization has completed.
 pub fn stage_account_helper(target_partition: &str) -> Result<PathBuf> {
     use std::io::{Read as _, Write as _};
@@ -3478,7 +3478,7 @@ pub fn stage_account_helper(target_partition: &str) -> Result<PathBuf> {
         anyhow::bail!("running account helper is not a regular file");
     }
     let root = normalized_target_root(target_partition)?;
-    let directory = root.join("LetRecovery_Scripts");
+    let directory = root.join("RZhuangJi_Scripts");
     std::fs::create_dir_all(&directory)?;
     reject_reparse_or_non_directory(&directory)?;
     let target = directory.join(ACCOUNT_HELPER_FILE_NAME);
@@ -3556,7 +3556,7 @@ pub fn stage_account_helper(target_partition: &str) -> Result<PathBuf> {
 
 pub fn is_staged(target_partition: &str) -> Result<bool> {
     let root = normalized_target_root(target_partition)?;
-    let path = root.join("LetRecovery_Scripts").join(SCRIPT_FILE_NAME);
+    let path = root.join("RZhuangJi_Scripts").join(SCRIPT_FILE_NAME);
     let metadata = match std::fs::symlink_metadata(&path) {
         Ok(metadata) => metadata,
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(false),
@@ -3596,7 +3596,7 @@ pub fn render_command(order: u32) -> Result<String> {
     crate::unattend_command::render_first_logon_synchronous_command(
         order,
         &command,
-        "Finalize LetRecovery setup",
+        "Finalize RZhuangJi setup",
     )
 }
 
@@ -3675,7 +3675,7 @@ mod tests {
         assert!(
             LAUNCHER.contains("%SystemRoot%\\System32\\WindowsPowerShell\\v1.0\\powershell.exe")
         );
-        assert!(LAUNCHER.contains("rd /s /q \"%SystemDrive%\\LetRecovery_Scripts\""));
+        assert!(LAUNCHER.contains("rd /s /q \"%SystemDrive%\\RZhuangJi_Scripts\""));
         assert!(LAUNCHER.contains("LETRECOVERY_FIRST_LOGON_CLEANUP_FAILURE"));
         assert!(LAUNCHER.contains("preserved after failure"));
         assert!(LAUNCHER.contains("if not \"!lr_ec!\"==\"0\""));
@@ -3691,7 +3691,7 @@ mod tests {
         assert!(!LAUNCHER.contains("-ShowPersonalRestoreConsole"));
         assert!(!LAUNCHER.contains("GetConsoleWindow"));
         assert!(!LAUNCHER.contains("ShowWindow"));
-        assert!(LAUNCHER.contains("rd /s /q \"%SystemDrive%\\LetRecovery_Scripts\" >nul 2>&1"));
+        assert!(LAUNCHER.contains("rd /s /q \"%SystemDrive%\\RZhuangJi_Scripts\" >nul 2>&1"));
         for line in LAUNCHER
             .lines()
             .filter(|line| line.contains(">>\"%lr_log%\""))
@@ -3701,11 +3701,11 @@ mod tests {
                 "ordinary-user diagnostic append can leak Access Denied: {line}"
             );
         }
-        assert!(!LAUNCHER.contains("start \"LetRecovery - Personal File Recovery\""));
+        assert!(!LAUNCHER.contains("start \"RZhuangJi - Personal File Recovery\""));
         assert!(!LAUNCHER.contains("[!lr_progress!] Step !lr_step!/4"));
         assert!(!LAUNCHER.contains("[####] Step 4/4"));
         assert!(!LAUNCHER.contains(r"C:\Windows"));
-        assert!(!LAUNCHER.contains(r"C:\LetRecovery"));
+        assert!(!LAUNCHER.contains(r"C:\RZhuangJi"));
         assert!(!SCRIPT.contains("ShowPersonalRestoreConsole"));
         assert!(!SCRIPT.contains("PersonalRestoreGateSessionId"));
         assert!(!SCRIPT.contains("GetConsoleWindow"));
@@ -3718,7 +3718,7 @@ mod tests {
         assert!(LAUNCHER.contains("staging preserved for the final account logon"));
         assert!(LAUNCHER.contains("pre-Explorer gate retained"));
         assert!(LAUNCHER.contains(
-            "if exist \"%SystemDrive%\\LetRecovery_Scripts\\personal-restore-shell-gate.state\""
+            "if exist \"%SystemDrive%\\RZhuangJi_Scripts\\personal-restore-shell-gate.state\""
         ));
         assert!(LAUNCHER.contains("staging retained until the verified Explorer Shell takes over"));
         assert!(!LAUNCHER.contains("--internal-start-personal-restore-explorer"));
@@ -3851,7 +3851,7 @@ mod tests {
     #[test]
     fn personal_restore_task_is_sid_bound_highest_interactive_worker() {
         let root = temporary_directory("personal-restore-task");
-        let directory = root.join("LetRecovery_Scripts");
+        let directory = root.join("RZhuangJi_Scripts");
         std::fs::create_dir_all(&directory).unwrap();
         std::fs::write(root.join(LAUNCHER_FILE_NAME), LAUNCHER).unwrap();
         let session_id = "0123456789abcdef0123456789abcdef";
@@ -3878,7 +3878,7 @@ mod tests {
         assert_ne!(style.0 & WS_VISIBLE.0, 0);
         assert_ne!(style.0 & WS_POPUP.0, 0);
         let root = temporary_directory("personal-restore-shell-command");
-        let directory = root.join("LetRecovery_Scripts");
+        let directory = root.join("RZhuangJi_Scripts");
         std::fs::create_dir_all(&directory).unwrap();
         let launcher = root.join(LAUNCHER_FILE_NAME);
         std::fs::write(&launcher, LAUNCHER).unwrap();
@@ -3965,11 +3965,11 @@ mod tests {
     #[test]
     fn cleanup_command_has_raw_cmd_outer_quotes_and_only_a_numeric_pid() {
         let command =
-            personal_restore_cleanup_raw_arguments(Path::new(r"C:\LetRecovery-first-logon.cmd"))
+            personal_restore_cleanup_raw_arguments(Path::new(r"C:\RZhuangJi-first-logon.cmd"))
                 .unwrap();
         assert_eq!(
             command,
-            r#"/d /s /c ""C:\LetRecovery-first-logon.cmd" cleanup""#
+            r#"/d /s /c ""C:\RZhuangJi-first-logon.cmd" cleanup""#
         );
         assert!(
             personal_restore_cleanup_raw_arguments(Path::new("C:\\bad\nlauncher.cmd")).is_err()
@@ -4112,9 +4112,9 @@ mod tests {
             rendered.contains("$systemVolumeRoot = [System.IO.Path]::GetPathRoot($env:SystemRoot)")
         );
         assert!(rendered.contains(
-            "$directory = [System.IO.Path]::Combine($systemVolumeRoot, 'LetRecovery_Scripts')"
+            "$directory = [System.IO.Path]::Combine($systemVolumeRoot, 'RZhuangJi_Scripts')"
         ));
-        assert!(!rendered.contains("Combine($env:SystemDrive, 'LetRecovery_Scripts')"));
+        assert!(!rendered.contains("Combine($env:SystemDrive, 'RZhuangJi_Scripts')"));
         assert!(rendered.contains(
             "$entries = @((ConvertFrom-Json -InputObject $softwarePlanJson) | ForEach-Object { $_ })"
         ));
