@@ -257,7 +257,7 @@ mod tests {
     fn pe() -> OnlinePE {
         OnlinePE {
             download_url: "https://example.invalid/pe.wim".to_owned(),
-            display_name: "LetRecovery PE".to_owned(),
+            display_name: "R装机 PE".to_owned(),
             filename: "LetRecovery_PE.wim".to_owned(),
             md5: None,
             sha256: Some("00".repeat(32)),
@@ -280,10 +280,7 @@ mod tests {
         ));
         let plan = plan_backup_launch(&config(0), false, true, Some(&pe())).unwrap();
         assert!(plan.preview.requires_pe_preparation);
-        assert_eq!(
-            plan.preview.pe_display_name.as_deref(),
-            Some("LetRecovery PE")
-        );
+        assert_eq!(plan.preview.pe_display_name.as_deref(), Some("R装机 PE"));
         let BackupLaunchIntent::ViaPe(intent) = plan.intent else {
             panic!("expected PE handoff intent");
         };

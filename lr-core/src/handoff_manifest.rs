@@ -26,6 +26,10 @@ pub enum ArtifactRole {
     /// Raw byte chunk of one image file. WinPE concatenates all chunks in ordinal order and checks
     /// the whole-file SHA-256 bound in the authenticated install configuration.
     InstallImageChunk,
+    /// Online image descriptor (`online_image.json`): URL + expected length/SHA-256 of the image
+    /// the PE endpoint downloads itself. Satisfies the install manifest's image requirement
+    /// exactly like a staged span; must not be mixed with spans, chunks or XP sources.
+    OnlineImageDescriptor,
     XpSourceFile,
     CustomUnattend,
     XpAnswer,
@@ -52,6 +56,7 @@ impl ArtifactRole {
         match self {
             Self::InstallImageSpan => "install_image_span",
             Self::InstallImageChunk => "install_image_chunk",
+            Self::OnlineImageDescriptor => "online_image_descriptor",
             Self::XpSourceFile => "xp_source_file",
             Self::CustomUnattend => "custom_unattend",
             Self::XpAnswer => "xp_answer",
@@ -78,6 +83,7 @@ impl ArtifactRole {
         match value {
             "install_image_span" => Ok(Self::InstallImageSpan),
             "install_image_chunk" => Ok(Self::InstallImageChunk),
+            "online_image_descriptor" => Ok(Self::OnlineImageDescriptor),
             "xp_source_file" => Ok(Self::XpSourceFile),
             "custom_unattend" => Ok(Self::CustomUnattend),
             "xp_answer" => Ok(Self::XpAnswer),
@@ -686,10 +692,19 @@ fn validate_role_matrix(
         let chunk_count = roles
             .get(&ArtifactRole::InstallImageChunk)
             .map_or(0, Vec::len);
+        let online_count = roles
+            .get(&ArtifactRole::OnlineImageDescriptor)
+            .map_or(0, Vec::len);
         if span_count != 0 && chunk_count != 0 {
             bail!("installation handoff cannot mix image spans with raw image chunks");
         }
-        let image_count = span_count + chunk_count;
+        if online_count != 0 && (span_count != 0 || chunk_count != 0) {
+            bail!("installation handoff cannot mix an online image descriptor with staged image files");
+        }
+        if online_count > 1 {
+            bail!("installation handoff cannot carry more than one online image descriptor");
+        }
+        let image_count = span_count + chunk_count + online_count;
         let xp_count = roles.get(&ArtifactRole::XpSourceFile).map_or(0, Vec::len);
         if image_count == 0 && xp_count == 0 {
             bail!("installation handoff manifest has no authenticated image or XP source files");

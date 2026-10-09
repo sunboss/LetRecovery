@@ -632,10 +632,19 @@ impl NativeInstallExecutor {
         if intent.options.export_drivers {
             phases.push(InstallExecutionPhase::ExportDriversToPeData);
         }
-        phases.extend([
-            InstallExecutionPhase::VerifySourceImage,
-            InstallExecutionPhase::CopySourceImage,
-        ]);
+        // PE 在线下载模式：PE 端自行下载镜像，桌面端跳过本地镜像校验与复制。
+        let online_image = intent
+            .options
+            .advanced_options
+            .online_image_source_url
+            .as_deref()
+            .is_some_and(|url| !url.trim().is_empty());
+        if !online_image {
+            phases.extend([
+                InstallExecutionPhase::VerifySourceImage,
+                InstallExecutionPhase::CopySourceImage,
+            ]);
+        }
         if !intent
             .options
             .advanced_options

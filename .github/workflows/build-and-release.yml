@@ -61,13 +61,13 @@ jobs:
           cargo test -p letrecovery-pe --locked --features non-elevated-tests
           cargo test -p LetRecovery --locked --features non-elevated-tests
 
-      - name: Build and verify system-side exe (LetRecovery.exe)
+      - name: Build and verify system-side exe (RZhuangJi.exe)
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
           & .\.github\scripts\build-win7-normal.ps1
 
-      - name: Build PE-side exe (LetRecoveryPE.exe)
+      - name: Build PE-side exe (RZhuangJiPE.exe)
         shell: bash
         working-directory: PE端
         run: |
@@ -77,12 +77,13 @@ jobs:
       - name: Download base package (template)
         shell: bash
         env:
-          GH_TOKEN: ${{ secrets.RELEASE_PAT }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          gh release download release \
-            --repo NORMAL-EX/letrecovery-package \
-            --pattern package.7z --dir .
+          gh release download 2026.10.1 \
+            --repo NORMAL-EX/LetRecovery \
+            --pattern LetRecovery.7z --dir .
+          mv LetRecovery.7z package.7z
           ls -la package.7z
 
       - name: Extract base package
@@ -91,7 +92,11 @@ jobs:
           set -euo pipefail
           mkdir -p pkg
           7z x package.7z -opkg -y >/dev/null
-          test -f "pkg/LetRecovery.exe"            || { echo "底包缺少 LetRecovery.exe"; exit 1; }
+          # 原版包里是 LetRecovery.exe，重命名为 RZhuangJi.exe（后续会被新编译的覆盖）
+          if [ -f "pkg/LetRecovery.exe" ] && [ ! -f "pkg/RZhuangJi.exe" ]; then
+            mv "pkg/LetRecovery.exe" "pkg/RZhuangJi.exe"
+          fi
+          test -f "pkg/RZhuangJi.exe"            || { echo "底包缺少 RZhuangJi.exe"; exit 1; }
           test -f "pkg/bin/pe/LetRecovery_PE.wim"  || { echo "底包缺少 bin/pe/LetRecovery_PE.wim"; exit 1; }
 
       - name: Rebuild package config from generated release defaults
@@ -315,11 +320,11 @@ jobs:
         run: |
           set -euo pipefail
           # 正常端只发布一份 Win7-11 通用 EXE。PE 端仍由默认现代 Windows target 单独构建。
-          src="target/x86_64-win7-windows-msvc/release/LetRecovery.exe"
-          test -f "$src" || { echo "找不到 Win7-11 通用编译产物 LetRecovery.exe"; exit 1; }
+          src="target/x86_64-win7-windows-msvc/release/RZhuangJi.exe"
+          test -f "$src" || { echo "找不到 Win7-11 通用编译产物 RZhuangJi.exe"; exit 1; }
           echo "Using system-side exe: $src"
-          cp -f "$src" "pkg/LetRecovery.exe"
-          find "pkg" -maxdepth 1 -type f -iname '*.exe' ! -iname 'LetRecovery.exe' -delete
+          cp -f "$src" "pkg/RZhuangJi.exe"
+          find "pkg" -maxdepth 1 -type f -iname '*.exe' ! -iname 'RZhuangJi.exe' -delete
 
       - name: Inject PE-side exe into WIM
         shell: pwsh
@@ -331,14 +336,16 @@ jobs:
           Write-Host "Mounting $wim ..."
           dism /Mount-Image /ImageFile:"$wim" /Index:1 /MountDir:"$mount"
           if ($LASTEXITCODE -ne 0) { throw "DISM mount failed" }
-          $dst = Join-Path $mount "Program Files\LetRecoveryPE\LetRecoveryPE.exe"
+          $dstDir = Join-Path $mount "Program Files\RZhuangJiPE"
+          New-Item -ItemType Directory -Force -Path $dstDir | Out-Null
+          $dst = Join-Path $dstDir "RZhuangJiPE.exe"
           # 产物可能在 crate 的 target\ 或工作区根 target\
-          $peExe = @("PE端\target\release\LetRecoveryPE.exe", "target\release\LetRecoveryPE.exe") | Where-Object { Test-Path $_ } | Select-Object -First 1
-          if (-not $peExe) { throw "找不到编译产物 LetRecoveryPE.exe" }
+          $peExe = @("PE端\target\release\RZhuangJiPE.exe", "target\release\RZhuangJiPE.exe") | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (-not $peExe) { throw "找不到编译产物 RZhuangJiPE.exe" }
           Write-Host "Using PE-side exe: $peExe"
           Copy-Item -Force $peExe $dst
           Write-Host "Replaced: $dst"
-          $capabilityPath = Join-Path $mount "Program Files\LetRecoveryPE\handoff-capabilities.txt"
+          $capabilityPath = Join-Path $mount "Program Files\RZhuangJiPE\handoff-capabilities.txt"
           $capabilityText = "source-image-verified-v1`r`nscattered-staging-v1`r`npe-network-v1`r`n"
           [IO.File]::WriteAllBytes($capabilityPath, [Text.Encoding]::ASCII.GetBytes($capabilityText))
           if ([IO.File]::ReadAllText($capabilityPath, [Text.Encoding]::ASCII) -ne $capabilityText) {
@@ -346,7 +353,7 @@ jobs:
           }
           Write-Host "Injected PE handoff capabilities: $capabilityPath"
           $offregSource = "assets\release\bin\offreg.dll"
-          $offregDestination = Join-Path $mount "Program Files\LetRecoveryPE\offreg.dll"
+          $offregDestination = Join-Path $mount "Program Files\RZhuangJiPE\offreg.dll"
           Copy-Item -LiteralPath $offregSource -Destination $offregDestination -Force
           if ((Get-Item -LiteralPath $offregDestination).Length -ne 125424 -or
               (Get-FileHash -LiteralPath $offregDestination -Algorithm SHA256).Hash -ne
@@ -356,18 +363,18 @@ jobs:
           Write-Host "Injected Microsoft Offline Registry runtime: $offregDestination"
           # The PE client is native Win32-only. Remove the legacy Mesa shim from the base WIM so
           # release artifacts do not retain an unused OpenGL runtime after replacing the old EXE.
-          $legacyOpenGl = Join-Path $mount "Program Files\LetRecoveryPE\opengl32.dll"
+          $legacyOpenGl = Join-Path $mount "Program Files\RZhuangJiPE\opengl32.dll"
           if (Test-Path -LiteralPath $legacyOpenGl) {
             Remove-Item -LiteralPath $legacyOpenGl -Force
             Write-Host "Removed legacy OpenGL runtime: $legacyOpenGl"
           }
           $pcaSource = "pkg\bin\pca2023"
-          $pcaDestination = Join-Path $mount "Program Files\LetRecoveryPE\bin\pca2023"
+          $pcaDestination = Join-Path $mount "Program Files\RZhuangJiPE\bin\pca2023"
           New-Item -ItemType Directory -Force -Path $pcaDestination | Out-Null
           Copy-Item -Path (Join-Path $pcaSource "*") -Destination $pcaDestination -Recurse -Force
           Write-Host "Injected PCA2023 offline assets: $pcaDestination"
           $uefiSevenSource = "pkg\bin\uefiseven"
-          $uefiSevenDestination = Join-Path $mount "Program Files\LetRecoveryPE\bin\uefiseven"
+          $uefiSevenDestination = Join-Path $mount "Program Files\RZhuangJiPE\bin\uefiseven"
           if (Test-Path -LiteralPath $uefiSevenDestination) {
             Remove-Item -LiteralPath $uefiSevenDestination -Recurse -Force
           }
@@ -386,12 +393,12 @@ jobs:
           }
           Write-Host "Injected locked UefiSeven assets: $uefiSevenDestination"
           $languageSource = "assets\release\lang"
-          $languageDestination = Join-Path $mount "Program Files\LetRecoveryPE\lang"
+          $languageDestination = Join-Path $mount "Program Files\RZhuangJiPE\lang"
           New-Item -ItemType Directory -Force -Path $languageDestination | Out-Null
           Copy-Item -Path (Join-Path $languageSource "*.json") -Destination $languageDestination -Force
           Write-Host "Injected release language catalogs: $languageDestination"
           $storageSource = "pkg\bin\drivers\storage_controller"
-          $storageDestination = Join-Path $mount "Program Files\LetRecoveryPE\drivers\storage_controller"
+          $storageDestination = Join-Path $mount "Program Files\RZhuangJiPE\drivers\storage_controller"
           if (Test-Path -LiteralPath $storageDestination) {
             Remove-Item -LiteralPath $storageDestination -Recurse -Force
           }
@@ -402,7 +409,7 @@ jobs:
             -LockFile "docs\STORAGE_CONTROLLER_DRIVERS.lock.json"
           Write-Host "Injected locked storage-controller drivers: $storageDestination"
           $windows7Source = "pkg\bin\drivers"
-          $windows7Destination = Join-Path $mount "Program Files\LetRecoveryPE\drivers"
+          $windows7Destination = Join-Path $mount "Program Files\RZhuangJiPE\drivers"
           New-Item -ItemType Directory -Force -Path $windows7Destination | Out-Null
           foreach ($family in @("usb3", "nvme")) {
             $target = Join-Path $windows7Destination $family
@@ -488,7 +495,7 @@ jobs:
             dism /Mount-Image /ImageFile:"$wim" /Index:1 /MountDir:"$mount" /ReadOnly
             if ($LASTEXITCODE -ne 0) { throw "DISM read-only mount failed" }
             $mounted = $true
-            $storageRoot = Join-Path $mount "Program Files\LetRecoveryPE\drivers\storage_controller"
+            $storageRoot = Join-Path $mount "Program Files\RZhuangJiPE\drivers\storage_controller"
             # DISM exposes files in a mounted WIM through reparse-point projections.
             # Copy the bytes out before applying the release-tree no-reparse policy.
             Copy-Item -Path (Join-Path $storageRoot "*") -Destination $audit -Recurse -Force
@@ -496,7 +503,7 @@ jobs:
               -Root $audit `
               -LockFile "docs\STORAGE_CONTROLLER_DRIVERS.lock.json" `
               -VerifySignatures
-            $windows7Root = Join-Path $mount "Program Files\LetRecoveryPE\drivers"
+            $windows7Root = Join-Path $mount "Program Files\RZhuangJiPE\drivers"
             foreach ($family in @("usb3", "nvme")) {
               Copy-Item -LiteralPath (Join-Path $windows7Root $family) `
                 -Destination (Join-Path $windows7Audit $family) -Recurse
@@ -509,7 +516,7 @@ jobs:
             if ($wimLogs.Count -ne 0) {
               throw "Final WinPE image contains stale runtime logs: $($wimLogs.FullName -join ', ')"
             }
-            $uefiSevenRoot = Join-Path $mount "Program Files\LetRecoveryPE\bin\uefiseven"
+            $uefiSevenRoot = Join-Path $mount "Program Files\RZhuangJiPE\bin\uefiseven"
             foreach ($lockedFile in @(
               @{ Name = "bootx64.efi"; Size = 96896; Sha256 = "0A44A256CDA725C22F1DAADCF093FC4660B7214E6437968A4C8E119AED02A947" },
               @{ Name = "UefiSeven.ini"; Size = 294; Sha256 = "7A4293182F93AE9537251B80DE03308B2E9CB33E194711894DDF84377EDF58BB" }
@@ -521,13 +528,13 @@ jobs:
                 throw "Final WIM UefiSeven resource does not match its lock: $lockedPath"
               }
             }
-            $offreg = Join-Path $mount "Program Files\LetRecoveryPE\offreg.dll"
+            $offreg = Join-Path $mount "Program Files\RZhuangJiPE\offreg.dll"
             if ((Get-Item -LiteralPath $offreg).Length -ne 125424 -or
                 (Get-FileHash -LiteralPath $offreg -Algorithm SHA256).Hash -ne
                   "BAEE13B111020107A3CCFE4BEC5FDD2CE6863991066201CA110E02B2DDD495E0") {
               throw "Final WIM Microsoft Offline Registry runtime does not match its release lock"
             }
-            $capabilities = Join-Path $mount "Program Files\LetRecoveryPE\handoff-capabilities.txt"
+            $capabilities = Join-Path $mount "Program Files\RZhuangJiPE\handoff-capabilities.txt"
             $expectedCapabilities = "source-image-verified-v1`r`nscattered-staging-v1`r`npe-network-v1`r`n"
             if ([IO.File]::ReadAllText($capabilities, [Text.Encoding]::ASCII) -ne $expectedCapabilities) {
               throw "Final WIM handoff capability marker mismatch"
@@ -848,15 +855,15 @@ jobs:
           echo "--- package README ---"
           ls -la pkg/README.txt 2>/dev/null || true
 
-      - name: Repackage into LetRecovery.7z
+      - name: Repackage into RZhuangJi.7z
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
           & .\.github\scripts\assert-release-tree-clean.ps1 -Root .\pkg
-          Remove-Item -LiteralPath .\LetRecovery.7z -Force -ErrorAction SilentlyContinue
+          Remove-Item -LiteralPath .\RZhuangJi.7z -Force -ErrorAction SilentlyContinue
           Push-Location .\pkg
           try {
-            & 7z a -t7z -mx=9 -m0=lzma2 -ms=on ..\LetRecovery.7z .\*
+            & 7z a -t7z -mx=9 -m0=lzma2 -ms=on ..\RZhuangJi.7z .\*
             if ($LASTEXITCODE -ne 0) {
               throw "7z package creation failed with exit code $LASTEXITCODE"
             }
@@ -867,9 +874,9 @@ jobs:
           $audit = Join-Path $env:RUNNER_TEMP ("release-config-audit-" + [guid]::NewGuid().ToString("N"))
           New-Item -ItemType Directory -Path $audit | Out-Null
           try {
-            & 7z x .\LetRecovery.7z config.json "-o$audit" -y
+            & 7z x .\RZhuangJi.7z config.json "-o$audit" -y
             if ($LASTEXITCODE -ne 0) {
-              throw "Could not extract config.json from LetRecovery.7z"
+              throw "Could not extract config.json from RZhuangJi.7z"
             }
             $archivedConfig = Join-Path $audit "config.json"
             & .\.github\scripts\normalize-release-config.ps1 `
@@ -885,7 +892,7 @@ jobs:
           } finally {
             Remove-Item -LiteralPath $audit -Recurse -Force -ErrorAction SilentlyContinue
           }
-          Get-Item -LiteralPath .\LetRecovery.7z
+          Get-Item -LiteralPath .\RZhuangJi.7z
 
       - name: Install Inno Setup 6.7.1
         shell: pwsh
@@ -926,32 +933,78 @@ jobs:
             -OutputDirectory $output `
             -InnoCompiler $env:INNO_COMPILER
 
-          $installer = Join-Path $output "LetRecovery-Setup-x64.exe"
+          $installer = Join-Path $output "RZhuangJi-Setup-x64.exe"
           if (-not (Test-Path -LiteralPath $installer -PathType Leaf)) {
-            throw "Installer build did not produce LetRecovery-Setup-x64.exe"
+            throw "Installer build did not produce RZhuangJi-Setup-x64.exe"
           }
 
-      - name: Verify the two Release assets
+      - name: Build x86 (32-bit) system-side exe
         shell: pwsh
         run: |
-          $archive = (Resolve-Path .\LetRecovery.7z).Path
+          & .\.github\scripts\build-x86-normal.ps1
+
+      - name: Build x86 (32-bit) PE-side exe
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          Push-Location PE端
+          try {
+            & rustup target add i686-pc-windows-msvc --toolchain 1.88.0 2>&1 | Out-Null
+            $env:RUSTFLAGS = '-C target-feature=+crt-static'
+            & cargo +1.88.0 build -p letrecovery-pe --release --locked --target i686-pc-windows-msvc
+            if ($LASTEXITCODE -ne 0) { throw 'x86 PE-side build failed.' }
+          } finally {
+            Pop-Location
+            Remove-Item Env:RUSTFLAGS -ErrorAction SilentlyContinue
+          }
+
+      - name: Build x86 offline installer EXE
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          # 复制 x64 包目录，换上 32 位 exe
+          $pkgX86 = Join-Path $env:GITHUB_WORKSPACE "pkg-x86"
+          if (Test-Path -LiteralPath $pkgX86) { Remove-Item -LiteralPath $pkgX86 -Recurse -Force }
+          Copy-Item -LiteralPath (Join-Path $env:GITHUB_WORKSPACE "pkg") -Destination $pkgX86 -Recurse
+          Copy-Item -LiteralPath (Join-Path $env:GITHUB_WORKSPACE "target\i686-pc-windows-msvc\release\RZhuangJi.exe") `
+            -Destination (Join-Path $pkgX86 "RZhuangJi.exe") -Force
+
+          $output = Join-Path $env:GITHUB_WORKSPACE "installer\output"
+          & .\installer\build-installer.ps1 `
+            -SourceDirectory $pkgX86 `
+            -OutputDirectory $output `
+            -InnoCompiler $env:INNO_COMPILER `
+            -Architecture x86
+
+          $installer = Join-Path $output "RZhuangJi-Setup-x86.exe"
+          if (-not (Test-Path -LiteralPath $installer -PathType Leaf)) {
+            throw "Installer build did not produce RZhuangJi-Setup-x86.exe"
+          }
+
+      - name: Verify the Release assets
+        shell: pwsh
+        run: |
+          $archive = (Resolve-Path .\RZhuangJi.7z).Path
           $installerDirectory = (Resolve-Path .\installer\output).Path
-          $installer = Join-Path $installerDirectory "LetRecovery-Setup-x64.exe"
 
           & 7z t $archive
           if ($LASTEXITCODE -ne 0) {
-            throw "LetRecovery.7z integrity test failed with exit code $LASTEXITCODE"
+            throw "RZhuangJi.7z integrity test failed with exit code $LASTEXITCODE"
           }
 
-          $installerFiles = @(Get-ChildItem -LiteralPath $installerDirectory -File)
-          if ($installerFiles.Count -ne 1 -or $installerFiles[0].Name -ne "LetRecovery-Setup-x64.exe") {
-            $names = $installerFiles.Name -join ", "
-            throw "Installer output must contain exactly LetRecovery-Setup-x64.exe; found: $names"
+          $expectedInstallers = @("RZhuangJi-Setup-x64.exe", "RZhuangJi-Setup-x86.exe")
+          $installerFiles = @(Get-ChildItem -LiteralPath $installerDirectory -File | Select-Object -ExpandProperty Name)
+          foreach ($name in $expectedInstallers) {
+            if ($installerFiles -notcontains $name) {
+              $names = $installerFiles -join ", "
+              throw "Installer output missing $name; found: $names"
+            }
           }
 
           $assets = @(
             Get-Item -LiteralPath $archive
-            Get-Item -LiteralPath $installer
+            Get-Item -LiteralPath (Join-Path $installerDirectory "RZhuangJi-Setup-x64.exe")
+            Get-Item -LiteralPath (Join-Path $installerDirectory "RZhuangJi-Setup-x86.exe")
           )
           foreach ($asset in $assets) {
             if ($asset.Length -le 0) {
@@ -984,7 +1037,7 @@ jobs:
       - name: Create Release
         shell: bash
         env:
-          GH_TOKEN: ${{ secrets.RELEASE_PAT }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           TAG="${{ steps.tag.outputs.tag }}"
@@ -1002,83 +1055,12 @@ jobs:
           } > release_notes.md
           gh release delete "$TAG" --repo "${{ github.repository }}" --yes --cleanup-tag || true
           gh release create "$TAG" \
-            LetRecovery.7z \
-            installer/output/LetRecovery-Setup-x64.exe \
+            RZhuangJi.7z \
+            installer/output/RZhuangJi-Setup-x64.exe \
+            installer/output/RZhuangJi-Setup-x86.exe \
             --repo "${{ github.repository }}" \
             --target "$SHA" \
             --title "$TAG" \
             --notes-file release_notes.md \
             $PRE
-          echo "Released $TAG with LetRecovery.7z and LetRecovery-Setup-x64.exe (prerelease: ${PRE:-no})"
-
-      - name: Checkout website repository
-        uses: actions/checkout@v4
-        with:
-          repository: NORMAL-EX/letrecovery-website
-          ref: main
-          path: website-repo
-          fetch-depth: 0
-          token: ${{ secrets.RELEASE_PAT }}
-
-      - name: Update released website version
-        shell: pwsh
-        env:
-          RELEASE_TAG: ${{ steps.tag.outputs.tag }}
-        run: |
-          $ErrorActionPreference = "Stop"
-          $websiteRepository = Join-Path $env:GITHUB_WORKSPACE "website-repo"
-          $versionFile = Join-Path $websiteRepository "version.json"
-
-          & pwsh -NoProfile -NonInteractive -ExecutionPolicy Bypass `
-            -File .\.github\scripts\update-website-version.ps1 `
-            -ReleaseTag $env:RELEASE_TAG `
-            -VersionFile $versionFile
-          if ($LASTEXITCODE -ne 0) {
-            throw "Failed to update the website Release version"
-          }
-
-          Push-Location $websiteRepository
-          try {
-            $changes = @(git status --porcelain --untracked-files=no -- version.json)
-            if ($LASTEXITCODE -ne 0) {
-              throw "Failed to inspect website version changes"
-            }
-            if ($changes.Count -eq 0) {
-              Write-Host "Website version already matches this Release; no commit is required."
-              exit 0
-            }
-
-            & git diff --check -- version.json
-            if ($LASTEXITCODE -ne 0) {
-              throw "Website version diff validation failed"
-            }
-
-            & git config user.name "github-actions[bot]"
-            & git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            & git add -- version.json
-            if ($LASTEXITCODE -ne 0) {
-              throw "Failed to stage website version"
-            }
-
-            $stagedFiles = @(git -c core.quotepath=false diff --cached --name-only)
-            if ($LASTEXITCODE -ne 0 -or $stagedFiles.Count -ne 1 -or $stagedFiles[0] -ne "version.json") {
-              throw "Release version commit must contain only version.json"
-            }
-
-            $version = [string](Get-Content -Raw -Encoding UTF8 -LiteralPath version.json | ConvertFrom-Json).version
-            & git commit -m "chore: update release version to $version [skip ci]"
-            if ($LASTEXITCODE -ne 0) {
-              throw "Failed to commit website version"
-            }
-
-            & git pull --rebase origin main
-            if ($LASTEXITCODE -ne 0) {
-              throw "Failed to rebase the website version commit onto main"
-            }
-            & git push origin "HEAD:refs/heads/main"
-            if ($LASTEXITCODE -ne 0) {
-              throw "Failed to push website version commit to main"
-            }
-          } finally {
-            Pop-Location
-          }
+          echo "Released $TAG with RZhuangJi.7z, RZhuangJi-Setup-x64.exe and RZhuangJi-Setup-x86.exe (prerelease: ${PRE:-no})"

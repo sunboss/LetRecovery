@@ -104,7 +104,7 @@ fn build_client() -> Result<Client> {
     Client::builder()
         .connect_timeout(Duration::from_secs(10))
         .timeout(Duration::from_secs(30))
-        .user_agent("LetRecovery/official-microsoft-catalogue")
+        .user_agent("R装机/official-microsoft-catalogue")
         .redirect(Policy::custom(official_redirect_policy))
         .build()
         .context("create Microsoft catalogue HTTP client")

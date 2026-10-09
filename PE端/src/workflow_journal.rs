@@ -17,7 +17,7 @@ use lr_core::operation::{OperationKind, StepDefinition};
 use crate::core::config::OperationType;
 use crate::ui::progress::{BackupStep, InstallStep};
 
-const LAST_RUNTIME_LOG_FILE: &str = "LetRecoveryPE-last.log";
+const LAST_RUNTIME_LOG_FILE: &str = "RZhuangJiPE-last.log";
 
 pub(crate) struct PeWorkflowJournal {
     journal: OperationJournal,
@@ -194,12 +194,8 @@ fn write_support_bundle(
     data_partition: &str,
     reason: &str,
 ) -> Result<(), OperationError> {
-    let mut builder = SupportBundleBuilder::new(
-        "LetRecovery",
-        env!("BUILD_VERSION"),
-        "pe",
-        unix_time_millis(),
-    )?;
+    let mut builder =
+        SupportBundleBuilder::new("R装机", env!("BUILD_VERSION"), "pe", unix_time_millis())?;
     builder.add_environment("reason", reason)?;
     builder.add_environment("data_partition", data_partition)?;
     builder.set_operation(checkpoint);

@@ -22,7 +22,7 @@ pub const MAX_STAGE_LOG_BYTES: u64 = 32 * 1024 * 1024;
 pub const HANDOFF_LOG_DIRECTORY: &str = "logs";
 pub const DESKTOP_LOG_FILE: &str = "normal.log";
 pub const DESKTOP_MANIFEST_FILE: &str = "normal.manifest.json";
-pub const PE_LOG_FILE: &str = "LetRecoveryPE.log";
+pub const PE_LOG_FILE: &str = "RZhuangJiPE.log";
 const MAX_MANIFEST_BYTES: u64 = 64 * 1024;
 const LOG_TAIL_TRUNCATION_MARKER: &[u8] = b"[TRUNCATED: retained complete-line tail]\r\n";
 

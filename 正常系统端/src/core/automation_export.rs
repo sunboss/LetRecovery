@@ -107,11 +107,11 @@ pub fn export(config: CliConfig, stem: &str, subcommand: &str) -> Result<Exporte
         .normalize()
         .context("validate generated CLI configuration")?;
 
-    let exe = std::env::current_exe().context("locate the running LetRecovery executable")?;
+    let exe = std::env::current_exe().context("locate the running R装机 executable")?;
     let exe_name = exe
         .file_name()
         .and_then(|name| name.to_str())
-        .ok_or_else(|| anyhow!("the LetRecovery executable filename is not Unicode"))?;
+        .ok_or_else(|| anyhow!("the R装机 executable filename is not Unicode"))?;
     validate_executable_filename(exe_name)?;
     let directory = crate::utils::path::get_exe_dir().join("cli");
     let config_path = directory.join(format!("{stem}.json"));
@@ -161,7 +161,7 @@ fn validate_executable_filename(value: &str) -> Result<()> {
             .any(|character| character <= '\u{1f}' || "\"%&|<>^!()".contains(character))
         || value.contains(['\\', '/'])
     {
-        return Err(anyhow!("unsafe LetRecovery executable filename"));
+        return Err(anyhow!("unsafe R装机 executable filename"));
     }
     Ok(())
 }
@@ -219,8 +219,8 @@ mod tests {
 
     #[test]
     fn launcher_uses_script_relative_paths_and_preserves_exit_code() {
-        let script = launcher_script("LetRecovery.exe", "install", "install.json");
-        assert!(script.contains(r#""%~dp0..\LetRecovery.exe" install run"#));
+        let script = launcher_script("R装机.exe", "install", "install.json");
+        assert!(script.contains(r#""%~dp0..\R装机.exe" install run"#));
         assert!(script.contains(r#"--config "%~dp0install.json" --yes"#));
         assert!(script.contains("exit /b %lr_exit%"));
     }

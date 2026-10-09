@@ -379,7 +379,7 @@ pub fn run_backup(prepared: PreparedBackup) -> Result<Value> {
                 if auto_reboot {
                     match lr_core::windows_shutdown::schedule_restart(
                         5,
-                        "LetRecovery backup preparation completed; Windows will restart into PE.",
+                        "R装机 backup preparation completed; Windows will restart into PE.",
                     ) {
                         Ok(()) => restart_scheduled = true,
                         Err(error) => warnings.push(json!({

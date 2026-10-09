@@ -1,4 +1,4 @@
-# LetRecovery Installer
+# R装机 Installer
 
 This directory builds the complete `pkg/` release tree into one modern offline
 x64 installer with Inno Setup 6.7. The generated setup supports interactive
@@ -14,9 +14,9 @@ Install Inno Setup 6.7, or place its compiler at
 powershell -ExecutionPolicy Bypass -File .\installer\build-installer.ps1
 ```
 
-Output is written to `installer/output/LetRecovery-Setup-x64.exe`.
+Output is written to `installer/output/R装机-Setup-x64.exe`.
 
-The build script reads the version from `pkg/LetRecovery.exe`, validates the
+The build script reads the version from `pkg/R装机.exe`, validates the
 minimum package layout, and prints the final size, SHA-256, and Authenticode
 status. Use `-RequireSignature` in a production pipeline after signing is
 configured.

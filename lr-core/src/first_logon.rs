@@ -555,7 +555,7 @@ namespace LetRecovery {
     try {
       [System.IO.File]::Delete($restoreStdout)
       [System.IO.File]::Delete($restoreStderr)
-      # LetRecoveryPE.exe uses the GUI subsystem. PowerShell's call operator does not provide a
+      # RZhuangJiPE.exe uses the GUI subsystem. PowerShell's call operator does not provide a
       # reliable synchronous exit code for GUI applications, so use an explicit process handle.
       $restoreProcess = Start-Process -FilePath $personalRestoreHelper -ArgumentList @('--internal-restore-personal-files-at-shell',$personalRestoreSessionId) -WindowStyle Hidden -RedirectStandardOutput $restoreStdout -RedirectStandardError $restoreStderr -Wait -PassThru
       foreach ($outputPath in @($restoreStdout,$restoreStderr)) {
@@ -3520,7 +3520,7 @@ pub fn stage_account_helper(target_partition: &str) -> Result<PathBuf> {
     if source
         .file_name()
         .and_then(|value| value.to_str())
-        .is_some_and(|value| value.eq_ignore_ascii_case("LetRecoveryPE.exe"))
+        .is_some_and(|value| value.eq_ignore_ascii_case("R装机PE.exe"))
         && runtime_metadata.is_none()
     {
         anyhow::bail!("PE account helper runtime is missing");

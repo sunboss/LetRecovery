@@ -246,7 +246,7 @@ pub fn administrator_required() -> i32 {
 pub fn administrator_required_for(command: &str) -> i32 {
     ensure_parent_console();
     let written = print_json(
-        json!({"ok":false,"error":{"code":"administrator_required","message":format!("{command} must be started from an already elevated administrator console; LetRecovery never auto-elevates CLI commands")}}),
+        json!({"ok":false,"error":{"code":"administrator_required","message":format!("{command} must be started from an already elevated administrator console; R装机 never auto-elevates CLI commands")}}),
     );
     if written {
         EXIT_USAGE

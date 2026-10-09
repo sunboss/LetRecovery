@@ -100,6 +100,16 @@ pub struct AdvancedOptionsData {
     pub xp_inject_nvme_driver: bool,
     #[serde(skip)]
     pub xp_defaults_applied: bool,
+    /// PE 在线下载模式：本次安装有效的镜像源 URL（http://）。非空时 PE 端自行
+    /// 下载安装镜像，桌面端不再要求本地镜像文件。当前安装会话有效，不持久化。
+    #[serde(skip)]
+    pub online_image_source_url: Option<String>,
+    /// 在线镜像的预期字节数（0 表示未知）。
+    #[serde(skip)]
+    pub online_image_source_length: u64,
+    /// 在线镜像的 SHA-256（小写十六进制；为空则下载后不校验）。
+    #[serde(skip)]
+    pub online_image_source_sha256: Option<String>,
 }
 
 pub const ADVANCED_SYSTEM_OPTION_COUNT: usize = 10;
@@ -207,6 +217,9 @@ impl Default for AdvancedOptionsData {
             disable_device_encryption: true,
             remove_uwp_apps: false,
             preinstalled_software: Vec::new(),
+            online_image_source_url: None,
+            online_image_source_length: 0,
+            online_image_source_sha256: None,
             install_vmware_tools: true,
             // This is an intent default only. `apply_runtime_defaults` immediately captures the
             // current connected profile into session-only fields, or clears the intent when no
