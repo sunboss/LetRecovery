@@ -12,7 +12,7 @@ use anyhow::{Context, Result};
 use serde::Deserialize;
 
 /// v4 单文件资源目录。正常情况下只需要一次 HTTP 请求。
-pub const SERVER_V4_URL: &str = "https://letrecovery.cloud-pe.cn/v4/";
+pub const SERVER_V4_URL: &str = "https://zhuangji.1234r.com/v4.json";
 
 type RemoteConfigContents = (
     Option<String>,
