@@ -3,6 +3,8 @@ param(
     [string]$SourceDirectory,
     [string]$OutputDirectory,
     [string]$InnoCompiler,
+    [ValidateSet("x64", "x86")]
+    [string]$Architecture = "x64",
     [switch]$RequireSignature
 )
 
@@ -82,7 +84,7 @@ $icon = Resolve-ExistingFile -Path $icon -Description "Application icon"
 New-Item -ItemType Directory -Force -Path $OutputDirectory | Out-Null
 $output = (Resolve-Path -LiteralPath $OutputDirectory).Path
 
-Write-Host "Building RZhuangJi installer"
+Write-Host "Building RZhuangJi installer ($Architecture)"
 Write-Host "  Source : $source"
 Write-Host "  Version: $displayVersion"
 Write-Host "  Output : $output"
@@ -93,6 +95,7 @@ try {
     $env:LETRECOVERY_INSTALLER_VERSION = $numericVersion
     $env:LETRECOVERY_INSTALLER_DISPLAY_VERSION = $displayVersion
     $env:LETRECOVERY_INSTALLER_ICON = $icon
+    $env:LETRECOVERY_INSTALLER_ARCH = $Architecture
 
     & $compiler /Qp $script
     if ($LASTEXITCODE -ne 0) {
@@ -105,9 +108,11 @@ finally {
     Remove-Item Env:LETRECOVERY_INSTALLER_VERSION -ErrorAction SilentlyContinue
     Remove-Item Env:LETRECOVERY_INSTALLER_DISPLAY_VERSION -ErrorAction SilentlyContinue
     Remove-Item Env:LETRECOVERY_INSTALLER_ICON -ErrorAction SilentlyContinue
+    Remove-Item Env:LETRECOVERY_INSTALLER_ARCH -ErrorAction SilentlyContinue
 }
 
-$installer = Resolve-ExistingFile -Path (Join-Path $output "RZhuangJi-Setup-x64.exe") -Description "Compiled installer"
+$installerName = if ($Architecture -eq "x86") { "RZhuangJi-Setup-x86.exe" } else { "RZhuangJi-Setup-x64.exe" }
+$installer = Resolve-ExistingFile -Path (Join-Path $output $installerName) -Description "Compiled installer"
 $signature = Get-AuthenticodeSignature -LiteralPath $installer
 if ($RequireSignature -and $signature.Status -ne [System.Management.Automation.SignatureStatus]::Valid) {
     throw "Installer signature is required but status is $($signature.Status)."

@@ -3,6 +3,10 @@
 #define AppVersion GetEnv("LETRECOVERY_INSTALLER_VERSION")
 #define AppDisplayVersion GetEnv("LETRECOVERY_INSTALLER_DISPLAY_VERSION")
 #define AppIcon GetEnv("LETRECOVERY_INSTALLER_ICON")
+#define Arch GetEnv("LETRECOVERY_INSTALLER_ARCH")
+#if Arch == ""
+  #define Arch "x64"
+#endif
 
 #if SourceDir == ""
   #error "LETRECOVERY_INSTALLER_SOURCE is not set"
@@ -34,13 +38,21 @@ AllowNoIcons=yes
 LicenseFile=LICENSE.zh-CN.txt
 InfoBeforeFile=NOTICE.zh-CN.txt
 OutputDir={#OutputDir}
+#if Arch == "x86"
+OutputBaseFilename=RZhuangJi-Setup-x86
+#else
 OutputBaseFilename=RZhuangJi-Setup-x64
+#endif
 SetupIconFile={#AppIcon}
 UninstallDisplayIcon={app}\RZhuangJi.exe
 UninstallDisplayName=RZhuangJi
 PrivilegesRequired=admin
+#if Arch == "x86"
+ArchitecturesAllowed=x86compatible
+#else
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
+#endif
 MinVersion=10.0.10240
 WizardStyle=modern dynamic windows11 hidebevels includetitlebar
 WizardSizePercent=110
