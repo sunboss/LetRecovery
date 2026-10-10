@@ -478,9 +478,7 @@ pub fn remove_offline_provisioning(
 
 pub fn online_script_path(target_partition: &str) -> Result<PathBuf> {
     let root = normalized_target_root(target_partition)?;
-    Ok(root
-        .join("RZhuangJi_Scripts")
-        .join(ONLINE_SCRIPT_FILE_NAME))
+    Ok(root.join("RZhuangJi_Scripts").join(ONLINE_SCRIPT_FILE_NAME))
 }
 
 /// Atomically stage the fixed online-removal script and read it back byte-for-byte.

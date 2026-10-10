@@ -6837,8 +6837,8 @@ impl NativeWindow {
                 let manually_allowed_http = path.to_ascii_lowercase().starts_with("http://");
                 let allow_insecure_http =
                     self.app_config.allow_insecure_http_downloads || manually_allowed_http;
-                let download_directory = dirs::download_dir()
-                    .unwrap_or_else(|| std::env::temp_dir().join("RZhuangJi"));
+                let download_directory =
+                    dirs::download_dir().unwrap_or_else(|| std::env::temp_dir().join("RZhuangJi"));
                 match crate::core::native_download_controller::plan_remote_system_image(
                     path,
                     download_directory,
@@ -7437,8 +7437,8 @@ impl NativeWindow {
                         partition_size_bytes: partition.partition_size_bytes,
                         stable_identity: partition.stable_identity,
                     });
-                let download_directory = dirs::download_dir()
-                    .unwrap_or_else(|| std::env::temp_dir().join("RZhuangJi"));
+                let download_directory =
+                    dirs::download_dir().unwrap_or_else(|| std::env::temp_dir().join("RZhuangJi"));
                 match self.easy_controller.start_install_intent(
                     system_partition,
                     &download_directory,
