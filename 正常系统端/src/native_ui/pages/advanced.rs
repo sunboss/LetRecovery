@@ -62,8 +62,7 @@ const WM_NCMOUSELEAVE_MESSAGE: u32 = 0x02a2;
 const WM_MOUSELEAVE_MESSAGE: u32 = 0x02a3;
 const ADVANCED_SCROLLBAR_STATE_PROPERTY: PCWSTR = w!("RZhuangJi.AdvancedScrollbarThemeState");
 const ADVANCED_SCROLLBAR_OVERLAY_PROPERTY: PCWSTR = w!("RZhuangJi.AdvancedScrollbarOverlay");
-const ADVANCED_SCROLLBAR_DRAG_OFFSET_PROPERTY: PCWSTR =
-    w!("RZhuangJi.AdvancedScrollbarDragOffset");
+const ADVANCED_SCROLLBAR_DRAG_OFFSET_PROPERTY: PCWSTR = w!("RZhuangJi.AdvancedScrollbarDragOffset");
 const ADVANCED_SCROLLBAR_PROXY_POSITION_PROPERTY: PCWSTR =
     w!("RZhuangJi.AdvancedScrollbarProxyPosition");
 const ADVANCED_SCROLLBAR_PENDING_POSITION_PROPERTY: PCWSTR =

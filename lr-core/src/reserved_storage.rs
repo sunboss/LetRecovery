@@ -179,9 +179,7 @@ pub const fn is_supported_target_version(major: u32, minor: u32, build: u32) -> 
 
 pub fn online_script_path(target_partition: &str) -> Result<PathBuf> {
     let root = normalized_target_root(target_partition)?;
-    Ok(root
-        .join("RZhuangJi_Scripts")
-        .join(ONLINE_SCRIPT_FILE_NAME))
+    Ok(root.join("RZhuangJi_Scripts").join(ONLINE_SCRIPT_FILE_NAME))
 }
 
 /// Atomically stage and byte-for-byte verify the fixed script.

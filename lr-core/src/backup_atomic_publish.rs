@@ -2251,10 +2251,8 @@ mod tests {
                 NEXT.fetch_add(1, Ordering::Relaxed)
             ));
             std::fs::create_dir(&root).unwrap();
-            let session_path = root.join(format!(
-                ".RZhuangJi-BackupPublish-{}",
-                session_id.as_str()
-            ));
+            let session_path =
+                root.join(format!(".RZhuangJi-BackupPublish-{}", session_id.as_str()));
             std::fs::create_dir(&session_path).unwrap();
             let pins = pin_existing_parent_directory_ancestors(&root).unwrap();
             let directory = open_directory_locked(&session_path).unwrap();

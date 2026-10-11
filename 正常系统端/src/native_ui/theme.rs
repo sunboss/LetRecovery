@@ -862,8 +862,7 @@ const LIST_BOX_HOT_PROPERTY: PCWSTR = w!("RZhuangJi.InnoListBox.HotItem");
 const ROUNDED_CONTROL_HOT_PROPERTY: PCWSTR = w!("RZhuangJi.InnoControl.Hot");
 const COMBO_CARET_HIDDEN_PROPERTY: PCWSTR = w!("RZhuangJi.InnoCombo.CaretHidden");
 const COMBO_TRACKING_DROPPED_PROPERTY: PCWSTR = w!("RZhuangJi.InnoCombo.TrackingDropped");
-const COMBO_SELECTION_ITEM_PREPARED_PROPERTY: PCWSTR =
-    w!("RZhuangJi.InnoCombo.SelectionPrepared");
+const COMBO_SELECTION_ITEM_PREPARED_PROPERTY: PCWSTR = w!("RZhuangJi.InnoCombo.SelectionPrepared");
 const RADIO_BUTTON_HOT_PROPERTY: PCWSTR = w!("RZhuangJi.InnoRadio.Hot");
 const PALETTE_REFERENCE_DARK: usize = 0x1;
 const CHECK_BOX_HOT_PROPERTY: PCWSTR = w!("RZhuangJi.InnoCheck.Hot");
@@ -2527,8 +2526,7 @@ unsafe extern "system" fn list_view_subclass(
     }
 }
 
-const LIST_VIEW_HOLD_PROPERTY: windows::core::PCWSTR =
-    windows::core::w!("RZhuangJi.ListViewHold");
+const LIST_VIEW_HOLD_PROPERTY: windows::core::PCWSTR = windows::core::w!("RZhuangJi.ListViewHold");
 
 fn list_view_hold_release_message() -> u32 {
     use std::sync::atomic::{AtomicU32, Ordering};

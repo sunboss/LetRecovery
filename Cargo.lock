@@ -3,7 +3,7 @@
 version = 4
 
 [[package]]
-name = "LetRecovery"
+name = "RZhuangJi"
 version = "2026.9.26"
 dependencies = [
  "anyhow",

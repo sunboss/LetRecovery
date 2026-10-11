@@ -442,10 +442,7 @@ mod tests {
             .unwrap();
         builder.add_text_file("runtime log", &path).unwrap();
         let attachment = &builder.build().attachments[0];
-        assert_eq!(
-            attachment.source_name.as_deref(),
-            Some("RZhuangJi PE.log")
-        );
+        assert_eq!(attachment.source_name.as_deref(), Some("RZhuangJi PE.log"));
         assert!(attachment.truncated);
         assert_eq!(attachment.content, "[TRUNCATED OVERLONG LINE OMITTED]");
         assert!(!attachment.content.contains("gone"));
