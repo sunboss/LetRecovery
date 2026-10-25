@@ -102,6 +102,26 @@ jobs:
             mv "pkg/bin/pe/LetRecovery_PE.wim" "pkg/bin/pe/RZhuangJi_PE.wim"
           fi
           test -f "pkg/bin/pe/RZhuangJi_PE.wim"  || { echo "底包缺少 bin/pe/RZhuangJi_PE.wim"; exit 1; }
+          # config.json 的 pe_list 仍指向旧文件名，须随 WIM 一起改名：
+          # 否则后续「Update WIM checksums」按旧名找不到文件，且发出的包内
+          # 配置与实际文件不一致。display_name 是展示文案，不动。
+          python - <<'PY'
+          import json
+          cfg = "pkg/config.json"
+          with open(cfg, "r", encoding="utf-8") as f:
+              data = json.load(f)
+          renamed = False
+          for entry in data.get("pe_cache", {}).get("pe_list", []):
+              if entry.get("filename") == "LetRecovery_PE.wim":
+                  entry["filename"] = "RZhuangJi_PE.wim"
+                  renamed = True
+          if not renamed:
+              raise SystemExit("config.json pe_list 中没有 LetRecovery_PE.wim 条目，无法随 WIM 改名同步")
+          with open(cfg, "w", encoding="utf-8", newline="\n") as f:
+              json.dump(data, f, ensure_ascii=False, indent=2)
+              f.write("\n")
+          print("Renamed pe_list filename to RZhuangJi_PE.wim")
+          PY
 
       - name: Rebuild package config from generated release defaults
         shell: pwsh
