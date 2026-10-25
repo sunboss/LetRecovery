@@ -16858,7 +16858,7 @@ mod tests {
         assert!(maintenance_pe_from_catalogue(std::slice::from_ref(&arbitrary)).is_none());
 
         let official = crate::download::config::OnlinePE {
-            filename: "letrecovery_pe.WIM".to_owned(),
+            filename: "rzhuangji_pe.WIM".to_owned(),
             ..arbitrary
         };
         assert_eq!(
