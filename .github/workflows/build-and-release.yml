@@ -334,7 +334,7 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
-          $wim   = "pkg\bin\pe\LetRecovery_PE.wim"
+          $wim   = "pkg\bin\pe\RZhuangJi_PE.wim"
           $mount = Join-Path $env:RUNNER_TEMP "wimmount"
           New-Item -ItemType Directory -Force -Path $mount | Out-Null
           Write-Host "Mounting $wim ..."
@@ -469,7 +469,7 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
-          $wim = "pkg\bin\pe\LetRecovery_PE.wim"
+          $wim = "pkg\bin\pe\RZhuangJi_PE.wim"
           Write-Host "=== WIM info BEFORE clean ==="
           dism /Get-WimInfo /WimFile:"$wim" /Index:1
           # 挂载提交会在 WIM 内留下被替换文件的旧数据流（7z/Bandizip 显示为 [DELETED]）。
@@ -487,7 +487,7 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
-          $wim = (Resolve-Path -LiteralPath "pkg\bin\pe\LetRecovery_PE.wim").Path
+          $wim = (Resolve-Path -LiteralPath "pkg\bin\pe\RZhuangJi_PE.wim").Path
           $mount = Join-Path $env:RUNNER_TEMP ("wim-storage-audit-" + [guid]::NewGuid().ToString("N"))
           $audit = Join-Path $env:RUNNER_TEMP ("wim-storage-files-" + [guid]::NewGuid().ToString("N"))
           $windows7Audit = Join-Path $env:RUNNER_TEMP ("wim-win7-files-" + [guid]::NewGuid().ToString("N"))
@@ -634,7 +634,7 @@ jobs:
             throw "OneDrive remote path must start with '/': $env:ONEDRIVE_REMOTE_PATH"
           }
 
-          $wimPath = "pkg\bin\pe\LetRecovery_PE.wim"
+          $wimPath = "pkg\bin\pe\RZhuangJi_PE.wim"
           if (-not (Test-Path -LiteralPath $wimPath)) {
             throw "WIM not found: $wimPath"
           }
