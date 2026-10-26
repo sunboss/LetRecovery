@@ -10,7 +10,7 @@ body:
 
         - ViaPE 安装完成后优先上传合并日志：`<新系统盘>\LetRecovery\Logs\LetRecovery-install-<SessionId>.log`。它已经包含正常系统端和 PE 端日志，不需要重复上传两份原始日志。
         - 如果格式化或首次写入后安装失败，到 `<数据分区>\LetRecovery_Data\LetRecovery\Logs\LetRecovery-install-<SessionId>.log` 查找合并日志。
-        - 只有合并日志不存在时，才上传“关于 → 打开日志目录”中的 `<LetRecovery.exe 所在目录>\log\LetRecovery.<日期>.log` 和能够取得的 `<LetRecoveryPE.exe 所在目录>\LetRecoveryPE.log`（正式发布包默认在 `X:\Program Files\LetRecoveryPE\LetRecoveryPE.log`）。
+        - 只有合并日志不存在时，才上传“关于 → 打开日志目录”中的 `<RZhuangJi.exe 所在目录>\log\RZhuangJi.<日期>.log` 和能够取得的 `<RZhuangJiPE.exe 所在目录>\RZhuangJiPE.log`（正式发布包默认在 `X:\Program Files\RZhuangJiPE\RZhuangJiPE.log`）。
 
         ⚠️ 没有日志通常无法定位；如确实无法取得，请在日志栏说明原因。
         🔒 上传前请检查并遮盖 BitLocker 恢复密钥、序列号、账号和其他敏感信息。

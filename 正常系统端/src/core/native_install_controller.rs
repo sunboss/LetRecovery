@@ -127,6 +127,7 @@ pub enum InstallValidationError {
     PersonalFilesUnsupportedSource,
     PersonalFilesRequirePartitionReinstall,
     PersonalFilesRequireNormalWindows,
+    InvalidOnlineImageSourceUrl,
 }
 
 impl std::fmt::Display for InstallValidationError {
@@ -171,7 +172,7 @@ impl std::fmt::Display for InstallValidationError {
                 )
             }
             Self::RequiredCleanupRequiresUnattended => crate::tr!(
-                "移除预装应用或 Windows 安全中心需要启用 LetRecovery 内置无人值守安装。"
+                "移除预装应用或 Windows 安全中心需要启用 RZhuangJi 内置无人值守安装。"
             ),
             Self::RequiredCleanupConflictsWithCustomUnattend => crate::tr!(
                 "移除预装应用或 Windows 安全中心不能与自定义应答文件同时使用。"
@@ -180,7 +181,7 @@ impl std::fmt::Display for InstallValidationError {
                 "移除预装应用或 Windows 安全中心不支持 GHO/GHS 或 XP 文本模式来源。"
             ),
             Self::PreinstalledSoftwareRequiresUnattended => {
-                crate::tr!("安装所选软件需要启用 LetRecovery 内置无人值守安装。")
+                crate::tr!("安装所选软件需要启用 RZhuangJi 内置无人值守安装。")
             }
             Self::PreinstalledSoftwareConflictsWithCustomUnattend => {
                 crate::tr!("安装所选软件不能与自定义应答文件同时使用。")
@@ -211,6 +212,9 @@ impl std::fmt::Display for InstallValidationError {
             }
             Self::PersonalFilesRequireNormalWindows => {
                 crate::tr!("请从完整 Windows 启动保留个人文件重装，程序将自动进入 PE 执行。")
+            }
+            Self::InvalidOnlineImageSourceUrl => {
+                crate::tr!("在线镜像源 URL 无效，请输入 http:// 开头的完整地址。")
             }
         };
         formatter.write_str(&message)
@@ -273,13 +277,39 @@ pub struct PcaCompatConfig {
 }
 
 impl NativeInstallState {
+    /// PE 在线下载模式是否启用：高级选项中配置了镜像源 URL。
+    pub fn online_image_enabled(&self) -> bool {
+        self.prefs
+            .advanced_options
+            .online_image_source_url
+            .as_deref()
+            .is_some_and(|url| !url.trim().is_empty())
+    }
+
     pub fn start_intent(&self) -> Result<StartInstallIntent, InstallValidationError> {
         let image_path = self.effective_image_path();
-        if image_path.trim().is_empty() {
-            return Err(InstallValidationError::MissingImage);
-        }
-        if !self.image_ready {
-            return Err(InstallValidationError::ImageNotReady);
+        // 在线下载模式下不需要本地镜像文件，PE 端会自行下载；但 URL 本身必须合法。
+        if self.online_image_enabled() {
+            let url = self
+                .prefs
+                .advanced_options
+                .online_image_source_url
+                .as_deref()
+                .unwrap_or_default()
+                .trim();
+            if !url.starts_with("http://")
+                || url.len() > 2048
+                || url.bytes().any(|b| b < 0x20 || b == 0x7f)
+            {
+                return Err(InstallValidationError::InvalidOnlineImageSourceUrl);
+            }
+        } else {
+            if image_path.trim().is_empty() {
+                return Err(InstallValidationError::MissingImage);
+            }
+            if !self.image_ready {
+                return Err(InstallValidationError::ImageNotReady);
+            }
         }
 
         let target = self
@@ -535,9 +565,9 @@ impl NativeInstallState {
         let builtin_unattend =
             self.prefs.unattended_install && self.custom_unattend_path.trim().is_empty();
         if advanced_options.migrate_wifi && !builtin_unattend {
-            // The profile is imported only by LetRecovery's own first-logon finalizer, which is
+            // The profile is imported only by RZhuangJi's own first-logon finalizer, which is
             // staged exclusively with the built-in answer file. Without it the XML (including its
-            // plaintext key) would stay in LetRecovery_Scripts on the new system and never be
+            // plaintext key) would stay in RZhuangJi_Scripts on the new system and never be
             // imported. Skip the optional migration instead of shipping the secret.
             let reason = "built_in_unattend_not_used";
             log::warn!("[ADVANCED WIFI] status=skipped reason={reason}; installation continues");
@@ -687,6 +717,13 @@ impl StartInstallIntent {
             image_chunked: false,
             image_chunked_length: 0,
             image_chunked_sha256: String::new(),
+            // PE 在线下载模式：由高级选项中的镜像源 URL 决定（见 AdvancedOptionsData）。
+            image_source_url: advanced.online_image_source_url.clone().unwrap_or_default(),
+            image_source_length: advanced.online_image_source_length,
+            image_source_sha256: advanced
+                .online_image_source_sha256
+                .clone()
+                .unwrap_or_default(),
             image_expanded_bytes: 0,
             in_place_target_staging: false,
             is_gho: self.is_gho,
@@ -1389,7 +1426,7 @@ mod tests {
         let mut state = base_state();
         state.prefs.driver_action = DriverAction::AutoImport;
         state.prefs.advanced_options.custom_username = true;
-        state.prefs.advanced_options.username = "LetRecovery".to_string();
+        state.prefs.advanced_options.username = "RZhuangJi".to_string();
         state.prefs.run_diskpart_scripts = true;
         state.advanced_options_enabled = true;
         let intent = state.start_intent().unwrap();
@@ -1402,7 +1439,7 @@ mod tests {
         };
         let config = intent.to_install_config("images\\install.wim", 1, Some(&pca));
         assert_eq!(config.driver_action_mode, 2);
-        assert_eq!(config.custom_username, "LetRecovery");
+        assert_eq!(config.custom_username, "RZhuangJi");
         assert_eq!(config.format_partition, state.prefs.format_partition);
         assert_eq!(config.repair_boot, state.prefs.repair_boot);
         assert!(!config.run_diskpart_scripts);

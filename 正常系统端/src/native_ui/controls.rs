@@ -38,16 +38,16 @@ use windows::Win32::UI::WindowsAndMessaging::{
 
 use super::theme::Palette;
 
-const BUTTON_HOT_PROPERTY: PCWSTR = w!("LetRecovery.InnoButton.Hot");
+const BUTTON_HOT_PROPERTY: PCWSTR = w!("RZhuangJi.InnoButton.Hot");
 const OWNER_DRAW_BUTTON_SUBCLASS_ID: usize = 0x4c52;
 const SINGLE_LINE_EDIT_LAYOUT_SUBCLASS_ID: usize = 0x4c52_4544;
-const SINGLE_LINE_EDIT_FRAME_PROPERTY: PCWSTR = w!("LetRecovery.InnoEdit.Frame");
-const SINGLE_LINE_EDIT_OWNER_PROPERTY: PCWSTR = w!("LetRecovery.InnoEdit.Owner");
-const SINGLE_LINE_EDIT_INTERNAL_LAYOUT_PROPERTY: PCWSTR = w!("LetRecovery.InnoEdit.Layout");
+const SINGLE_LINE_EDIT_FRAME_PROPERTY: PCWSTR = w!("RZhuangJi.InnoEdit.Frame");
+const SINGLE_LINE_EDIT_OWNER_PROPERTY: PCWSTR = w!("RZhuangJi.InnoEdit.Owner");
+const SINGLE_LINE_EDIT_INTERNAL_LAYOUT_PROPERTY: PCWSTR = w!("RZhuangJi.InnoEdit.Layout");
 const LIST_VIEW_LAYOUT_SUBCLASS_ID: usize = 0x4c52_4c46;
-const LIST_VIEW_FRAME_PROPERTY: PCWSTR = w!("LetRecovery.InnoListView.Frame");
-const LIST_VIEW_OWNER_PROPERTY: PCWSTR = w!("LetRecovery.InnoListView.Owner");
-const LIST_VIEW_INTERNAL_LAYOUT_PROPERTY: PCWSTR = w!("LetRecovery.InnoListView.Layout");
+const LIST_VIEW_FRAME_PROPERTY: PCWSTR = w!("RZhuangJi.InnoListView.Frame");
+const LIST_VIEW_OWNER_PROPERTY: PCWSTR = w!("RZhuangJi.InnoListView.Owner");
+const LIST_VIEW_INTERNAL_LAYOUT_PROPERTY: PCWSTR = w!("RZhuangJi.InnoListView.Layout");
 
 #[derive(Clone, Copy)]
 struct LayoutRequest {

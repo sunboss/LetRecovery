@@ -44,8 +44,8 @@ use super::theme::{
     Brushes, NativeControlKind, Palette,
 };
 
-const DIALOG_CLASS: PCWSTR = w!("LetRecovery.Native.InnoDialog");
-const CONTENT_CLASS: PCWSTR = w!("LetRecovery.Native.InnoDialogContent");
+const DIALOG_CLASS: PCWSTR = w!("RZhuangJi.Native.InnoDialog");
+const CONTENT_CLASS: PCWSTR = w!("RZhuangJi.Native.InnoDialogContent");
 const ID_TITLE: u16 = 61_000;
 const ID_DESCRIPTION: u16 = 61_001;
 const ID_PRIMARY: u16 = 61_002;

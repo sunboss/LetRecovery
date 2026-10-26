@@ -237,8 +237,8 @@ mod tests {
     #[test]
     fn packaged_path_is_fixed_below_executable_directory() {
         assert_eq!(
-            packaged_driver_directory(Path::new(r"E:\LetRecovery")),
-            PathBuf::from(r"E:\LetRecovery\bin\drivers\storage_controller")
+            packaged_driver_directory(Path::new(r"E:\RZhuangJi")),
+            PathBuf::from(r"E:\RZhuangJi\bin\drivers\storage_controller")
         );
     }
 
@@ -253,7 +253,7 @@ mod tests {
             &request("d:\\"),
             &inventory(),
             "C:",
-            Path::new(r"E:\LetRecovery"),
+            Path::new(r"E:\RZhuangJi"),
             &probe,
         )
         .unwrap();
@@ -261,7 +261,7 @@ mod tests {
         assert_eq!(plan.target(), "D:");
         assert_eq!(
             plan.driver_directory(),
-            Path::new(r"E:\LetRecovery\bin\drivers\storage_controller")
+            Path::new(r"E:\RZhuangJi\bin\drivers\storage_controller")
         );
     }
 
@@ -277,7 +277,7 @@ mod tests {
                 &request(target),
                 &inventory(),
                 "C:",
-                Path::new(r"E:\LetRecovery"),
+                Path::new(r"E:\RZhuangJi"),
                 &probe,
             )
             .is_err());
@@ -292,7 +292,7 @@ mod tests {
                 &request("D:"),
                 &inventory(),
                 "C:",
-                Path::new(r"E:\LetRecovery"),
+                Path::new(r"E:\RZhuangJi"),
                 &missing,
             ),
             Err(StorageDriverImportError::SourceUnavailable(_))
@@ -307,7 +307,7 @@ mod tests {
             &request("C:"),
             &offline_c,
             "D:",
-            Path::new(r"E:\LetRecovery"),
+            Path::new(r"E:\RZhuangJi"),
             &available,
         )
         .is_ok());
@@ -325,7 +325,7 @@ mod tests {
                 &request("D:"),
                 &inventory(),
                 "C:",
-                Path::new(r"E:\LetRecovery"),
+                Path::new(r"E:\RZhuangJi"),
                 &probe,
             ),
             Err(StorageDriverImportError::DevelopmentBuildDenied)

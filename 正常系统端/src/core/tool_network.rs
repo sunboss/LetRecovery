@@ -62,7 +62,7 @@ fn contains_any(haystack: &str, needles: &[&str]) -> bool {
 ///
 /// The displayed type and status come from `tr!`, so they are compared with both the Chinese
 /// source text and the active UI language; the former exact Chinese comparison rejected every
-/// adapter whenever LetRecovery ran in English, Japanese, Korean, French or German. The former
+/// adapter whenever RZhuangJi ran in English, Japanese, Korean, French or German. The former
 /// "hyper-v" hint also rejected the only NIC of a Hyper-V guest, not just the host vSwitch.
 pub fn pe_network_source(
     adapter: &crate::core::hardware_info::NetworkAdapterInfo,

@@ -1,6 +1,6 @@
 //! Offline PCA2023 compatibility assets for supported Windows images.
 //!
-//! LetRecovery ships a small, fixed set of WIM resource packs. Selection is
+//! RZhuangJi ships a small, fixed set of WIM resource packs. Selection is
 //! based on the target image architecture and boot-environment family; no
 //! network access is required. Every package is signature-checked before use
 //! and SHA-256 binds a package staged by the desktop endpoint to WinPE.
@@ -501,7 +501,7 @@ fn validate_locked_package(
     }
     verify_sha256_file(path, &locked.sha256)?;
 
-    let temp = ScopedTempDir::create_in(&std::env::temp_dir(), "LetRecovery-PcaCompat")
+    let temp = ScopedTempDir::create_in(&std::env::temp_dir(), "RZhuangJi-PcaCompat")
         .map_err(|error| PcaCompatError::Io(error.to_string()))?;
     {
         let manager = WimlibManager::new().map_err(PcaCompatError::InvalidPackage)?;
@@ -698,7 +698,7 @@ mod tests {
 
     #[test]
     fn staged_paths_are_confined_to_the_data_directory() {
-        let root = Path::new("X:\\LetRecovery");
+        let root = Path::new("X:\\RZhuangJi");
         assert_eq!(
             resolve_staged_package_path(root, STAGED_PACKAGE_RELATIVE_PATH).unwrap(),
             root.join(STAGED_PACKAGE_RELATIVE_PATH)

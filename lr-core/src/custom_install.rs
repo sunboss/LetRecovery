@@ -1303,7 +1303,7 @@ mod tests {
 
     #[test]
     fn same_disk_staging_keeps_a_data_volume_for_the_cleanup() {
-        // Old layout: C: 120 GiB, then the LetRecovery staging volume up to the end of a 512-GB disk.
+        // Old layout: C: 120 GiB, then the RZhuangJi staging volume up to the end of a 512-GB disk.
         let staging_offset = 120 * GIB;
         let layout = plan_full_disk_layout_for_disk(
             RequestedPartitionStyle::Gpt,

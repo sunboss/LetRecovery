@@ -13,7 +13,7 @@ use lr_core::cached_artifact::{
 use crate::utils::encoding::gbk_to_utf8;
 use crate::utils::path::{get_bin_dir, get_exe_dir, get_pe_download_cache_dir};
 
-const PERSISTENT_PE_DIR_NAME: &str = "LetRecovery_PE";
+const PERSISTENT_PE_DIR_NAME: &str = "RZhuangJi_PE";
 const ACTIVE_PE_JOURNAL_NAME: &str = "pe_guid.txt";
 const PENDING_PE_JOURNAL_NAME: &str = "pe_pending.txt";
 const HANDOFF_CAPSULE_WIM_PATH: &str = "\\LR_HandoffAuth.txt";
@@ -25,7 +25,7 @@ const HANDOFF_ADMINISTRATOR_WIM_PATH: &str =
     lr_core::unattend_account::PROTECTED_ADMINISTRATOR_SECRET_WIM_PATH;
 const HANDOFF_BITLOCKER_WIM_PATH: &str = lr_core::bl_passthrough::KEYS_WIM_PATH;
 const HANDOFF_CAPABILITIES_WIM_PATH: &str =
-    "\\Program Files\\LetRecoveryPE\\handoff-capabilities.txt";
+    "\\Program Files\\RZhuangJiPE\\handoff-capabilities.txt";
 const SOURCE_IMAGE_VERIFIED_CAPABILITY: &str = "source-image-verified-v1";
 const JOURNAL_VERSION: &str = "LRPE4";
 const PRE_AUTH_JOURNAL_VERSION: &str = "LRPE3";
@@ -83,7 +83,7 @@ fn read_pe_capabilities(pe_path: &Path) -> Result<Vec<u8>> {
         &extraction
             .path()
             .join("Program Files")
-            .join("LetRecoveryPE")
+            .join("RZhuangJiPE")
             .join("handoff-capabilities.txt"),
         4096,
     )?;
@@ -1899,7 +1899,7 @@ impl PeManager {
             .map(|directory| directory.join("bcdedit.exe"))
             .unwrap_or_else(|error| {
                 log::error!("[PE BOOT] 无法解析宿主 System32，bcdedit 将失败关闭: {error}");
-                PathBuf::from("__LetRecovery_missing_System32__").join("bcdedit.exe")
+                PathBuf::from("__RZhuangJi_missing_System32__").join("bcdedit.exe")
             });
         Self {
             bcdedit_path: bcdedit_path.to_string_lossy().to_string(),
@@ -2507,7 +2507,7 @@ impl PeManager {
     pub fn reboot() {
         log::info!("[PE] 执行重启");
         if let Err(error) =
-            lr_core::windows_shutdown::schedule_restart(3, "LetRecovery 正在重启到 PE 环境...")
+            lr_core::windows_shutdown::schedule_restart(3, "R装机 正在重启到 PE 环境...")
         {
             log::error!("[PE] 安排重启失败: {error}");
         }
@@ -2654,7 +2654,7 @@ pub(crate) fn enter_pe_maintenance_with_progress(
         .boot_to_pe_for_maintenance(&snapshot.path.to_string_lossy(), &pe.display_name, payload)?
         .commit()?;
     progress(PeMaintenanceProgress::SchedulingRestart);
-    lr_core::windows_shutdown::schedule_restart(3, "LetRecovery 正在重启到 PE 维护环境...")
+    lr_core::windows_shutdown::schedule_restart(3, "R装机 正在重启到 PE 维护环境...")
         .context("PE 维护环境已经准备完成，但 Windows 未能安排重启；下次手动重启仍会进入 PE")?;
     progress(PeMaintenanceProgress::RestartScheduled);
     Ok(())
@@ -2708,7 +2708,7 @@ mod cache_policy_tests {
     const WRONG_MD5: &str = "00000000000000000000000000000000";
     const RAMDISK_GUID: &str = "{11111111-1111-1111-1111-111111111111}";
     const LOADER_GUID: &str = "{22222222-2222-2222-2222-222222222222}";
-    const TEST_PERSISTENT_PE_DIR: &str = "C:\\LetRecovery_PE";
+    const TEST_PERSISTENT_PE_DIR: &str = "C:\\RZhuangJi_PE";
 
     #[test]
     fn stale_handoff_temp_names_expose_only_their_owner_pid() {
@@ -2807,7 +2807,7 @@ mod cache_policy_tests {
                     role: ArtifactRole::InstallImageSpan,
                     location: ArtifactLocation::PublicData,
                     ordinal: 0,
-                    relative_path: "LetRecovery_Data\\install.wim".to_owned(),
+                    relative_path: "RZhuangJi_Data\\install.wim".to_owned(),
                     length_bytes: 1,
                     sha256: [0x11; 32],
                 },
@@ -2941,7 +2941,7 @@ mod cache_policy_tests {
 
     #[test]
     fn private_pe_paths_follow_a_non_c_windows_volume() {
-        let root = Path::new(r"D:\LetRecovery_PE");
+        let root = Path::new(r"D:\RZhuangJi_PE");
         let record = PeBootRecord {
             ramdisk_guid: RAMDISK_GUID.to_owned(),
             loader_guid: LOADER_GUID.to_owned(),
@@ -2957,7 +2957,7 @@ mod cache_policy_tests {
         assert_eq!(parsed[0].wim_path, record.wim_path);
         assert_eq!(
             bcd_path_on_volume(&record.wim_path, 'D').unwrap(),
-            r"\LetRecovery_PE\boot-0123456789abcdef0123456789abcdef.wim"
+            r"\RZhuangJi_PE\boot-0123456789abcdef0123456789abcdef.wim"
         );
         assert!(bcd_path_on_volume(&record.wim_path, 'C').is_err());
 
@@ -3446,11 +3446,11 @@ mod cache_policy_tests {
     fn user_managed_pe_can_be_customized_without_matching_server_hash() {
         let local = TestDirectory::new("local");
         let managed = TestDirectory::new("managed-empty");
-        let path = local.0.join("LetRecovery_PE.wim");
+        let path = local.0.join("RZhuangJi_PE.wim");
         fs::write(&path, b"custom PE contents").unwrap();
 
         let status = verify_pe_candidates(
-            "LetRecovery_PE.wim",
+            "RZhuangJi_PE.wim",
             std::slice::from_ref(&local.0),
             std::slice::from_ref(&managed.0),
             None,
@@ -3471,11 +3471,11 @@ mod cache_policy_tests {
     fn customized_managed_download_cache_is_accepted_after_download() {
         let local = TestDirectory::new("local-empty");
         let managed = TestDirectory::new("managed");
-        let path = managed.0.join("LetRecovery_PE.wim");
+        let path = managed.0.join("RZhuangJi_PE.wim");
         fs::write(&path, b"user-customized PE after download").unwrap();
 
         let status = verify_pe_candidates(
-            "LetRecovery_PE.wim",
+            "RZhuangJi_PE.wim",
             std::slice::from_ref(&local.0),
             std::slice::from_ref(&managed.0),
             None,

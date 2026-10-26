@@ -73,7 +73,7 @@ if (@(Compare-Object $installOrder @($nvmeFiles.path)).Count -ne 0) {
 
 $manifest = [ordered]@{
     version = 1
-    source = "User-provided legacy LetRecovery.7z; unsafe or non-kernel-policy USB3 packages excluded"
+    source = "User-provided legacy RZhuangJi.7z; unsafe or non-kernel-policy USB3 packages excluded"
     usb3_packages = @($usbPackages)
     nvme = [ordered]@{
         architecture = "amd64"

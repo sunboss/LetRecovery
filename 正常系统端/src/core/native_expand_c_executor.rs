@@ -392,10 +392,10 @@ mod tests {
         use crate::core::install_config::{ConfigFileManager, ExpandConfig};
 
         let root = unique_temp_root();
-        let data_dir = root.join("LetRecovery_Data");
+        let data_dir = root.join("RZhuangJi_Data");
         std::fs::create_dir_all(&data_dir).unwrap();
-        let marker = root.join("LetRecovery_Expand.marker");
-        let config = data_dir.join("LetRecovery_Expand.ini");
+        let marker = root.join("RZhuangJi_Expand.marker");
+        let config = data_dir.join("RZhuangJi_Expand.ini");
         let unrelated = data_dir.join("user-owned.bin");
         std::fs::write(&marker, b"previous marker").unwrap();
         std::fs::write(&config, b"previous config").unwrap();

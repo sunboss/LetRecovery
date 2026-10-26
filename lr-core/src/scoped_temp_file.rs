@@ -1855,7 +1855,7 @@ const INTERACTIVE_FILE_ACL_PRINCIPALS: [InteractiveFileAclPrincipal; 3] = [
 /// unique SID set consisting of the current token user, local SYSTEM, and BUILTIN\Administrators.
 /// `SET_ACCESS` may consolidate duplicate trustees when the token user is SYSTEM. This is intended for a secret
 /// file created by an asInvoker interactive process: the user must retain access while service
-/// and later elevated LetRecovery processes can consume it. This function never changes a parent
+/// and later elevated RZhuangJi processes can consume it. This function never changes a parent
 /// directory ACL.
 #[cfg(windows)]
 pub fn restrict_to_current_user_system_and_administrators(path: &Path) -> io::Result<()> {

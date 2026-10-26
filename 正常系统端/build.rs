@@ -1,11 +1,16 @@
 fn main() {
     let profile = std::env::var("PROFILE").unwrap_or_default();
     let target = std::env::var("TARGET").unwrap_or_default();
-    if profile == "release" && target != "x86_64-win7-windows-msvc" {
+    if profile == "release"
+        && target != "x86_64-win7-windows-msvc"
+        && target != "i686-pc-windows-msvc"
+    {
         panic!(
-            "LetRecovery release builds must use the Windows 7 target; run \
-             powershell -ExecutionPolicy Bypass -File \
-             .github/scripts/build-win7-normal.ps1 from the workspace root \
+            "RZhuangJi release builds must use the Windows 7 target \
+             (x86_64-win7-windows-msvc) or the 32-bit target \
+             (i686-pc-windows-msvc); run the workflow build scripts \
+             (.github/scripts/build-win7-normal.ps1 or \
+             .github/scripts/build-x86-normal.ps1) from the workspace root \
              instead of cargo build --workspace --release (current target: {target})"
         );
     }
@@ -56,7 +61,7 @@ fn main() {
         );
 
         // 设置程序信息
-        res.set("ProductName", "LetRecovery");
+        res.set("ProductName", "RZhuangJi");
         res.set("FileDescription", "Windows系统一键重装工具");
         res.set("LegalCopyright", "© 2026-present Cloud-PE Dev.");
         res.set("ProductVersion", &numeric_version);
@@ -358,7 +363,7 @@ fn generate_icon_from_png() -> std::path::PathBuf {
         .expect("failed to open assets/icon.png")
         .into_rgba8();
     let output = std::path::PathBuf::from(std::env::var_os("OUT_DIR").expect("OUT_DIR"))
-        .join("LetRecovery.generated.ico");
+        .join("RZhuangJi.generated.ico");
     const SIZES: [u32; 8] = [16, 20, 24, 32, 40, 48, 64, 256];
     let mut images = Vec::with_capacity(SIZES.len());
     for size in SIZES {

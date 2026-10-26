@@ -92,7 +92,7 @@ pub fn parse_driver_inf(inf: &Path) -> Option<TxtmodeDriver> {
     }
     sys_files.sort();
     Some(TxtmodeDriver {
-        desc: format!("{} (LetRecovery textmode)", parsed.service),
+        desc: format!("{} (RZhuangJi textmode)", parsed.service),
         service: parsed.service,
         miniport_sys: parsed.miniport_sys,
         hwids: parsed.hwids,
@@ -489,13 +489,13 @@ ServiceBinary  = %12%\\stornvme.sys
         let drv = TxtmodeDriver {
             service: "genahci".into(),
             miniport_sys: "genahci.sys".into(),
-            desc: "genahci (LetRecovery textmode)".into(),
+            desc: "genahci (RZhuangJi textmode)".into(),
             hwids: vec!["PCI\\CC_010601".into()],
             sys_files: vec![], // 无文件可拷（测纯合并；拷贝在真实路径做）
         };
         let (out, _log) = integrate(ts, &[drv], &[Path::new("/nonexistent-source")]);
         assert!(out.contains("[SCSI.Load]\r\ngenahci = genahci.sys,4"));
-        assert!(out.contains("genahci = \"genahci (LetRecovery textmode)\""));
+        assert!(out.contains("genahci = \"genahci (RZhuangJi textmode)\""));
         assert!(out.contains("PCI\\CC_010601 = \"genahci\""));
         // storport.sys 已存在不重复加；这里没有可拷 .sys 故 SourceDisksFiles 不新增
     }
@@ -509,7 +509,7 @@ ServiceBinary  = %12%\\stornvme.sys
         let mk = |svc: &str, files: &[&str]| TxtmodeDriver {
             service: svc.into(),
             miniport_sys: format!("{svc}.sys"),
-            desc: format!("{svc} (LetRecovery textmode)"),
+            desc: format!("{svc} (RZhuangJi textmode)"),
             hwids: vec![],
             sys_files: files
                 .iter()

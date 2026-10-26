@@ -403,7 +403,7 @@ mod tests {
 
     #[test]
     fn download_filename_accepts_spaces_unicode_and_shell_metacharacters() {
-        validate_download_filename("LetRecovery PE 中文 & ^ %.wim").unwrap();
+        validate_download_filename("RZhuangJi PE 中文 & ^ %.wim").unwrap();
     }
 
     #[test]

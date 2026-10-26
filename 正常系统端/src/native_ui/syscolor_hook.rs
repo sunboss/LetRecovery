@@ -3,7 +3,7 @@
 //! The Edit control paints selected text with the system highlight colours (GetSysColor
 //! COLOR_HIGHLIGHT / COLOR_HIGHLIGHTTEXT); there is no message to change them per control, and
 //! SetSysColors would change them for every program. Instead, the import table of this process's
-//! comctl32 is pointed at two small functions that answer those two indexes with LetRecovery's
+//! comctl32 is pointed at two small functions that answer those two indexes with RZhuangJi's
 //! selection colours (the same as selected list rows) and forward every other index unchanged.
 //! Only this process and only the controls implemented in comctl32 are affected.
 

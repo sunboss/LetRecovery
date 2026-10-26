@@ -1,5 +1,5 @@
 [package]
-name = "LetRecovery"
+name = "RZhuangJi"
 version = "2026.9.26"
 edition = "2021"
 rust-version.workspace = true
@@ -134,5 +134,5 @@ image = { version = "0.25", default-features = false, features = ["png"] }
 winres = "0.1"
 
 [[bin]]
-name = "LetRecovery"
+name = "RZhuangJi"
 path = "src/main.rs"

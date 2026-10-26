@@ -105,7 +105,7 @@ try {
     }
     Invoke-Dism @(
         "/Capture-Image", "/ImageFile:$OutputWim", "/CaptureDir:$payload",
-        "/Name:LetRecovery PCA2023 $Architecture", "/Compress:max", "/CheckIntegrity"
+        "/Name:RZhuangJi PCA2023 $Architecture", "/Compress:max", "/CheckIntegrity"
     )
     Write-Host "Created: $OutputWim"
     Write-Host "SHA-256: $((Get-FileHash -LiteralPath $OutputWim -Algorithm SHA256).Hash)"

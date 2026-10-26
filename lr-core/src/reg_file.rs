@@ -1,4 +1,4 @@
-//! Offline conversion of `.reg` files for LetRecovery's mounted hives (`pc-soft`, `pc-sys`,
+//! Offline conversion of `.reg` files for RZhuangJi's mounted hives (`pc-soft`, `pc-sys`,
 //! `pc-default`). Shared by the desktop direct-install path and the WinPE path.
 //!
 //! Regedit exports are UTF-16LE with a BOM; hand-written and `REGEDIT4` files are UTF-8 or the

@@ -27,7 +27,7 @@ pub enum RequiredBuiltinUnattendError {
     UnsupportedSource,
 }
 
-/// Validate options whose selected result can only be proved by LetRecovery's built-in
+/// Validate options whose selected result can only be proved by RZhuangJi's built-in
 /// specialize/first-logon hooks. Call this before the first destructive target write.
 pub fn validate_required_builtin_unattend(
     required: bool,

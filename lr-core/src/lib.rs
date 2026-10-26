@@ -1,4 +1,4 @@
-//! LetRecovery 两端（PE端 / 正常系统端）共享核心库。
+//! RZhuangJi 两端（PE端 / 正常系统端）共享核心库。
 //!
 //! 目标：逐步收纳两端重复的核心模块，消除复制粘贴。
 //! 当前已收纳：
@@ -44,6 +44,7 @@ pub mod onedrive_removal;
 pub mod operation;
 pub mod pca_compat;
 pub mod pca_preflight;
+pub mod pe_http_fetch;
 pub mod pe_network;
 pub mod personal_files;
 pub mod progress_raster;

@@ -12,10 +12,10 @@ pub const CANONICAL_TARGET_VERSION: u8 = 2;
 /// Fixed leaf used only to rediscover the user-selected installation volume after booting PE.
 /// The value is an independent 256-bit CNG locator token authenticated by the private LRHM3
 /// manifest; it is not a second trust root and carries no disk inventory fields.
-pub const DATA_VOLUME_MARKER_NAME: &str = "LetRecovery_Data.marker";
-pub const INSTALL_TARGET_MARKER_NAME: &str = "LetRecovery_Target.marker";
+pub const DATA_VOLUME_MARKER_NAME: &str = "RZhuangJi_Data.marker";
+pub const INSTALL_TARGET_MARKER_NAME: &str = "RZhuangJi_Target.marker";
 /// Per-selected-disk random locator used by authenticated full-disk reinstall plans.
-pub const FULL_DISK_MARKER_NAME: &str = "LetRecovery_FullDisk.marker";
+pub const FULL_DISK_MARKER_NAME: &str = "RZhuangJi_FullDisk.marker";
 
 pub fn locator_marker_bytes(token: &str) -> Result<Vec<u8>> {
     crate::handoff_auth::validate_locator_token(token)?;

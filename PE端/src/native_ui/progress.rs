@@ -63,7 +63,7 @@ use super::window::{
     fit_window_to_work_area, monitor_work_area, scaled,
 };
 
-const CLASS_NAME: PCWSTR = w!("LetRecovery.PE.Native.Progress");
+const CLASS_NAME: PCWSTR = w!("RZhuangJi.PE.Native.Progress");
 const WORKER_TIMER_ID: usize = 1;
 const WORKER_POLL_INTERVAL_MS: u32 = 50;
 const ANIMATION_FRAME_INTERVAL_MS: i32 = 16;
@@ -655,7 +655,7 @@ impl NativeProgressWindow {
         match lr_core::windows_diagnostics::show_error_log_prompt(
             hwnd,
             &crate::tr!("操作出错"),
-            &crate::tr!("LetRecovery 遇到错误"),
+            &crate::tr!("R装机 遇到错误"),
             &content,
             &crate::tr!("打开文件"),
         ) {
@@ -1163,7 +1163,7 @@ fn run_internal(
         let preferred_height = preferred_progress_height(operation_type);
         let width = scaled(PREFERRED_WIDTH, dpi).min(screen_width);
         let height = scaled(preferred_height, dpi).min(screen_height);
-        let title = wide(crate::tr!("LetRecovery PE"));
+        let title = wide(crate::tr!("R装机 PE"));
         let hwnd = match CreateWindowExW(
             WS_EX_DLGMODALFRAME,
             CLASS_NAME,
@@ -1296,10 +1296,10 @@ fn launch_progress(
 
 fn progress_title(workflow: WorkflowKind) -> String {
     match workflow {
-        WorkflowKind::Install => crate::tr!("LetRecovery PE 安装助手"),
-        WorkflowKind::Backup => crate::tr!("LetRecovery PE 备份助手"),
-        WorkflowKind::Expand => crate::tr!("LetRecovery PE 扩容助手"),
-        WorkflowKind::Missing => crate::tr!("LetRecovery PE"),
+        WorkflowKind::Install => crate::tr!("RZhuangJi PE 安装助手"),
+        WorkflowKind::Backup => crate::tr!("RZhuangJi PE 备份助手"),
+        WorkflowKind::Expand => crate::tr!("RZhuangJi PE 扩容助手"),
+        WorkflowKind::Missing => crate::tr!("R装机 PE"),
     }
 }
 

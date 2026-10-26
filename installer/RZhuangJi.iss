@@ -1,8 +1,12 @@
-#define SourceDir GetEnv("LETRECOVERY_INSTALLER_SOURCE")
+﻿#define SourceDir GetEnv("LETRECOVERY_INSTALLER_SOURCE")
 #define OutputDir GetEnv("LETRECOVERY_INSTALLER_OUTPUT")
 #define AppVersion GetEnv("LETRECOVERY_INSTALLER_VERSION")
 #define AppDisplayVersion GetEnv("LETRECOVERY_INSTALLER_DISPLAY_VERSION")
 #define AppIcon GetEnv("LETRECOVERY_INSTALLER_ICON")
+#define Arch GetEnv("LETRECOVERY_INSTALLER_ARCH")
+#if Arch == ""
+  #define Arch "x64"
+#endif
 
 #if SourceDir == ""
   #error "LETRECOVERY_INSTALLER_SOURCE is not set"
@@ -19,28 +23,36 @@
 
 [Setup]
 AppId={{F0B9EACD-36A4-4D12-B07E-4D0CC87B4798}
-AppName=LetRecovery
+AppName=RZhuangJi
 AppVersion={#AppDisplayVersion}
-AppVerName=LetRecovery {#AppDisplayVersion}
-AppPublisher=NORMAL-EX
-AppPublisherURL=https://letrecovery.net/
-AppSupportURL=https://letrecovery.net/
-AppUpdatesURL=https://letrecovery.net/
-AppCopyright=© 2026-present Cloud-PE Dev.
-DefaultDirName={autopf}\LetRecovery
-DefaultGroupName=LetRecovery
+AppVerName=RZhuangJi {#AppDisplayVersion}
+AppPublisher=中邦智能
+AppPublisherURL=https://www.1234r.com/
+AppSupportURL=https://www.1234r.com/
+AppUpdatesURL=https://www.1234r.com/
+AppCopyright=© 2026-present 中邦智能
+DefaultDirName={autopf}\RZhuangJi
+DefaultGroupName=RZhuangJi
 DisableProgramGroupPage=yes
 AllowNoIcons=yes
 LicenseFile=LICENSE.zh-CN.txt
 InfoBeforeFile=NOTICE.zh-CN.txt
 OutputDir={#OutputDir}
-OutputBaseFilename=LetRecovery-Setup-x64
+#if Arch == "x86"
+OutputBaseFilename=RZhuangJi-Setup-x86
+#else
+OutputBaseFilename=RZhuangJi-Setup-x64
+#endif
 SetupIconFile={#AppIcon}
-UninstallDisplayIcon={app}\LetRecovery.exe
-UninstallDisplayName=LetRecovery
+UninstallDisplayIcon={app}\RZhuangJi.exe
+UninstallDisplayName=RZhuangJi
 PrivilegesRequired=admin
+#if Arch == "x86"
+ArchitecturesAllowed=x86compatible
+#else
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
+#endif
 MinVersion=10.0.10240
 WizardStyle=modern dynamic windows11 hidebevels includetitlebar
 WizardSizePercent=110
@@ -50,7 +62,7 @@ SolidCompression=yes
 CompressionThreads=auto
 LZMAUseSeparateProcess=yes
 CloseApplications=yes
-CloseApplicationsFilter=LetRecovery.exe
+CloseApplicationsFilter=RZhuangJi.exe
 RestartApplications=no
 UsePreviousAppDir=yes
 UsePreviousGroup=yes
@@ -60,11 +72,11 @@ DisableWelcomePage=no
 ShowLanguageDialog=no
 LanguageDetectionMethod=uilanguage
 VersionInfoVersion={#AppVersion}
-VersionInfoCompany=NORMAL-EX
-VersionInfoDescription=LetRecovery offline installer
-VersionInfoProductName=LetRecovery
+VersionInfoCompany=中邦智能
+VersionInfoDescription=RZhuangJi安装包
+VersionInfoProductName=RZhuangJi
 VersionInfoProductVersion={#AppDisplayVersion}
-VersionInfoCopyright=© 2026-present Cloud-PE Dev.
+VersionInfoCopyright=© 2026-present 中邦智能
 
 [Languages]
 Name: "chinesesimp"; MessagesFile: "languages\ChineseSimplified.isl"; LicenseFile: "LICENSE.zh-CN.txt"; InfoBeforeFile: "NOTICE.zh-CN.txt"
@@ -83,12 +95,12 @@ Source: "{#SourceDir}\*"; DestDir: "{app}"; Excludes: "config.json"; Flags: igno
 Source: "{#SourceDir}\config.json"; DestDir: "{app}"; Flags: onlyifdoesntexist
 
 [Icons]
-Name: "{group}\LetRecovery"; Filename: "{app}\LetRecovery.exe"; WorkingDir: "{app}"
-Name: "{group}\卸载 LetRecovery"; Filename: "{uninstallexe}"
-Name: "{autodesktop}\LetRecovery"; Filename: "{app}\LetRecovery.exe"; WorkingDir: "{app}"; Tasks: desktopicon
+Name: "{group}\RZhuangJi"; Filename: "{app}\RZhuangJi.exe"; WorkingDir: "{app}"
+Name: "{group}\卸载 RZhuangJi"; Filename: "{uninstallexe}"
+Name: "{autodesktop}\RZhuangJi"; Filename: "{app}\RZhuangJi.exe"; WorkingDir: "{app}"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\LetRecovery.exe"; Description: "启动 LetRecovery"; WorkingDir: "{app}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\RZhuangJi.exe"; Description: "启动 RZhuangJi"; WorkingDir: "{app}"; Flags: nowait postinstall skipifsilent
 
 [UninstallDelete]
 Type: files; Name: "{app}\config.json"

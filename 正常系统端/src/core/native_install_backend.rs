@@ -271,7 +271,7 @@ fn stage_ci_existing_target_driver_fixture(
 
     let storage_inf = format!(
         concat!(
-            "; LetRecovery disposable-VM CI fixture. It is deliberately unsigned and must be rejected.\r\n",
+            "; RZhuangJi disposable-VM CI fixture. It is deliberately unsigned and must be rejected.\r\n",
             "; RunId={run_id}\r\n",
             "[Version]\r\n",
             "Signature=\"$WINDOWS NT$\"\r\n",
@@ -299,15 +299,15 @@ fn stage_ci_existing_target_driver_fixture(
             "[DriverCopyFiles]\r\n",
             "lrci_storage.sys\r\n\r\n",
             "[Strings]\r\n",
-            "Provider=\"LetRecovery CI\"\r\n",
-            "DeviceDesc=\"LetRecovery CI rejected storage candidate\"\r\n"
+            "Provider=\"RZhuangJi CI\"\r\n",
+            "DeviceDesc=\"RZhuangJi CI rejected storage candidate\"\r\n"
         ),
         run_id = run_id,
         model_id = model_id,
     );
     let optional_inf = format!(
         concat!(
-        "; LetRecovery disposable-VM CI fixture. It is deliberately unsigned, boot-start and unrelated.\r\n",
+        "; RZhuangJi disposable-VM CI fixture. It is deliberately unsigned, boot-start and unrelated.\r\n",
         "; RunId={run_id}\r\n",
         "[Version]\r\n",
         "Signature=\"$WINDOWS NT$\"\r\n",
@@ -341,8 +341,8 @@ fn stage_ci_existing_target_driver_fixture(
         "[DriverCopyFiles]\r\n",
         "lrci_optional.sys\r\n\r\n",
         "[Strings]\r\n",
-        "Provider=\"LetRecovery CI\"\r\n",
-        "DeviceDesc=\"LetRecovery CI rejected optional package\"\r\n"
+        "Provider=\"RZhuangJi CI\"\r\n",
+        "DeviceDesc=\"RZhuangJi CI rejected optional package\"\r\n"
     ),
         run_id = run_id
     );
@@ -371,7 +371,7 @@ fn stage_ci_existing_target_driver_fixture(
     }
     requirements.push(lr_core::driver::StorageDriverRequirement {
         description: format!(
-            "LetRecovery CI target-existing candidate: {}",
+            "RZhuangJi CI target-existing candidate: {}",
             device.description
         ),
         source_inf: "lrci_storage.inf".to_owned(),
@@ -990,7 +990,7 @@ pub struct ProductionInstallBackend {
     dual_boot_transaction: Option<super::disk::PreparedDualBootTransaction>,
     /// Present only when the payload is stored on existing volumes instead of one data partition.
     scattered_staging: Option<super::scattered_staging::ScatterStaging>,
-    /// Directory (below `LetRecovery_Data` on its volume) that holds the staged image when the
+    /// Directory (below `RZhuangJi_Data` on its volume) that holds the staged image when the
     /// scattered plan put the whole image on a secondary volume.
     image_data_dir_override: Option<PathBuf>,
     /// Exact, handle-held files of a scattered image: split WIM parts or raw image chunks in
@@ -1003,7 +1003,7 @@ pub struct ProductionInstallBackend {
     /// In-place target-drive staging: the payload lives on the target volume itself and PE deletes
     /// the old system in place instead of formatting. Set only for an ordinary partition reinstall.
     in_place_target_staging: bool,
-    /// `<target>:\\LetRecovery_Data` of an in-place staging that has not been handed to PE yet.
+    /// `<target>:\\RZhuangJi_Data` of an in-place staging that has not been handed to PE yet.
     /// Dropping the backend before the handoff commits deletes the staged payload from the
     /// system drive (keeping logs), so a failed attempt never leaves gigabytes behind on C:.
     in_place_uncommitted_dir: Option<PathBuf>,
@@ -1191,7 +1191,7 @@ impl ProductionInstallBackend {
             target_style: PartitionStyle::Unknown,
             partitions: Vec::new(),
             pca_package: None,
-            driver_backup: std::env::temp_dir().join("LetRecovery_DriverBackup"),
+            driver_backup: std::env::temp_dir().join("RZhuangJi_DriverBackup"),
             pe_path: None,
             pe_snapshot: None,
             pe_supports_source_image_verification_receipt: false,
@@ -1683,7 +1683,7 @@ impl ProductionInstallBackend {
         ))
     }
 
-    /// `LetRecovery_Data` directory that receives the staged image. It is the primary data
+    /// `RZhuangJi_Data` directory that receives the staged image. It is the primary data
     /// directory except when a scattered plan put the complete image on another volume.
     fn image_data_dir(&self) -> Result<PathBuf, InstallBackendError> {
         match &self.image_data_dir_override {
@@ -1939,7 +1939,7 @@ impl ProductionInstallBackend {
         if !intent.options.unattended_install
             || !intent.options.custom_unattend_path.trim().is_empty()
         {
-            // The applications are installed by LetRecovery's own first-logon finalizer, which
+            // The applications are installed by RZhuangJi's own first-logon finalizer, which
             // exists only with the built-in answer file. Skip them instead of refusing the whole
             // installation.
             log::warn!(
@@ -1956,7 +1956,7 @@ impl ProductionInstallBackend {
         self.prepared_software_packages = None;
         let temp = lr_core::scoped_temp_file::ScopedTempDir::create_in(
             &std::env::temp_dir(),
-            "LetRecovery-preinstalled-software",
+            "RZhuangJi-preinstalled-software",
         )
         .map_err(|error| Self::error("create_preinstalled_software_temp", error))?;
         let batch = Self::download_software_packages(
@@ -2190,7 +2190,7 @@ impl ProductionInstallBackend {
             self.direct_staged_software = Some(Vec::new());
             return Ok(());
         }
-        let scripts = Path::new(&self.target).join("LetRecovery_Scripts");
+        let scripts = Path::new(&self.target).join("RZhuangJi_Scripts");
         let destination = scripts.join(lr_core::software_install::STAGING_DIRECTORY_NAME);
         if self.prepared_software_directory.is_some() {
             let prepared_packages =
@@ -2986,7 +2986,7 @@ impl ProductionInstallBackend {
         Err(InstallBackendError::new(
             "scatter_requires_new_pe",
             format!(
-                "the selected PE ({}) does not declare scattered-staging-v1; rebuild the PE with the current LetRecoveryPE",
+                "the selected PE ({}) does not declare scattered-staging-v1; rebuild the PE with the current RZhuangJiPE",
                 pe_path.display()
             ),
         ))
@@ -3100,13 +3100,13 @@ impl ProductionInstallBackend {
             None => return 0,
         };
         // Used space is a safe lower bound on what the old-system deletion can reclaim; the real
-        // deletion keeps LetRecovery_ directories, but at selection time none exist yet.
+        // deletion keeps RZhuangJi_ directories, but at selection time none exist yet.
         total.saturating_sub(free)
     }
 
     /// Last-resort staging on the target volume itself. Valid only for an ordinary partition
     /// reinstall (never dual-boot, full-disk or XP text mode): the payload is written into the
-    /// target's own LetRecovery_Data, PE deletes the old system in place and applies the image
+    /// target's own RZhuangJi_Data, PE deletes the old system in place and applies the image
     /// without formatting. The whole image is stored as one file because it is applied back to the
     /// same volume; raw chunking would add no benefit here.
     fn select_in_place_target_staging(
@@ -3320,7 +3320,7 @@ impl ProductionInstallBackend {
             }
         }
         let scratch = ScratchDirectory(PathBuf::from(format!(
-            "{target_letter}:\\LetRecovery_DriverExport_{}_{}",
+            "{target_letter}:\\RZhuangJi_DriverExport_{}_{}",
             std::process::id(),
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
@@ -5167,7 +5167,7 @@ impl ProductionInstallBackend {
 
     /// Manifest record for a staged file on the primary data volume or on a scattered volume.
     /// The relative path of a scattered file automatically starts with its
-    /// `LetRecovery_Scatter_<token>` directory.
+    /// `RZhuangJi_Scatter_<token>` directory.
     fn scatter_artifact_record(
         &self,
         identity: &lr_core::install_source_lock::LockedSourceArtifactIdentity,
@@ -5202,9 +5202,26 @@ impl ProductionInstallBackend {
         &mut self,
         intent: &StartInstallIntent,
     ) -> Result<(), InstallBackendError> {
-        let staged_name = self.staged_image_name.as_deref().ok_or_else(|| {
-            InstallBackendError::new("staged_image_missing", "source image has not been staged")
-        })?;
+        // PE 在线下载模式：PE 端自行下载安装镜像，桌面端不暂存本地镜像文件。
+        let online_image = intent
+            .options
+            .advanced_options
+            .online_image_source_url
+            .as_deref()
+            .is_some_and(|url| !url.trim().is_empty());
+        let staged_name = if online_image {
+            String::new()
+        } else {
+            self.staged_image_name
+                .as_deref()
+                .ok_or_else(|| {
+                    InstallBackendError::new(
+                        "staged_image_missing",
+                        "source image has not been staged",
+                    )
+                })?
+                .to_owned()
+        };
         let pca = self.pca_package.as_ref().map(|package| PcaCompatConfig {
             package: lr_core::pca_compat::STAGED_PACKAGE_RELATIVE_PATH.to_string(),
             sha256: package.sha256().to_string(),
@@ -5230,8 +5247,11 @@ impl ProductionInstallBackend {
         } else {
             intent.target_partition.clone()
         };
-        let mut config =
-            intent.to_install_config(staged_name, lr_core::active_engine().as_u8(), pca.as_ref());
+        let mut config = intent.to_install_config(
+            staged_name.clone(),
+            lr_core::active_engine().as_u8(),
+            pca.as_ref(),
+        );
         let staged_software = self
             .prepared_software_packages
             .as_deref()
@@ -5246,7 +5266,7 @@ impl ProductionInstallBackend {
         if self.in_place_target_staging {
             // The payload lives on the target volume itself. PE never formats it; the user's
             // format / personal-file choices are kept and PE maps "format" to an in-place deletion
-            // of the old system that preserves every LetRecovery_ directory.
+            // of the old system that preserves every RZhuangJi_ directory.
             config.in_place_target_staging = true;
         }
         if let Some(plan) = prepared_dual_boot_plan {
@@ -5348,8 +5368,12 @@ impl ProductionInstallBackend {
         }
         let auth_key = lr_core::handoff_auth::SessionAuthKey::generate()
             .map_err(|error| Self::error("generate_pe_handoff_auth", error))?;
-        let staged_root = self.image_data_dir()?.join(staged_name);
-        let identities = if intent.options.is_xp_i386 {
+        let staged_root = self.image_data_dir()?.join(&staged_name);
+        // PE 在线下载模式：没有桌面端暂存的镜像，安装源身份清单为空；
+        // PE 端以下载完成并通过 SHA-256 校验的镜像为准。
+        let identities = if online_image {
+            Vec::new()
+        } else if intent.options.is_xp_i386 {
             let source_arch = self.staged_xp_source_arch.as_deref().ok_or_else(|| {
                 InstallBackendError::new(
                     "staged_xp_arch_missing",
@@ -5397,7 +5421,8 @@ impl ProductionInstallBackend {
             self.pe_source_lock = Some(lock);
             identities
         };
-        let receipt_matches = self.scattered_image_layout == ScatteredImageLayout::Directory
+        let receipt_matches = !online_image
+            && self.scattered_image_layout == ScatteredImageLayout::Directory
             && Self::receipt_matches_manifest_identities(
                 self.staged_source_image_receipt.as_ref(),
                 &staged_root,
@@ -5430,7 +5455,7 @@ impl ProductionInstallBackend {
             if let Some(pe_path) = self.pe_path.as_ref() {
                 if !super::pe::supports_scattered_staging(pe_path) {
                     log::warn!(
-                        "[SCATTER] 所选 PE 没有声明 scattered-staging-v1；如果 PE 里的 LetRecoveryPE 是旧版本，它无法读取放在其他分区的文件，请用新版 PE端 重新打包 PE"
+                        "[SCATTER] 所选 PE 没有声明 scattered-staging-v1；如果 PE 里的 RZhuangJiPE 是旧版本，它无法读取放在其他分区的文件，请用新版 PE端 重新打包 PE"
                     );
                 }
             }
@@ -5459,6 +5484,46 @@ impl ProductionInstallBackend {
             })
             .collect::<Result<Vec<_>, _>>()?;
         let data_dir = PathBuf::from(self.data_dir()?);
+        // PE 在线下载模式：写在线镜像描述文件并注册为 manifest artifact，
+        // 使安装交接满足"至少一个认证镜像源"的结构要求。描述文件本身被
+        // manifest 签名认证；PE 端会核对它与 INI 配置的一致性。
+        if online_image {
+            let descriptor_url = intent
+                .options
+                .advanced_options
+                .online_image_source_url
+                .as_deref()
+                .unwrap_or_default()
+                .trim()
+                .to_owned();
+            if descriptor_url.is_empty() {
+                return Err(InstallBackendError::new(
+                    "online_image_url_missing",
+                    "online image mode is enabled but the source URL is empty",
+                ));
+            }
+            let descriptor = serde_json::json!({
+                "url": descriptor_url,
+                "sha256": intent.options.advanced_options.online_image_source_sha256.clone().unwrap_or_default(),
+                "length": intent.options.advanced_options.online_image_source_length,
+            });
+            let descriptor_path = data_dir.join("online_image.json");
+            std::fs::write(
+                &descriptor_path,
+                serde_json::to_string_pretty(&descriptor)
+                    .map_err(|error| Self::error("write_online_image_descriptor", error))?,
+            )
+            .map_err(|error| Self::error("write_online_image_descriptor", error))?;
+            let lock = lr_core::install_source_lock::LockedPlainArtifact::acquire(&descriptor_path)
+                .map_err(|error| Self::error("lock_online_image_descriptor", error))?;
+            source_artifacts.push(self.scatter_artifact_record(
+                lock.identity(),
+                lr_core::handoff_manifest::ArtifactRole::OnlineImageDescriptor,
+                0,
+            )?);
+            self.pe_auxiliary_file_locks.push(lock);
+            log::info!("[PE HANDOFF] online image descriptor staged: {descriptor_url}");
+        }
         #[cfg(feature = "ci-automation")]
         if let Some(run_id) = ci_stale_disabled_driver_scenario_run_id() {
             if intent.options.export_drivers {
@@ -6191,7 +6256,7 @@ impl ProductionInstallBackend {
                 }
             }
             DriverAction::SaveOnly => {
-                let destination = PathBuf::from(format!("{}\\LetRecovery_Drivers", self.target));
+                let destination = PathBuf::from(format!("{}\\RZhuangJi_Drivers", self.target));
                 if let Err(error) = Self::copy_directory(&self.driver_backup, &destination) {
                     log::warn!(
                         "[Driver] 保存旧驱动到 {} 失败，安装继续: {error}",
@@ -6620,7 +6685,7 @@ impl ProductionInstallBackend {
             if intent.options.advanced_options.disable_windows_defender {
                 return Err(InstallBackendError::new(
                     "required_security_ui_hook_unavailable",
-                    "Windows Security UI removal requires LetRecovery's built-in unattended file",
+                    "Windows Security UI removal requires RZhuangJi's built-in unattended file",
                 ));
             }
             if intent.options.advanced_options.disable_reserved_storage {
@@ -6631,7 +6696,7 @@ impl ProductionInstallBackend {
             if intent.options.advanced_options.remove_uwp_apps {
                 return Err(InstallBackendError::new(
                     "required_appx_hook_unavailable",
-                    "preinstalled application removal requires LetRecovery's built-in unattended file",
+                    "preinstalled application removal requires RZhuangJi's built-in unattended file",
                 ));
             }
             std::fs::copy(&intent.options.custom_unattend_path, &destination)
@@ -7326,7 +7391,7 @@ mod tests {
     #[test]
     fn receipt_requires_exact_manifest_identity_and_legal_format() {
         let identity = lr_core::install_source_lock::LockedSourceArtifactIdentity {
-            path: PathBuf::from(r"D:\LetRecovery_Data\install.wim"),
+            path: PathBuf::from(r"D:\RZhuangJi_Data\install.wim"),
             length_bytes: 123,
             sha256: [7; 32],
         };
@@ -7340,7 +7405,7 @@ mod tests {
         assert!(
             ProductionInstallBackend::receipt_matches_manifest_identities(
                 Some(&receipt),
-                Path::new(r"D:\LetRecovery_Data\install.wim"),
+                Path::new(r"D:\RZhuangJi_Data\install.wim"),
                 &config,
                 std::slice::from_ref(&identity),
             )
@@ -7352,7 +7417,7 @@ mod tests {
         assert!(
             ProductionInstallBackend::receipt_matches_manifest_identities(
                 Some(&receipt),
-                Path::new(r"D:\LetRecovery_Data\install.wim"),
+                Path::new(r"D:\RZhuangJi_Data\install.wim"),
                 &config,
                 &[changed],
             )
@@ -7361,7 +7426,7 @@ mod tests {
         assert!(
             ProductionInstallBackend::receipt_matches_manifest_identities(
                 Some(&receipt),
-                Path::new(r"D:\LetRecovery_Data\install.swm"),
+                Path::new(r"D:\RZhuangJi_Data\install.swm"),
                 &config,
                 std::slice::from_ref(&identity),
             )
@@ -7761,13 +7826,13 @@ mod tests {
     fn advanced_state_round_trips_to_established_business_type() {
         let mut value = intent(InstallMode::Direct);
         value.options.advanced_options.disable_uac = true;
-        value.options.advanced_options.username = "LetRecovery".into();
+        value.options.advanced_options.username = "RZhuangJi".into();
         value.options.advanced_options.migrate_wifi = true;
         value.options.advanced_options.wifi_ssid = "Test Wi-Fi".into();
         value.options.advanced_options.wifi_profile_xml = "<WLANProfile />".into();
         let converted = ProductionInstallBackend::legacy_advanced(&value);
         assert!(converted.disable_uac);
-        assert_eq!(converted.username, "LetRecovery");
+        assert_eq!(converted.username, "RZhuangJi");
         assert!(converted.migrate_wifi);
         assert_eq!(converted.wifi_ssid, "Test Wi-Fi");
         assert_eq!(converted.wifi_profile_xml, "<WLANProfile />");
@@ -7820,11 +7885,11 @@ mod tests {
     fn missing_pe_is_returned_as_download_preparation_boundary() {
         let error = ProductionInstallBackend::require_cached_pe(
             CachedArtifactStatus::Missing,
-            "LetRecovery_PE.wim",
+            "RZhuangJi_PE.wim",
         )
         .expect_err("missing PE must not be accepted");
         assert_eq!(error.code, "pe_download_required");
-        assert!(error.detail.contains("LetRecovery_PE.wim"));
+        assert!(error.detail.contains("RZhuangJi_PE.wim"));
     }
 
     #[test]

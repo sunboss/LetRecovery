@@ -108,16 +108,16 @@ pub const CURATED_PREINSTALLED_APPX: &[CuratedAppxIdentity] = &[
 
 const CURATED_ONLINE_REMOVAL_SCRIPT: &str = r#"[CmdletBinding()]
 param(
-  [switch]$LetRecoveryWorker
+  [switch]$RZhuangJiWorker
 )
 $ErrorActionPreference = 'Stop'
-if (-not $LetRecoveryWorker) {
+if (-not $RZhuangJiWorker) {
   # Windows Setup waits for RunSynchronous commands without any timeout. AppX servicing on a new
   # or damaged image can block indefinitely and would leave Setup on its wait screen forever.
   # Run the real work in a bounded child PowerShell and always let Windows Setup continue.
   try {
     $workerPowerShell = [System.IO.Path]::Combine($env:SystemRoot, 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe')
-    $worker = Start-Process -FilePath $workerPowerShell -ArgumentList @('-NoP', '-NonI', '-ExecutionPolicy', 'Bypass', '-File', ('"{0}"' -f $PSCommandPath), '-LetRecoveryWorker') -WindowStyle Hidden -PassThru
+    $worker = Start-Process -FilePath $workerPowerShell -ArgumentList @('-NoP', '-NonI', '-ExecutionPolicy', 'Bypass', '-File', ('"{0}"' -f $PSCommandPath), '-RZhuangJiWorker') -WindowStyle Hidden -PassThru
     try { $null = $worker.Handle } catch {}
     if (-not $worker.WaitForExit(900000)) {
       try { $worker.Kill() } catch {}
@@ -148,16 +148,16 @@ $allowed = @(
 )
 $failures = [System.Collections.Generic.List[string]]::new()
 $diagnostics = [System.Collections.Generic.List[string]]::new()
-$logDirectory = [System.IO.Path]::Combine($env:ProgramData, 'LetRecovery', 'Logs')
+$logDirectory = [System.IO.Path]::Combine($env:ProgramData, 'RZhuangJi', 'Logs')
 
-function Test-LetRecoveryAppxToken([string]$value) {
+function Test-RZhuangJiAppxToken([string]$value) {
   return (-not [string]::IsNullOrWhiteSpace($value)) -and
     $value.Length -le 512 -and
     $value -match '\A[A-Za-z0-9._~-]+\z'
 }
 
-function Import-LetRecoveryAppxRetirementMarkers([string]$family, [object[]]$packages) {
-  if (-not (Test-LetRecoveryAppxToken $family)) { throw ('unsafe package family name: {0}' -f $family) }
+function Import-RZhuangJiAppxRetirementMarkers([string]$family, [object[]]$packages) {
+  if (-not (Test-RZhuangJiAppxToken $family)) { throw ('unsafe package family name: {0}' -f $family) }
   [void][System.IO.Directory]::CreateDirectory($logDirectory)
   $directoryInfo = Get-Item -LiteralPath $logDirectory -Force -ErrorAction Stop
   if (-not $directoryInfo.PSIsContainer -or (($directoryInfo.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0)) {
@@ -168,7 +168,7 @@ function Import-LetRecoveryAppxRetirementMarkers([string]$family, [object[]]$pac
   foreach ($package in $packages) {
     $fullName = [string]$package.PackageFullName
     if ([string]::IsNullOrWhiteSpace($fullName)) { $fullName = [string]$package.PackageName }
-    if (-not (Test-LetRecoveryAppxToken $fullName)) { throw ('unsafe package full name: {0}' -f $fullName) }
+    if (-not (Test-RZhuangJiAppxToken $fullName)) { throw ('unsafe package full name: {0}' -f $fullName) }
     $sids = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
     [void]$sids.Add('S-1-5-18')
     foreach ($user in @($package.PackageUserInformation)) {
@@ -200,7 +200,7 @@ function Import-LetRecoveryAppxRetirementMarkers([string]$family, [object[]]$pac
   }
 }
 
-Write-Host '[LetRecovery] Preinstalled app cleanup: removing exact provisioned identities...'
+Write-Host '[RZhuangJi] Preinstalled app cleanup: removing exact provisioned identities...'
 try {
   $provisioned = @(Get-AppxProvisionedPackage -Online -ErrorAction Stop)
   $registered = @(Get-AppxPackage -AllUsers -ErrorAction Stop)
@@ -213,7 +213,7 @@ try {
       if ([string]::Equals([string]$package.PackageFamilyName, [string]$identity.Family, [System.StringComparison]::OrdinalIgnoreCase)) { $retirementPackages.Add($package) }
     }
     if ($retirementPackages.Count -gt 0) {
-      try { Import-LetRecoveryAppxRetirementMarkers $identity.Family @($retirementPackages) }
+      try { Import-RZhuangJiAppxRetirementMarkers $identity.Family @($retirementPackages) }
       catch { $diagnostics.Add(('markers:{0}:0x{1:X8}' -f $identity.Family, $_.Exception.HResult)) }
       try { Set-NonRemovableAppsPolicy -Online -PackageFamilyName $identity.Family -NonRemovable 0 -ErrorAction Stop | Out-Null }
       catch { $diagnostics.Add(('policy:{0}:0x{1:X8}' -f $identity.Family, $_.Exception.HResult)) }
@@ -225,7 +225,7 @@ try {
       }
     }
   }
-  Write-Host '[LetRecovery] Preinstalled app cleanup: removing all-user registrations...'
+  Write-Host '[RZhuangJi] Preinstalled app cleanup: removing all-user registrations...'
   foreach ($identity in $allowed) {
     foreach ($package in $registered) {
       if ([string]::Equals([string]$package.PackageFamilyName, [string]$identity.Family, [System.StringComparison]::OrdinalIgnoreCase)) {
@@ -234,7 +234,7 @@ try {
       }
     }
   }
-  Write-Host '[LetRecovery] Preinstalled app cleanup: verifying final provisioning and all-user state...'
+  Write-Host '[RZhuangJi] Preinstalled app cleanup: verifying final provisioning and all-user state...'
   $finalProvisioned = @(Get-AppxProvisionedPackage -Online -ErrorAction Stop)
   $finalRegistered = @(Get-AppxPackage -AllUsers -ErrorAction Stop)
   foreach ($identity in $allowed) {
@@ -254,11 +254,11 @@ try {
 }
 $failures = @($failures | Sort-Object -Unique)
 $diagnostics = @($diagnostics | Sort-Object -Unique)
-foreach ($diagnostic in $diagnostics) { Write-Host ('[LetRecovery] Preinstalled app cleanup diagnostic: {0}' -f $diagnostic) }
+foreach ($diagnostic in $diagnostics) { Write-Host ('[RZhuangJi] Preinstalled app cleanup diagnostic: {0}' -f $diagnostic) }
 if ($failures.Count -ne 0) {
   foreach ($failure in $failures) { [Console]::Error.WriteLine(('LETRECOVERY_APPX_WARNING {0}' -f $failure)) }
 } else {
-  Write-Host '[LetRecovery] Preinstalled app cleanup: completed and verified.'
+  Write-Host '[RZhuangJi] Preinstalled app cleanup: completed and verified.'
 }
 exit 0
 "#;
@@ -266,7 +266,7 @@ exit 0
 pub fn curated_online_script_path(target_partition: &str) -> AnyResult<PathBuf> {
     let root = normalized_script_target_root(target_partition)?;
     Ok(root
-        .join("LetRecovery_Scripts")
+        .join("RZhuangJi_Scripts")
         .join(CURATED_ONLINE_SCRIPT_FILE_NAME))
 }
 
@@ -305,7 +305,7 @@ pub fn curated_online_script_is_staged(target_partition: &str) -> AnyResult<bool
 
 pub fn render_curated_specialize_command(order: u32) -> AnyResult<String> {
     let path = format!(
-        r#"powershell.exe -NoP -NonI -W Hidden -EP Bypass -File "%SystemDrive%\LetRecovery_Scripts\{CURATED_ONLINE_SCRIPT_FILE_NAME}""#
+        r#"powershell.exe -NoP -NonI -W Hidden -EP Bypass -File "%SystemDrive%\RZhuangJi_Scripts\{CURATED_ONLINE_SCRIPT_FILE_NAME}""#
     );
     crate::unattend_command::render_specialize_run_synchronous_command(
         order,

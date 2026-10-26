@@ -32,6 +32,39 @@ pub fn start_from_handoff(guard: &AuthenticatedOperationGuard) {
     }
 }
 
+/// Synchronously run the best-effort network bring-up and report whether
+/// routable IPv4 connectivity is available afterwards.
+///
+/// Unlike [`start_from_handoff`] (fire-and-forget background thread), the
+/// online-image install mode must KNOW the network is up before it starts
+/// downloading a multi-GB image, so it blocks here. Fast path: if the
+/// background bring-up already established connectivity, this returns
+/// immediately without touching the network stack again.
+///
+/// Policy note: this intentionally bypasses `policy_allows`. Online-image mode
+/// is only reachable when the authenticated handoff carries `ImageSourceUrl`,
+/// and the desktop endpoint forces `PeNetworkEnabled=true` in that case —
+/// requesting an online image IS the network consent.
+#[cfg(windows)]
+pub fn ensure_network_blocking(guard: &AuthenticatedOperationGuard) -> bool {
+    if has_connectivity() {
+        log::info!("[PE NETWORK] connectivity already available (background bring-up)");
+        return true;
+    }
+    log::info!("[PE NETWORK] synchronous bring-up for online image download");
+    let payload = load_payload(guard);
+    run_bringup(payload);
+    let ok = has_connectivity();
+    log::info!("[PE NETWORK] synchronous bring-up result: connectivity={ok}");
+    ok
+}
+
+/// Non-Windows stub: there is no WinPE network stack to bring up.
+#[cfg(not(windows))]
+pub fn ensure_network_blocking(_guard: &AuthenticatedOperationGuard) -> bool {
+    false
+}
+
 #[cfg(windows)]
 const MAX_DRIVERS: usize = 64;
 

@@ -233,7 +233,7 @@ fn partition_functional_minimum(
         // Windows 7 requires 128 MiB on GPT disks >=16 GiB. A 16-MiB MSR is sufficient only for
         // newer Windows layouts, so it is not the Windows 7-11 functional minimum.
         PlannedPartitionRole::MicrosoftReserved => Ok(MSR_WINDOWS_7_MINIMUM_BYTES),
-        // 100 MiB is Microsoft's boot-only BIOS minimum. LetRecovery also supports BitLocker,
+        // 100 MiB is Microsoft's boot-only BIOS minimum. RZhuangJi also supports BitLocker,
         // whose separate NTFS system volume requirement is approximately 350 MiB.
         PlannedPartitionRole::SystemReserved => Ok(BIOS_SYSTEM_FUNCTIONAL_MINIMUM_BYTES),
         PlannedPartitionRole::Windows => Ok(windows_minimum_bytes),

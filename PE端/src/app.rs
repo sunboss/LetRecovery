@@ -619,7 +619,7 @@ fn cleanup_target_private_pe_residue(target_partition: &str) -> anyhow::Result<u
     {
         anyhow::bail!("invalid target partition before private PE cleanup");
     }
-    let root = std::path::PathBuf::from(format!(r"{drive}\LetRecovery_PE"));
+    let root = std::path::PathBuf::from(format!(r"{drive}\RZhuangJi_PE"));
     cleanup_private_pe_residue_root(&root)
 }
 
@@ -679,7 +679,7 @@ fn cleanup_private_pe_residue_root(root: &std::path::Path) -> anyhow::Result<usi
         retained.sort();
         retained.truncate(8);
         log::warn!(
-            "[PE INSTALL] 目标的 LetRecovery_PE 中含非任务文件，已保留: {}",
+            "[PE INSTALL] 目标的 RZhuangJi_PE 中含非任务文件，已保留: {}",
             retained.join(", ")
         );
     }
@@ -812,7 +812,7 @@ fn stage_authenticated_preinstalled_software(
         target_partition.trim_end_matches(['\\', '/'])
     ));
     let destination = target_root
-        .join("LetRecovery_Scripts")
+        .join("RZhuangJi_Scripts")
         .join(lr_core::software_install::STAGING_DIRECTORY_NAME);
     if destination.exists() {
         anyhow::bail!(
@@ -872,7 +872,7 @@ impl Drop for AutomationFailureShutdown {
         }
         match lr_core::windows_shutdown::schedule_shutdown(
             15,
-            "LetRecovery PE automation reached a terminal failure; this test machine will power off.",
+            "RZhuangJi PE automation reached a terminal failure; this test machine will power off.",
         ) {
             Ok(()) => log::info!(
                 "[AUTOMATION] terminal=failure action=shutdown status=accepted timeout_seconds=15"
@@ -882,6 +882,128 @@ impl Drop for AutomationFailureShutdown {
             ),
         }
     }
+}
+
+/// PE 在线下载模式：从认证交接配置的 ImageSourceUrl 下载安装镜像到数据目录。
+/// 返回下载完成并校验通过的本地镜像路径。调用方应在失败时 fail_prewrite
+/// （下载发生在任何写盘操作之前，是安全的）。
+fn download_online_image(
+    tx: &Sender<WorkerMessage>,
+    network_ready: bool,
+    authenticated_task: &crate::core::config::AuthenticatedOperationTask,
+    config: &crate::core::config::InstallConfig,
+    data_dir: &str,
+) -> anyhow::Result<String> {
+    use anyhow::Context as _;
+    let url = config.image_source_url.trim().to_owned();
+    let file_name = lr_core::pe_http_fetch::file_name_from_url(&url)
+        .unwrap_or_else(|| "online_image.wim".to_owned());
+    let dest = std::path::Path::new(data_dir)
+        .join("pe_online_image")
+        .join(&file_name);
+    log::info!("[PE ONLINE] image source URL: {url}");
+    log::info!("[PE ONLINE] download destination: {}", dest.display());
+
+    // 核对认证交接中的在线镜像描述文件与 INI 配置一致（防桌面端 bug 导致配置错位）。
+    verify_online_image_descriptor(tx, authenticated_task, &url, config)?;
+
+    if !network_ready {
+        anyhow::bail!("PE 网络不可用，无法下载在线安装镜像（请检查网线/Wi-Fi 配置）");
+    }
+    let _ = tx.send(WorkerMessage::SetProgressStatus {
+        progress: 0,
+        status: tr!("网络已就绪，开始下载安装镜像..."),
+    });
+
+    let spec = lr_core::pe_http_fetch::FetchSpec {
+        url,
+        dest: dest.clone(),
+        expected_length: if config.image_source_length > 0 {
+            Some(config.image_source_length)
+        } else {
+            None
+        },
+        expected_sha256: if config.image_source_sha256.trim().is_empty() {
+            None
+        } else {
+            Some(config.image_source_sha256.clone())
+        },
+    };
+    let mut last_pct = u8::MAX;
+    lr_core::pe_http_fetch::fetch(&spec, &mut |downloaded, total| {
+        let pct = match total {
+            Some(t) if t > 0 => ((downloaded as f64 / t as f64) * 100.0).min(100.0) as u8,
+            _ => 0,
+        };
+        if pct != last_pct {
+            last_pct = pct;
+            let mb = downloaded / 1024 / 1024;
+            let status = match total {
+                Some(t) => tr!(
+                    "正在下载安装镜像：{} / {} MB（{}%）",
+                    mb,
+                    t / 1024 / 1024,
+                    pct
+                ),
+                None => tr!("正在下载安装镜像：{} MB", mb),
+            };
+            let _ = tx.send(WorkerMessage::SetProgressStatus {
+                progress: pct,
+                status,
+            });
+        }
+    })
+    .context("fetch online installation image")?;
+
+    if !dest.is_file() {
+        anyhow::bail!("下载完成后未找到镜像文件：{}", dest.display());
+    }
+    log::info!("[PE ONLINE] image ready: {}", dest.display());
+    Ok(dest.to_string_lossy().into_owned())
+}
+
+/// 核对 manifest 中的在线镜像描述文件（online_image.json）与 INI 配置一致。
+/// 描述文件与 INI 同被交接签名认证；不一致说明桌面端写配置时出了 bug，直接失败。
+fn verify_online_image_descriptor(
+    tx: &Sender<WorkerMessage>,
+    authenticated_task: &crate::core::config::AuthenticatedOperationTask,
+    url: &str,
+    config: &crate::core::config::InstallConfig,
+) -> anyhow::Result<()> {
+    use anyhow::Context as _;
+    let _ = tx.send(WorkerMessage::SetStatus(tr!("正在核对在线镜像交接信息...")));
+    let paths = authenticated_task
+        .install_artifact_paths(lr_core::handoff_manifest::ArtifactRole::OnlineImageDescriptor)
+        .context("读取在线镜像描述 artifact")?;
+    let path = paths.into_iter().next().with_context(|| {
+        "交接中缺少在线镜像描述文件（online_image.json），无法继续在线安装".to_owned()
+    })?;
+    let text = std::fs::read_to_string(&path)
+        .with_context(|| format!("读取在线镜像描述文件 {}", path.display()))?;
+    let descriptor: serde_json::Value =
+        serde_json::from_str(&text).context("解析在线镜像描述文件")?;
+    let descriptor_url = descriptor
+        .get("url")
+        .and_then(|v| v.as_str())
+        .unwrap_or_default()
+        .trim();
+    if descriptor_url != url.trim() {
+        anyhow::bail!(
+            "在线镜像描述文件中的 URL 与安装配置不一致：描述文件={descriptor_url}，配置={}",
+            url.trim()
+        );
+    }
+    let descriptor_sha = descriptor
+        .get("sha256")
+        .and_then(|v| v.as_str())
+        .unwrap_or_default()
+        .trim()
+        .to_ascii_lowercase();
+    if descriptor_sha != config.image_source_sha256.trim().to_ascii_lowercase() {
+        anyhow::bail!("在线镜像描述文件中的 SHA-256 与安装配置不一致");
+    }
+    log::info!("[PE ONLINE] online image descriptor matches handoff config");
+    Ok(())
 }
 
 /// 执行安装工作流
@@ -905,6 +1027,22 @@ fn execute_install_workflow(
         status: tr!("正在定位本次安装卷并认证安装文件..."),
     });
     let mut last_auth_progress = u8::MAX;
+    // PE 在线下载模式的网络预检：into_task_with_progress 会消费 authenticated_handoff，
+    // 而网络拉起需要 guard 读取 Wi-Fi 配置，因此预检必须在此之前完成。
+    // 后台的 start_from_handoff 线程可能已经连上网络，ensure_network_blocking 会先快速检查。
+    let online_image_wanted =
+        crate::core::config::ConfigFileManager::install_config_from_guard(&authenticated_handoff)
+            .map(|preview| !preview.image_source_url.trim().is_empty())
+            .unwrap_or(false);
+    let pe_network_ready = if online_image_wanted {
+        let _ = tx.send(WorkerMessage::SetProgressStatus {
+            progress: 0,
+            status: tr!("在线安装模式：正在建立网络连接..."),
+        });
+        crate::core::pe_network::ensure_network_blocking(&authenticated_handoff)
+    } else {
+        true
+    };
     let mut authenticated_task = match authenticated_handoff.into_task_with_progress(|event| {
         use crate::core::config::TaskAuthenticationProgress;
         match event {
@@ -996,7 +1134,7 @@ fn execute_install_workflow(
         use lr_core::unattend_command::RequiredBuiltinUnattendError as Error;
         let message = match error {
             Error::UnattendedDisabled => {
-                tr!("预装软件、移除预装应用或移除 Windows 安全中心需要启用 LetRecovery 内置无人值守安装。")
+                tr!("预装软件、移除预装应用或移除 Windows 安全中心需要启用 RZhuangJi 内置无人值守安装。")
             }
             Error::CustomUnattend => {
                 tr!("预装软件、移除预装应用或移除 Windows 安全中心不能与自定义应答文件同时使用。")
@@ -1030,7 +1168,7 @@ fn execute_install_workflow(
         .to_string_lossy()
         .trim_end_matches(['\\', '/'])
         .to_owned();
-    let public_data_dir = public_data_root.join("LetRecovery_Data");
+    let public_data_dir = public_data_root.join("RZhuangJi_Data");
     if config.is_xp_i386 && !config.repair_boot {
         fail_prewrite!(tr!(
             "XP/2003 文本模式安装必须启用“添加引导”，尚未写入目标分区。"
@@ -1139,8 +1277,26 @@ fn execute_install_workflow(
     };
     // Scattered staging may store one image file as raw chunks. They are concatenated on the
     // target after it is formatted, so every pre-write image check is deferred until then.
-    let chunked_image = config.image_chunked && !config.is_xp_i386;
-    let mut image_path = if chunked_image {
+    //
+    // Online-image mode (macOS-Internet-Recovery style): when the authenticated handoff
+    // carries ImageSourceUrl, the PE endpoint downloads the installation image itself
+    // instead of using a file staged by the desktop client.
+    let online_image = !config.image_source_url.trim().is_empty() && !config.is_xp_i386;
+    let chunked_image = config.image_chunked && !config.is_xp_i386 && !online_image;
+    let mut image_path = if online_image {
+        match download_online_image(
+            &tx,
+            pe_network_ready,
+            &authenticated_task,
+            &config,
+            &data_dir,
+        ) {
+            Ok(path) => path,
+            Err(error) => {
+                fail_prewrite!(tr!("下载在线安装镜像失败: {}", format!("{error:#}")));
+            }
+        }
+    } else if chunked_image {
         if !(config.format_partition
             && matches!(
                 config.custom_install_plan,
@@ -1419,10 +1575,10 @@ fn execute_install_workflow(
     }
 
     if config.in_place_target_staging {
-        // In-place staging deliberately keeps the image inside the target's own LetRecovery_Data.
+        // In-place staging deliberately keeps the image inside the target's own RZhuangJi_Data.
         // The cross-volume dependency check would reject that, so only the target's physical
         // identity is confirmed here; the staged image stays locked and the old-system deletion
-        // below never touches LetRecovery_ directories.
+        // below never touches RZhuangJi_ directories.
         if let Err(error) =
             DiskManager::verify_partition_volume_identity(&target_partition, expected_target)
         {
@@ -1618,7 +1774,7 @@ fn execute_install_workflow(
     };
     if config.in_place_target_staging && config.format_partition && !personal_files_prepared {
         // Target-drive staging with a requested format: never format (that would erase the
-        // staged image); delete the old system in place instead. LetRecovery_ directories,
+        // staged image); delete the old system in place instead. RZhuangJi_ directories,
         // including the staged data, are preserved by the deletion routine.
         let _ = tx.send(WorkerMessage::SetStatus(tr!(
             "正在原地删除旧系统（保留已暂存的安装文件）..."
@@ -2147,7 +2303,7 @@ fn execute_install_workflow(
                             // has a PnP candidate without requiring the source INF name or version.
                             let scratch_dir = std::env::temp_dir();
                             let inventory_log = scratch_dir.join(format!(
-                                "LetRecovery-DismApi-driver-inventory-{}.log",
+                                "RZhuangJi-DismApi-driver-inventory-{}.log",
                                 std::process::id()
                             ));
                             match enumerate_target_offline_driver_candidates(
@@ -2543,8 +2699,8 @@ fn execute_install_workflow(
     } else {
         log::info!("未启用高级选项，跳过离线注册表加载");
     }
-    // Only LetRecovery's built-in answer file stages the first-logon finalizer that imports
-    // LR_WiFi.xml and then deletes LetRecovery_Scripts. With a custom answer file (or unattended
+    // Only RZhuangJi's built-in answer file stages the first-logon finalizer that imports
+    // LR_WiFi.xml and then deletes RZhuangJi_Scripts. With a custom answer file (or unattended
     // setup disabled) the plaintext-key profile would stay on the target and never be imported.
     let built_in_first_logon = config.unattended && config.custom_unattend_file.is_empty();
     if private_wifi_profile.is_some() && !built_in_first_logon {
@@ -3089,17 +3245,17 @@ pub(crate) fn generate_unattend_xml(
     // only invokes that fixed launcher, avoiding nested `cmd /s /c` quoting differences while the
     // launcher preserves failures and removes staging only after the PowerShell process exits.
     let first_logon_commands = lr_core::first_logon::render_command(1)?;
-    // The advanced "run script during deployment" payload is copied to LetRecovery_Scripts before
+    // The advanced "run script during deployment" payload is copied to RZhuangJi_Scripts before
     // this answer file is generated (see `apply_authenticated_advanced_inputs`).
     let deploy_specialize_command = if std::path::PathBuf::from(format!(
-        "{}\\LetRecovery_Scripts\\deploy.bat",
+        "{}\\RZhuangJi_Scripts\\deploy.bat",
         target_partition.trim_end_matches('\\')
     ))
     .is_file()
     {
         lr_core::unattend_command::render_specialize_run_synchronous_command(
             1,
-            r#"cmd /d /c if exist %SystemDrive%\LetRecovery_Scripts\deploy.bat call %SystemDrive%\LetRecovery_Scripts\deploy.bat"#,
+            r#"cmd /d /c if exist %SystemDrive%\RZhuangJi_Scripts\deploy.bat call %SystemDrive%\RZhuangJi_Scripts\deploy.bat"#,
             "Run custom deploy script",
         )
         .unwrap_or_else(|error| {
@@ -3240,7 +3396,7 @@ fn apply_authenticated_advanced_inputs(
 ) -> Vec<String> {
     let mut warnings = Vec::new();
     let root = std::path::PathBuf::from(format!("{}\\", target_partition.trim_end_matches('\\')));
-    let scripts = root.join("LetRecovery_Scripts");
+    let scripts = root.join("RZhuangJi_Scripts");
     let mut registry_files = Vec::new();
     for artifact in artifacts {
         let components = artifact
@@ -3302,7 +3458,7 @@ fn import_registry_file_offline(
     let converted =
         lr_core::reg_file::convert_reg_file_for_offline_hives(&std::fs::read(registry_file)?);
     let temporary = root
-        .join("LetRecovery_Scripts")
+        .join("RZhuangJi_Scripts")
         .join("lr-advanced-registry-import.reg");
     if let Some(parent) = temporary.parent() {
         std::fs::create_dir_all(parent)?;
@@ -3556,7 +3712,7 @@ fn generate_win10_unattend_xml(
 }
 
 /// Directory on the formatted target that receives an image rebuilt from scattered raw chunks.
-const REASSEMBLY_DIRECTORY: &str = "LetRecovery_Reassembly";
+const REASSEMBLY_DIRECTORY: &str = "RZhuangJi_Reassembly";
 
 fn reassembled_image_path(target_partition: &str, image_path: &str) -> std::path::PathBuf {
     let file_name = std::path::Path::new(image_path)
@@ -3634,7 +3790,7 @@ fn reassemble_chunked_image(
 }
 
 /// After an in-place target staging install, the staged payload sits inside the new system's
-/// `LetRecovery_Data`. Delete every entry except the handoff log directory; failures are only
+/// `RZhuangJi_Data`. Delete every entry except the handoff log directory; failures are only
 /// logged because the new system is already complete.
 fn remove_in_place_payload(public_data_dir: &std::path::Path) {
     let entries = match std::fs::read_dir(public_data_dir) {
@@ -3903,7 +4059,7 @@ mod workflow_session_tests {
             "pe-install-stale-private-residue",
         )
         .unwrap();
-        let root = workspace.path().join("LetRecovery_PE");
+        let root = workspace.path().join("RZhuangJi_PE");
         std::fs::create_dir(&root).unwrap();
         std::fs::write(root.join("boot.wim"), b"stale-wim").unwrap();
         std::fs::write(root.join("pe_guid.txt"), b"stale-journal").unwrap();
@@ -3928,7 +4084,7 @@ mod workflow_session_tests {
             "pe-install-empty-private-residue",
         )
         .unwrap();
-        let root = workspace.path().join("LetRecovery_PE");
+        let root = workspace.path().join("RZhuangJi_PE");
         std::fs::create_dir(&root).unwrap();
         std::fs::write(root.join("boot-01234567-abcd.wim"), b"stale-wim").unwrap();
         std::fs::write(root.join("pe_pending.txt"), b"stale-journal").unwrap();

@@ -415,10 +415,17 @@ pub struct InstallConfig {
     pub image_chunked_length: u64,
     /// 拼回后完整镜像文件的 SHA-256（小写十六进制）。
     pub image_chunked_sha256: String,
+    /// PE 在线下载模式：非空时 PE 端从该 http:// URL 自行下载安装镜像，
+    /// 而不是使用桌面端预置的镜像文件（macOS 互联网恢复式流程）。
+    pub image_source_url: String,
+    /// 在线下载镜像的预期字节数（0 表示未知，下载完成后仍以哈希为准）。
+    pub image_source_length: u64,
+    /// 在线下载镜像的 SHA-256（小写十六进制 hex；为空则下载后不校验哈希）。
+    pub image_source_sha256: String,
     /// 所选镜像卷释放后大约占用的字节数（0 表示未知），供 PE 在写盘前核对目标分区容量。
     pub image_expanded_bytes: u64,
-    /// 目标盘内暂存：分散暂存找不到其他分区时，把安装文件放在目标分区自身的 LetRecovery_Data 里。
-    /// PE 不格式化目标分区，而是先原地删除旧系统（保留 LetRecovery_ 前缀的暂存目录），再拼回/释放镜像。
+    /// 目标盘内暂存：分散暂存找不到其他分区时，把安装文件放在目标分区自身的 RZhuangJi_Data 里。
+    /// PE 不格式化目标分区，而是先原地删除旧系统（保留 RZhuangJi_ 前缀的暂存目录），再拼回/释放镜像。
     pub in_place_target_staging: bool,
     /// 是否为GHO格式
     pub is_gho: bool,
@@ -599,7 +606,7 @@ pub struct ConfigFileManager;
 
 impl ConfigFileManager {
     /// 临时数据目录名
-    const DATA_DIR: &'static str = "LetRecovery_Data";
+    const DATA_DIR: &'static str = "RZhuangJi_Data";
 
     fn validate_ini_value(field: &str, value: &str) -> Result<()> {
         if value
@@ -704,7 +711,7 @@ impl ConfigFileManager {
     }
 
     /// 自动创建分区的标志文件名（与 disk.rs 中的常量保持一致）
-    const AUTO_CREATED_PARTITION_MARKER: &'static str = "LetRecovery_AutoCreated.marker";
+    const AUTO_CREATED_PARTITION_MARKER: &'static str = "RZhuangJi_AutoCreated.marker";
 
     pub(crate) fn new_session_id() -> Result<String> {
         Ok(lr_core::handoff_auth::generate_session_id()?
@@ -1027,7 +1034,7 @@ impl ConfigFileManager {
                 source_length_before_bytes,
             });
             let bound_marker = format!(
-                "LetRecovery Auto Created Partition\r\nMarkerVersion=3\r\nSessionId={}\r\nSource={}:\r\nSourceDisk={}\r\nSourceOffsetBytes={}\r\nSourceLengthBytes={}\r\nSourceLengthBeforeBytes={}\r\nTemporaryDisk={}\r\nTemporaryOffsetBytes={}\r\nTemporaryLengthBytes={}\r\nCanonicalDiskLayoutSha256={}\r\n",
+                "RZhuangJi Auto Created Partition\r\nMarkerVersion=3\r\nSessionId={}\r\nSource={}:\r\nSourceDisk={}\r\nSourceOffsetBytes={}\r\nSourceLengthBytes={}\r\nSourceLengthBeforeBytes={}\r\nTemporaryDisk={}\r\nTemporaryOffsetBytes={}\r\nTemporaryLengthBytes={}\r\nCanonicalDiskLayoutSha256={}\r\n",
                 config.session_id,
                 target_letter,
                 target.extent.disk_number,
@@ -1435,6 +1442,32 @@ impl ConfigFileManager {
                 config.image_chunked_length, sha256, config.image_expanded_bytes
             ));
         }
+        // PE 在线下载模式：URL 非空时 PE 端自行下载镜像。URL 与哈希绑定进入认证交接。
+        let image_source_url = config.image_source_url.trim();
+        if !image_source_url.is_empty() {
+            if !image_source_url.starts_with("http://") {
+                anyhow::bail!("online image source must be an http:// URL");
+            }
+            if image_source_url.len() > 2048
+                || image_source_url.bytes().any(|b| b < 0x20 || b == 0x7f)
+            {
+                anyhow::bail!("online image source URL is too long or contains control characters");
+            }
+            let sha256 = config.image_source_sha256.trim().to_ascii_lowercase();
+            if !sha256.is_empty()
+                && (sha256.len() != 64 || !sha256.bytes().all(|byte| byte.is_ascii_hexdigit()))
+            {
+                anyhow::bail!("online image source SHA-256 binding is invalid");
+            }
+            source_verification_binding.push_str(&format!(
+                "ImageSourceUrl={}\r\nImageSourceLength={}\r\nImageSourceSha256={}\r\n",
+                image_source_url, config.image_source_length, sha256
+            ));
+        }
+        // PE 在线下载模式强制启用 PE 网络：没有网络就不可能下载镜像，
+        // 请求在线镜像本身就是网络使用授权。
+        let pe_network_enabled =
+            config.pe_network_enabled || !config.image_source_url.trim().is_empty();
         let feedback_mode = match config.automatic_feedback_mode.as_str() {
             "disabled" | "normal" | "normal_and_pe" => config.automatic_feedback_mode.as_str(),
             _ => "normal_and_pe",
@@ -1534,7 +1567,7 @@ XpInjectNvmeDriver={}
             config.pca_compat_target_build,
             config.pca_compat_target_architecture,
             crate::utils::i18n::current_language(),
-            config.pe_network_enabled,
+            pe_network_enabled,
             feedback_mode,
             wifi_binding,
             canonical_target,
@@ -1684,6 +1717,11 @@ Language={}
                     }
                     "ImageChunkedSha256" => {
                         config.image_chunked_sha256 = value.trim().to_ascii_lowercase()
+                    }
+                    "ImageSourceUrl" => config.image_source_url = value.to_string(),
+                    "ImageSourceLength" => config.image_source_length = value.parse().unwrap_or(0),
+                    "ImageSourceSha256" => {
+                        config.image_source_sha256 = value.trim().to_ascii_lowercase()
                     }
                     "ImageExpandedBytes" => {
                         config.image_expanded_bytes = value.parse().unwrap_or(0)
@@ -2099,7 +2137,7 @@ mod tests {
             role: lr_core::handoff_manifest::ArtifactRole::InstallImageSpan,
             location: lr_core::handoff_manifest::ArtifactLocation::PublicData,
             ordinal: 0,
-            relative_path: "LetRecovery_Data\\install.wim".into(),
+            relative_path: "RZhuangJi_Data\\install.wim".into(),
             length_bytes: 123,
             sha256: [9; 32],
         };
@@ -2110,7 +2148,7 @@ mod tests {
         .unwrap();
 
         let mut wrong_path = identity.clone();
-        wrong_path.relative_path = "LetRecovery_Data\\other.wim".into();
+        wrong_path.relative_path = "RZhuangJi_Data\\other.wim".into();
         assert!(
             ConfigFileManager::validate_verified_source_manifest(&config, &[wrong_path]).is_err()
         );
@@ -2240,7 +2278,7 @@ mod tests {
             role: lr_core::handoff_manifest::ArtifactRole::InstallImageSpan,
             location: lr_core::handoff_manifest::ArtifactLocation::PublicData,
             ordinal: 0,
-            relative_path: "LetRecovery_Data\\install.wim".into(),
+            relative_path: "RZhuangJi_Data\\install.wim".into(),
             length_bytes: 1,
             sha256: [1; 32],
         }];
@@ -2316,7 +2354,7 @@ mod tests {
             data.display(),
             lr_core::install_handoff::DATA_VOLUME_MARKER_NAME
         ));
-        let ini = data_dir.join("LetRecovery_Install.ini");
+        let ini = data_dir.join("RZhuangJi_Install.ini");
         let custom = data_dir.join("custom_unattend.xml");
         std::fs::write(&marker, b"old marker").unwrap();
         std::fs::write(&ini, b"old config").unwrap();
@@ -2365,7 +2403,7 @@ mod tests {
             data.display(),
             lr_core::install_handoff::DATA_VOLUME_MARKER_NAME
         ));
-        let ini = data_dir.join("LetRecovery_Install.ini");
+        let ini = data_dir.join("RZhuangJi_Install.ini");
         let target_marker = target.join(lr_core::install_handoff::INSTALL_TARGET_MARKER_NAME);
         std::fs::write(&marker, b"old marker").unwrap();
         std::fs::write(&ini, b"old config").unwrap();
@@ -2381,7 +2419,7 @@ mod tests {
             role: lr_core::handoff_manifest::ArtifactRole::InstallImageSpan,
             location: lr_core::handoff_manifest::ArtifactLocation::PublicData,
             ordinal: 0,
-            relative_path: "LetRecovery_Data\\install.wim".into(),
+            relative_path: "RZhuangJi_Data\\install.wim".into(),
             length_bytes: 1,
             sha256: [1; 32],
         }];
@@ -2436,7 +2474,7 @@ mod tests {
         let data_dir = root.join(ConfigFileManager::DATA_DIR);
         std::fs::create_dir_all(&data_dir).unwrap();
         let marker = root.join(lr_core::install_handoff::DATA_VOLUME_MARKER_NAME);
-        let config_path = data_dir.join("LetRecovery_Backup.ini");
+        let config_path = data_dir.join("RZhuangJi_Backup.ini");
         let unrelated = data_dir.join("user-owned.txt");
         std::fs::write(&marker, b"old marker").unwrap();
         std::fs::write(&config_path, b"old config").unwrap();
@@ -2449,7 +2487,7 @@ mod tests {
             &BackupConfig {
                 save_path: "D:\\backup.wim".to_owned(),
                 name: "System Backup".to_owned(),
-                description: "Created by LetRecovery".to_owned(),
+                description: "Created by RZhuangJi".to_owned(),
                 source_partition: "C:".to_owned(),
                 incremental: true,
                 format: 0,
@@ -2494,7 +2532,7 @@ mod tests {
         .unwrap();
         let marker = root.join(lr_core::install_handoff::DATA_VOLUME_MARKER_NAME);
         let data_dir = root.join(ConfigFileManager::DATA_DIR);
-        let config_path = data_dir.join("LetRecovery_Backup.ini");
+        let config_path = data_dir.join("RZhuangJi_Backup.ini");
         assert!(marker.exists());
         assert!(!config_path.exists());
 
@@ -2555,7 +2593,7 @@ mod tests {
         let data_dir = root.join(ConfigFileManager::DATA_DIR);
         std::fs::create_dir_all(&data_dir).unwrap();
         let marker = root.join(lr_core::install_handoff::DATA_VOLUME_MARKER_NAME);
-        let config_path = data_dir.join("LetRecovery_Expand.ini");
+        let config_path = data_dir.join("RZhuangJi_Expand.ini");
         let unrelated = data_dir.join("user-owned.txt");
         std::fs::write(&marker, b"old marker").unwrap();
         std::fs::write(&config_path, b"old config").unwrap();
@@ -2625,7 +2663,7 @@ mod tests {
         .unwrap();
         let marker = root.join(lr_core::install_handoff::DATA_VOLUME_MARKER_NAME);
         let data_dir = root.join(ConfigFileManager::DATA_DIR);
-        let config_path = data_dir.join("LetRecovery_Expand.ini");
+        let config_path = data_dir.join("RZhuangJi_Expand.ini");
         assert!(marker.exists());
         assert!(!config_path.exists());
 

@@ -293,12 +293,12 @@ pub fn run_install(prepared: PreparedInstall) -> Result<Value> {
         let restart = if force_apps_closed {
             lr_core::windows_shutdown::schedule_restart_for_automation(
                 restart_delay_seconds,
-                "LetRecovery installation preparation completed; Windows will restart.",
+                "R装机 installation preparation completed; Windows will restart.",
             )
         } else {
             lr_core::windows_shutdown::schedule_restart(
                 restart_delay_seconds,
-                "LetRecovery installation preparation completed; Windows will restart.",
+                "R装机 installation preparation completed; Windows will restart.",
             )
         };
         match restart {

@@ -22,7 +22,7 @@ pub const MAX_STAGE_LOG_BYTES: u64 = 32 * 1024 * 1024;
 pub const HANDOFF_LOG_DIRECTORY: &str = "logs";
 pub const DESKTOP_LOG_FILE: &str = "normal.log";
 pub const DESKTOP_MANIFEST_FILE: &str = "normal.manifest.json";
-pub const PE_LOG_FILE: &str = "LetRecoveryPE.log";
+pub const PE_LOG_FILE: &str = "RZhuangJiPE.log";
 const MAX_MANIFEST_BYTES: u64 = 64 * 1024;
 const LOG_TAIL_TRUNCATION_MARKER: &[u8] = b"[TRUNCATED: retained complete-line tail]\r\n";
 
@@ -609,7 +609,7 @@ pub fn publish_combined_install_log(
 ) -> Result<PathBuf> {
     validate_session_id(session_id)?;
     let mut combined = Vec::new();
-    combined.extend_from_slice(b"===== LetRecovery normal endpoint log =====\r\n");
+    combined.extend_from_slice(b"===== RZhuangJi normal endpoint log =====\r\n");
     match desktop_log {
         Some(path) => match read_sanitized_log(path) {
             Ok(contents) => combined.extend_from_slice(&contents),
@@ -622,7 +622,7 @@ pub fn publish_combined_install_log(
         },
         None => combined.extend_from_slice(b"[not available]\r\n"),
     }
-    combined.extend_from_slice(b"\r\n===== LetRecovery WinPE log =====\r\n");
+    combined.extend_from_slice(b"\r\n===== RZhuangJi WinPE log =====\r\n");
     match pe_log {
         Some(path) => match read_sanitized_log(path) {
             Ok(contents) => combined.extend_from_slice(&contents),
@@ -635,11 +635,11 @@ pub fn publish_combined_install_log(
         },
         None => combined.extend_from_slice(b"[not available]\r\n"),
     }
-    let directory = target_root.join("LetRecovery").join("Logs");
-    let latest = atomic_publish_diagnostic(&directory, "LetRecovery-install.log", &combined)?;
+    let directory = target_root.join("RZhuangJi").join("Logs");
+    let latest = atomic_publish_diagnostic(&directory, "RZhuangJi-install.log", &combined)?;
     if let Err(error) = atomic_publish_diagnostic(
         &directory,
-        &format!("LetRecovery-install-{session_id}.log"),
+        &format!("RZhuangJi-install-{session_id}.log"),
         &combined,
     ) {
         log::warn!(
@@ -783,12 +783,12 @@ mod tests {
         .unwrap();
         assert_eq!(
             output.file_name().and_then(|name| name.to_str()),
-            Some("LetRecovery-install.log")
+            Some("RZhuangJi-install.log")
         );
         assert!(output
             .parent()
             .unwrap()
-            .join("LetRecovery-install-session-3.log")
+            .join("RZhuangJi-install-session-3.log")
             .is_file());
         let text = fs::read_to_string(output).unwrap();
         assert!(text.contains("normal endpoint"));
@@ -855,7 +855,7 @@ mod tests {
         .unwrap();
         let text = fs::read_to_string(output).unwrap();
         assert!(text.contains("normal endpoint reached reboot handoff"));
-        assert!(text.contains("LetRecovery WinPE log"));
+        assert!(text.contains("RZhuangJi WinPE log"));
         assert!(text.contains("[not available]"));
         fs::remove_dir_all(root).unwrap();
     }

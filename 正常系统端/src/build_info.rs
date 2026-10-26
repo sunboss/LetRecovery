@@ -5,12 +5,12 @@
 /// production packages remain unmarked unless `dev-build` is intentionally enabled.
 pub const DEV: bool = cfg!(feature = "dev-build");
 
-const PRODUCTION_WINDOW_TITLE: &str = "LetRecovery - Windows系统一键重装工具";
-const DEV_WINDOW_TITLE: &str = "LetRecovery 测试版 - 测试软件，仅供测试使用";
-const PRODUCTION_ABOUT_TITLE: &str = "关于 LetRecovery";
-const DEV_ABOUT_TITLE: &str = "关于 LetRecovery 测试版";
-const PRODUCTION_PRODUCT_NAME: &str = "LetRecovery";
-const DEV_PRODUCT_NAME: &str = "LetRecovery 测试版";
+const PRODUCTION_WINDOW_TITLE: &str = "R装机 - Windows系统一键重装工具";
+const DEV_WINDOW_TITLE: &str = "R装机 测试版 - 测试软件，仅供测试使用";
+const PRODUCTION_ABOUT_TITLE: &str = "关于 R装机";
+const DEV_ABOUT_TITLE: &str = "关于 R装机 测试版";
+const PRODUCTION_PRODUCT_NAME: &str = "R装机";
+const DEV_PRODUCT_NAME: &str = "R装机 测试版";
 const PRODUCTION_DESCRIPTION: &str = "Windows 系统安装、备份和维护工具。";
 const DEV_DESCRIPTION: &str = "测试软件，仅供测试使用。 Windows 系统安装、备份和维护工具。";
 

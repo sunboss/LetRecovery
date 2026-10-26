@@ -1122,10 +1122,10 @@ mod native {
 
         #[test]
         fn registry_paths_accept_documented_root_aliases() {
-            let (_, subkey) = split_key_path("HKLM\\Software\\LetRecovery").unwrap();
-            assert_eq!(subkey, "Software\\LetRecovery");
-            let (_, subkey) = split_key_path("HKEY_LOCAL_MACHINE\\Software\\LetRecovery").unwrap();
-            assert_eq!(subkey, "Software\\LetRecovery");
+            let (_, subkey) = split_key_path("HKLM\\Software\\RZhuangJi").unwrap();
+            assert_eq!(subkey, "Software\\RZhuangJi");
+            let (_, subkey) = split_key_path("HKEY_LOCAL_MACHINE\\Software\\RZhuangJi").unwrap();
+            assert_eq!(subkey, "Software\\RZhuangJi");
         }
 
         #[test]

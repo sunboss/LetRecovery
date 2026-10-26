@@ -108,7 +108,7 @@ impl Default for BackupPageState {
 pub fn localized_backup_defaults(timestamp: &str) -> (String, String) {
     (
         crate::tr!("系统备份_{}", timestamp),
-        crate::tr!("使用 LetRecovery 创建的系统备份"),
+        crate::tr!("使用 RZhuangJi 创建的系统备份"),
     )
 }
 
@@ -1084,7 +1084,7 @@ mod tests {
             source_partition: Some(0),
             save_path: " D:\\backup.wim ".to_owned(),
             name: " System Backup ".to_owned(),
-            description: "Created by LetRecovery".to_owned(),
+            description: "Created by RZhuangJi".to_owned(),
             incremental: true,
             ..BackupPageState::default()
         }
@@ -1120,7 +1120,7 @@ mod tests {
             relocalize_generated_value(
                 "My description".to_owned(),
                 &description,
-                "System backup created with LetRecovery"
+                "System backup created with RZhuangJi"
             ),
             "My description"
         );
@@ -1221,7 +1221,7 @@ mod tests {
         assert_eq!(config.source_partition, "C:");
         assert_eq!(config.save_path, "D:\\backup.wim");
         assert_eq!(config.name, "System Backup");
-        assert_eq!(config.description, "Created by LetRecovery");
+        assert_eq!(config.description, "Created by RZhuangJi");
         assert!(config.incremental);
         assert_eq!(config.format, 1);
         assert_eq!(config.swm_split_size, 4096);

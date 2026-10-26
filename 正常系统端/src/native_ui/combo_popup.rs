@@ -1,4 +1,4 @@
-//! The drop-down list of every read-only ComboBox (CBS_DROPDOWNLIST), drawn by LetRecovery.
+//! The drop-down list of every read-only ComboBox (CBS_DROPDOWNLIST), drawn by RZhuangJi.
 //!
 //! The native ComboLBox popup is never opened. The list looks exactly like the application's own
 //! list controls: the same rounded outline (radius and border width of every field), the same
@@ -50,7 +50,7 @@ use super::controls::{rounded_control_frame_geometry, InnoMetrics};
 use super::theme::Palette;
 use crate::native_ui::GetDpiForWindow;
 
-const CLASS_NAME: PCWSTR = w!("LetRecovery.DropDownList");
+const CLASS_NAME: PCWSTR = w!("RZhuangJi.DropDownList");
 const ANIMATION_TIMER_ID: usize = 0x4c52_4450;
 const OPEN_DURATION_SECONDS: f32 = 0.14;
 const MAX_VISIBLE_ROWS: usize = 12;

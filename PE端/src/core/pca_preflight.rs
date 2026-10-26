@@ -222,7 +222,7 @@ fn user_error(error: &PcaPreflightError) -> String {
             "无法在写盘前验证系统镜像的 EFI 引导文件；请检查镜像和 libwim 后重试"
         ),
         PcaPreflightError::UnsupportedArchitecture(_) => tr!(
-            "所选系统镜像的架构不受支持；LetRecovery 仅支持 x64 和 x86 系统镜像"
+            "所选系统镜像的架构不受支持；R装机 仅支持 x64 和 x86 系统镜像"
         ),
         PcaPreflightError::MissingSource(PcaGeneration::Pca2011) => {
             tr!("所选系统镜像不包含有效的 PCA2011 EFI 引导文件")

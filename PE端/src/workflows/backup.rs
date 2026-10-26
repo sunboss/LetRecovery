@@ -84,7 +84,7 @@ fn run_backup_workflow(
     // The one-shot WIM/SDI and BCD objects are required only to reach this already-running X:
     // environment. Remove the exact authenticated session before scanning the source volume. This
     // both closes the PE lifecycle and prevents the running Windows volume's private
-    // LetRecovery_PE directory from entering the backup image.
+    // RZhuangJi_PE directory from entering the backup image.
     authenticated_task.verify_unchanged()?;
     crate::cleanup_persistent_pe_boot_payload(authenticated_task.guard())
         .context("clean the authenticated private PE boot payload before backup capture")?;
@@ -126,7 +126,7 @@ fn run_backup_workflow(
 }
 
 fn require_private_pe_payload_absent_from_source(source_root: &str) -> Result<()> {
-    let path = PathBuf::from(source_root).join("LetRecovery_PE");
+    let path = PathBuf::from(source_root).join("RZhuangJi_PE");
     match std::fs::symlink_metadata(&path) {
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
         Err(error) => Err(error)
@@ -506,7 +506,7 @@ fn ci_probe_backup_namespace(session: &Path, target_parent: &Path, phase: &str) 
             .write(true)
             .create_new(true)
             .open(&source)?;
-        file.write_all(b"LetRecovery CI namespace probe\n")?;
+        file.write_all(b"RZhuangJi CI namespace probe\n")?;
         file.flush()?;
         file.sync_all()
     })();
@@ -821,7 +821,7 @@ mod tests {
         .unwrap();
         let root = source.path().to_string_lossy();
         assert!(require_private_pe_payload_absent_from_source(&root).is_ok());
-        std::fs::create_dir(source.path().join("LetRecovery_PE")).unwrap();
+        std::fs::create_dir(source.path().join("RZhuangJi_PE")).unwrap();
         assert!(require_private_pe_payload_absent_from_source(&root).is_err());
     }
 }

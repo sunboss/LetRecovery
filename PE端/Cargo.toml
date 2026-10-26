@@ -6,7 +6,7 @@ rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 authors = ["NORMAL-EX"]
-description = "LetRecovery PE安装助手"
+description = "RZhuangJi PE安装助手"
 
 [features]
 # Test harnesses must not trigger a UAC prompt. build.rs rejects this feature
@@ -77,5 +77,5 @@ zeroize = "1"
 winres = "0.1"
 
 [[bin]]
-name = "LetRecoveryPE"
+name = "RZhuangJiPE"
 path = "src/main.rs"

@@ -52,7 +52,7 @@ fn current_windows_root() -> Result<PathBuf> {
     Ok(root)
 }
 
-/// Restores only values owned by LetRecovery's installation-bound manifest.
+/// Restores only values owned by RZhuangJi's installation-bound manifest.
 pub fn restore_current_windows_update() -> Result<UpdateControlReport> {
     log::info!("[UPDATE_RESTORE] status=started source=current_system_drive");
     let root = current_windows_root().map_err(|error| {

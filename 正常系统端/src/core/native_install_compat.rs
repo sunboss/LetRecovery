@@ -106,7 +106,7 @@ pub fn render_default_unattend(options: &DefaultUnattendOptions<'_>) -> Result<S
     let deploy_specialize_command = if options.run_deploy_script {
         lr_core::unattend_command::render_specialize_run_synchronous_command(
             1,
-            r#"cmd /d /c if exist %SystemDrive%\LetRecovery_Scripts\deploy.bat call %SystemDrive%\LetRecovery_Scripts\deploy.bat"#,
+            r#"cmd /d /c if exist %SystemDrive%\RZhuangJi_Scripts\deploy.bat call %SystemDrive%\RZhuangJi_Scripts\deploy.bat"#,
             "Run custom deploy script",
         )
         .map_err(|error| error.to_string())?

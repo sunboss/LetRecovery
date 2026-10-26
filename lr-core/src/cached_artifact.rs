@@ -276,9 +276,9 @@ mod tests {
     #[test]
     fn sha256_is_verified_for_a_cached_file() {
         let cache = TestDirectory::new("sha256");
-        fs::write(cache.path().join("LetRecovery PE.wim"), b"abc").unwrap();
+        fs::write(cache.path().join("RZhuangJi PE.wim"), b"abc").unwrap();
         let status = verify_cached_artifact(
-            "LetRecovery PE.wim",
+            "RZhuangJi PE.wim",
             &[cache.path().to_path_buf()],
             Some(SHA256_ABC),
             Some(MD5_ABC),

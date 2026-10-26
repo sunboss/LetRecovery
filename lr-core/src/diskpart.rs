@@ -1,6 +1,6 @@
 //! Compatibility guard for the removed DiskPart script feature.
 //!
-//! LetRecovery no longer starts `diskpart.exe`, `cmd.exe`, or batch files from this boundary.
+//! RZhuangJi no longer starts `diskpart.exe`, `cmd.exe`, or batch files from this boundary.
 //! Built-in storage operations use [`crate::windows_storage`] and typed parameters instead.
 //! Existing configurations keep their historical flag and directory so upgrades remain
 //! parse-compatible, but a directory containing legacy scripts fails closed with a precise list.
@@ -43,7 +43,7 @@ pub fn run_scripts_in_dir(dir: &Path) -> Result<String, String> {
         .collect::<Vec<_>>()
         .join(", ");
     Err(format!(
-        "检测到已停用的任意分区脚本：{names}。LetRecovery 已改用参数化 WinAPI 存储操作；\
+        "检测到已停用的任意分区脚本：{names}。RZhuangJi 已改用参数化 WinAPI 存储操作；\
          无法安全、等价地自动转换任意 .txt/.cmd/.bat 脚本，请移除这些脚本并改用内置分区功能。"
     ))
 }

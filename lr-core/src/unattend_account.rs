@@ -426,7 +426,7 @@ pub fn render_builtin_administrator_unattend(
     let specialize_command =
         crate::unattend_command::render_required_specialize_run_synchronous_command(
             specialize_order,
-            r#""%SystemDrive%\LetRecovery_Scripts\LetRecovery-account-helper.exe" --internal-store-builtin-administrator-secret"#,
+            r#""%SystemDrive%\RZhuangJi_Scripts\RZhuangJi-account-helper.exe" --internal-store-builtin-administrator-secret"#,
             "Protect built-in Administrator transition secret",
         )
         .map_err(|_| BuiltInAdministratorValidationError::InvalidSpecializeCommand)?;
@@ -439,7 +439,7 @@ pub fn render_builtin_administrator_unattend(
                 <LocalAccounts>
                     <LocalAccount wcm:action="add">
                         <Password><Value>{password}</Value><PlainText>true</PlainText></Password>
-                        <Description>Temporary LetRecovery OOBE administrator</Description>
+                        <Description>Temporary RZhuangJi OOBE administrator</Description>
                         <DisplayName>{temporary_oobe_account}</DisplayName>
                         <Group>Administrators</Group>
                         <Name>{temporary_oobe_account}</Name>

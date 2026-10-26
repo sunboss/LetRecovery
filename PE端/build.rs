@@ -32,13 +32,13 @@ fn main() {
         }
 
         // 设置程序信息
-        res.set("ProductName", "LetRecovery PE");
+        res.set("ProductName", "RZhuangJi PE");
         res.set(
             "FileDescription",
             if ci_automation {
-                "LetRecovery PE CI自动化测试版"
+                "RZhuangJi PE CI自动化测试版"
             } else {
-                "LetRecovery PE安装助手"
+                "RZhuangJi PE安装助手"
             },
         );
         res.set("LegalCopyright", "© 2026-present Cloud-PE Dev.");

@@ -159,7 +159,7 @@ pub struct AdvancedOptions {
 
 impl AdvancedOptions {
     /// 脚本目录名称（统一路径）
-    const SCRIPTS_DIR: &'static str = "LetRecovery_Scripts";
+    const SCRIPTS_DIR: &'static str = "RZhuangJi_Scripts";
 
     /// 获取程序运行目录（exe 所在目录）
     fn get_program_dir() -> Option<PathBuf> {
@@ -454,7 +454,7 @@ impl AdvancedOptions {
         }
 
         // 9. Curated AppX servicing is deferred until every externally loaded offline hive has
-        // been unloaded. DISM must not service an image while LetRecovery still owns hive handles.
+        // been unloaded. DISM must not service an image while RZhuangJi still owns hive handles.
         // WiFi 迁移：只暂存已验证可迁移的 profile XML。内置无人值守文件会在首登时
         // 通过共享 finalizer 隐藏导入、检查退出码，并在所有收尾工作成功后删除脚本目录。
         if self.migrate_wifi && !self.wifi_profile_xml.is_empty() {

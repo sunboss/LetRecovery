@@ -157,7 +157,10 @@ unsafe extern "system" fn cabinet_callback(
                 return FILEOP_ABORT;
             }
             let info = &mut *(param1 as *mut FILE_IN_CABINET_INFO_W);
-            let name = match bounded_wide_string(info.NameInCabinet.as_ptr()) {
+            // FILE_IN_CABINET_INFO_W is packed: copy the field out first
+            // instead of taking a reference to the packed field (E0793 on 32-bit).
+            let name_in_cabinet = info.NameInCabinet;
+            let name = match bounded_wide_string(name_in_cabinet.as_ptr()) {
                 Ok(name) => name,
                 Err(error) => {
                     context.error = Some(error.to_string());
@@ -180,15 +183,21 @@ unsafe extern "system" fn cabinet_callback(
                     return FILEOP_ABORT;
                 }
             };
-            if target.len() > info.FullTargetName.len() {
+            let mut full_target_name = info.FullTargetName;
+            if target.len() > full_target_name.len() {
                 context.error = Some(format!(
                     "cabinet target path exceeds SetupAPI MAX_PATH: {}",
                     destination.join(name).display()
                 ));
                 return FILEOP_ABORT;
             }
-            info.FullTargetName.fill(0);
-            info.FullTargetName[..target.len()].copy_from_slice(&target);
+            full_target_name.fill(0);
+            full_target_name[..target.len()].copy_from_slice(&target);
+            // Write the whole array back without forming a reference to the packed field.
+            std::ptr::write_unaligned(
+                std::ptr::addr_of_mut!(info.FullTargetName),
+                full_target_name,
+            );
             context.requested_files += 1;
             FILEOP_DOIT
         }
@@ -198,14 +207,17 @@ unsafe extern "system" fn cabinet_callback(
                 return ERROR_INVALID_DATA.0;
             }
             let paths = &*(param1 as *const FILEPATHS_W);
-            if paths.Win32Error != NO_ERROR.0 {
+            // FILEPATHS_W is packed: copy fields out first (E0793 on 32-bit).
+            let win32_error = paths.Win32Error;
+            if win32_error != NO_ERROR.0 {
                 context.error = Some(format!(
                     "cabinet file extraction failed with Win32 error {}",
-                    paths.Win32Error
+                    win32_error
                 ));
-                return paths.Win32Error;
+                return win32_error;
             }
-            let target = match bounded_wide_string(paths.Target.as_ptr()) {
+            let paths_target = paths.Target;
+            let target = match bounded_wide_string(paths_target.as_ptr()) {
                 Ok(target) => PathBuf::from(target),
                 Err(error) => {
                     context.error = Some(error.to_string());

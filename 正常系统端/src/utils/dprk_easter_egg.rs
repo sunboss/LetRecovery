@@ -160,7 +160,7 @@ fn mci_error(operation: &str, code: u32) -> anyhow::Error {
 fn state_directory() -> PathBuf {
     dirs::data_local_dir()
         .unwrap_or_else(std::env::temp_dir)
-        .join("LetRecovery")
+        .join("RZhuangJi")
         .join("easter-eggs")
 }
 

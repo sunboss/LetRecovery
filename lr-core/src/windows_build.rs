@@ -1,6 +1,6 @@
 //! Windows build-number policy shared by the desktop and WinPE endpoints.
 //!
-//! LetRecovery keeps installing Windows builds that were published after a release was
+//! RZhuangJi keeps installing Windows builds that were published after a release was
 //! validated (Insider Dev/Beta/Experimental and "Future Platforms" flights such as 29671).
 //! Behaviour that depends on undocumented or retired Windows internals is limited to the
 //! validated ranges below; an unknown newer build takes the conservative path and the

@@ -19,7 +19,7 @@ pub fn get_bin_dir() -> PathBuf {
 /// 才能在后续使用时继续按服务端声明的 SHA-256/MD5 严格校验。
 pub fn get_pe_download_cache_dir() -> PathBuf {
     dirs::cache_dir()
-        .map(|directory| directory.join("LetRecovery").join("pe"))
+        .map(|directory| directory.join("RZhuangJi").join("pe"))
         .unwrap_or_else(|| get_exe_dir().join("cache").join("pe"))
 }
 
