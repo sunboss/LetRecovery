@@ -2298,7 +2298,12 @@ unsafe extern "system" fn personal_restore_progress_window_proc(
 
     if message == WM_NCCREATE {
         let create = &*(lparam.0 as *const CREATESTRUCTW);
+        // On 32-bit Windows SetWindowLongPtrW resolves to SetWindowLongW,
+        // whose value parameter is i32, not isize (LONG_PTR is 32-bit there).
+        #[cfg(target_pointer_width = "64")]
         let _ = SetWindowLongPtrW(hwnd, GWLP_USERDATA, create.lpCreateParams as isize);
+        #[cfg(target_pointer_width = "32")]
+        let _ = SetWindowLongPtrW(hwnd, GWLP_USERDATA, create.lpCreateParams as i32);
     }
     let state =
         (GetWindowLongPtrW(hwnd, GWLP_USERDATA) as *mut PersonalRestoreProgressWindow).as_mut();
