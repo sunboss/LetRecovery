@@ -482,6 +482,46 @@ jobs:
             throw "WinPE image still contains stale runtime logs: $($remainingLogs.FullName -join ', ')"
           }
           Write-Host "Removed and rechecked $($staleLogs.Count) stale runtime log(s) from WinPE"
+          # PE 自研化（2026-10-26 用户定夺）：底包 WIM 的 PECMD 仍启动上游 LetRecoveryPE.exe，
+          # 镜像内还并存整套上游目录。改为启动自研 RZhuangJiPE.exe：先把其运行时 DLL 从上游
+          # 目录镜像过来，再改 PECMD 启动行，最后整目录删除上游目录，
+          # 与官网自托管 WIM 的手工手术版（2026-10-25）保持一致。
+          $legacyDir = Join-Path $mount "Program Files\LetRecoveryPE"
+          $selfDir = Join-Path $mount "Program Files\RZhuangJiPE"
+          foreach ($dll in @("libwim-15.dll", "vcruntime140.dll")) {
+            $dllSource = Join-Path $legacyDir $dll
+            if (-not (Test-Path -LiteralPath $dllSource -PathType Leaf)) {
+              throw "Base WIM is missing the PE runtime DLL to mirror: $dllSource"
+            }
+            Copy-Item -LiteralPath $dllSource -Destination (Join-Path $selfDir $dll) -Force
+            if (-not (Test-Path -LiteralPath (Join-Path $selfDir $dll) -PathType Leaf)) {
+              throw "Failed to mirror PE runtime DLL into RZhuangJiPE: $dll"
+            }
+          }
+          Write-Host "Mirrored PE runtime DLLs into RZhuangJiPE"
+          # PECMD.INI 含 GBK 中文注释：用 Latin-1 编解码做字节级无损往返，只替换 ASCII 片段。
+          $pecmdPath = Join-Path $mount "Windows\PECMD.INI"
+          $latin1 = [Text.Encoding]::GetEncoding(28591)
+          $pecmdText = $latin1.GetString([IO.File]::ReadAllBytes($pecmdPath))
+          $pecmdText = $pecmdText.Replace("LetRecovery PE", "RZhuangJi PE")
+          $pecmdText = $pecmdText.Replace(
+            "Program Files\LetRecoveryPE\LetRecoveryPE.exe",
+            "Program Files\RZhuangJiPE\RZhuangJiPE.exe")
+          if ($pecmdText -notmatch [regex]::Escape("EXEC X:\Program Files\RZhuangJiPE\RZhuangJiPE.exe")) {
+            throw "PECMD rewrite did not produce the RZhuangJiPE boot entry"
+          }
+          if ($pecmdText -match "LetRecovery") {
+            throw "PECMD still references LetRecovery after rewrite"
+          }
+          [IO.File]::WriteAllBytes($pecmdPath, $latin1.GetBytes($pecmdText))
+          Write-Host "Rewrote PECMD boot entry to RZhuangJiPE"
+          if (Test-Path -LiteralPath $legacyDir) {
+            Remove-Item -LiteralPath $legacyDir -Recurse -Force
+          }
+          if (Test-Path -LiteralPath $legacyDir) {
+            throw "Upstream PE directory still present after removal: $legacyDir"
+          }
+          Write-Host "Removed upstream PE directory from WIM"
           dism /Unmount-Image /MountDir:"$mount" /Commit
           if ($LASTEXITCODE -ne 0) { throw "DISM unmount/commit failed" }
 
