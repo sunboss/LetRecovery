@@ -44,12 +44,12 @@ jobs:
       - name: Cargo clippy (deny warnings)
         # Rust 1.88 reports this style-only lint differently from newer supported toolchains.
         # Keep every behavioral warning blocking while avoiding a version-dependent rewrite.
-        run: cargo clippy --workspace --all-targets --locked --features "LetRecovery/non-elevated-tests,letrecovery-pe/non-elevated-tests" -- -D warnings -A clippy::uninlined_format_args
+        run: cargo clippy --workspace --all-targets --locked --features "RZhuangJi/non-elevated-tests,letrecovery-pe/non-elevated-tests" -- -D warnings -A clippy::uninlined_format_args
 
       # 编译所有测试目标（含 #[cfg(test)]），把“测试代码编不过”也变成阻塞失败。
       # 测试专用 feature 只让测试二进制以 asInvoker 启动；release 构建会主动拒绝该 feature。
       - name: Compile all test targets
-        run: cargo test --workspace --no-run --locked --features "LetRecovery/non-elevated-tests,letrecovery-pe/non-elevated-tests"
+        run: cargo test --workspace --no-run --locked --features "RZhuangJi/non-elevated-tests,letrecovery-pe/non-elevated-tests"
 
       # 运行两端完整的确定性单元测试。依赖真实 Windows 主机状态的测试必须显式 #[ignore]，
       # CI 不使用 --ignored，也不执行真实磁盘、BitLocker、DISM、BCD 或注册表写入操作。
@@ -57,4 +57,4 @@ jobs:
         run: |
           cargo test -p lr-core --locked
           cargo test -p letrecovery-pe --locked --features non-elevated-tests
-          cargo test -p LetRecovery --locked --features non-elevated-tests
+          cargo test -p RZhuangJi --locked --features non-elevated-tests
