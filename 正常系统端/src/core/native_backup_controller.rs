@@ -185,7 +185,7 @@ fn validate_minimum_config(config: &BackupConfig) -> Result<(), BackupPlanningEr
     Ok(())
 }
 
-fn is_absolute_windows_file_path(value: &str) -> bool {
+pub(crate) fn is_absolute_windows_file_path(value: &str) -> bool {
     let bytes = value.as_bytes();
     let drive_absolute = bytes.len() >= 4
         && bytes[0].is_ascii_alphabetic()

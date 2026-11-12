@@ -30,6 +30,8 @@ pub(crate) mod native_appx_legacy;
 pub mod native_appx_selection;
 pub mod native_backup_controller;
 pub mod native_backup_executor;
+pub mod native_restore_controller;
+pub mod native_restore_executor;
 pub mod native_batch_format;
 pub mod native_bitlocker_gate;
 pub mod native_bitlocker_manage;

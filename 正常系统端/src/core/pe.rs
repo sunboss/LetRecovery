@@ -832,6 +832,7 @@ impl HandoffBootPayload {
             lr_core::handoff_auth::HandoffPurpose::Install
                 | lr_core::handoff_auth::HandoffPurpose::Backup
                 | lr_core::handoff_auth::HandoffPurpose::Maintenance
+                | lr_core::handoff_auth::HandoffPurpose::Restore
         ) {
             anyhow::bail!("BitLocker recovery material is not valid for this PE handoff");
         }
@@ -1593,11 +1594,15 @@ enum PeBootPurpose {
     Install,
     Backup,
     Maintenance,
+    Restore,
 }
 
 impl PeBootPurpose {
     const fn may_inject_bitlocker_recovery_material(self) -> bool {
-        matches!(self, Self::Install | Self::Backup | Self::Maintenance)
+        matches!(
+            self,
+            Self::Install | Self::Backup | Self::Maintenance | Self::Restore
+        )
     }
 }
 
@@ -1995,6 +2000,20 @@ impl PeManager {
             anyhow::bail!("backup PE boot received a non-backup authentication capsule");
         }
         self.boot_to_pe_internal(pe_path, display_name, Some(payload), PeBootPurpose::Backup)
+    }
+
+    /// Prepare the PE used by an LRRH2 restore. The image and target volumes may be
+    /// BitLocker-protected, so manifest-bound recovery material may be injected.
+    pub(crate) fn boot_to_pe_for_restore(
+        &self,
+        pe_path: &str,
+        display_name: &str,
+        payload: HandoffBootPayload,
+    ) -> Result<PeBootTransaction> {
+        if payload.capsule.purpose() != lr_core::handoff_auth::HandoffPurpose::Restore {
+            anyhow::bail!("restore PE boot received a non-restore authentication capsule");
+        }
+        self.boot_to_pe_internal(pe_path, display_name, Some(payload), PeBootPurpose::Restore)
     }
 
     pub(crate) fn boot_to_pe_for_expand(
@@ -2780,6 +2799,7 @@ mod cache_policy_tests {
         assert!(PeBootPurpose::Install.may_inject_bitlocker_recovery_material());
         assert!(PeBootPurpose::Backup.may_inject_bitlocker_recovery_material());
         assert!(PeBootPurpose::Maintenance.may_inject_bitlocker_recovery_material());
+        assert!(PeBootPurpose::Restore.may_inject_bitlocker_recovery_material());
     }
 
     #[test]

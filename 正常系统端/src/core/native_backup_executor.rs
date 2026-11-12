@@ -294,7 +294,7 @@ fn authorize_backup_intent(
 }
 
 #[cfg(not(feature = "non-elevated-tests"))]
-fn strict_bitlocker_status(path: &str) -> Result<crate::core::bitlocker::VolumeStatus, String> {
+pub(crate) fn strict_bitlocker_status(path: &str) -> Result<crate::core::bitlocker::VolumeStatus, String> {
     use crate::core::bitlocker::VolumeStatus;
     use lr_core::fveapi::FveError;
 
@@ -950,7 +950,7 @@ fn run_pe_handoff(
 }
 
 #[cfg(not(feature = "non-elevated-tests"))]
-fn require_verified_cached_pe(
+pub(crate) fn require_verified_cached_pe(
     pe: &crate::download::config::OnlinePE,
 ) -> Result<crate::core::pe::LocalPeSnapshot, String> {
     use lr_core::cached_artifact::CachedArtifactStatus;
