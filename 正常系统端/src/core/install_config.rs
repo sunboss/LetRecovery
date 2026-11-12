@@ -57,6 +57,60 @@ pub struct BackupConfigTransaction {
     bitlocker_secret: Option<zeroize::Zeroizing<Vec<u8>>>,
 }
 
+/// Exact files changed while preparing a PE restore handoff.
+///
+/// Two independent locator markers are published: one on the image volume and one on the target
+/// volume. A later BCD failure can restore both byte-for-byte without touching unrelated files.
+pub struct RestoreConfigTransaction {
+    marker_path: PathBuf,
+    marker_previous: Option<Vec<u8>>,
+    marker_pins: lr_core::scoped_temp_file::PinnedDirectoryAncestors,
+    target_marker_path: PathBuf,
+    target_marker_previous: Option<Vec<u8>>,
+    target_pins: lr_core::scoped_temp_file::PinnedDirectoryAncestors,
+    boot_config_bytes: Option<Vec<u8>>,
+    boot_manifest_bytes: Option<Vec<u8>>,
+    bitlocker_secret: Option<zeroize::Zeroizing<Vec<u8>>>,
+}
+
+impl RestoreConfigTransaction {
+    pub(crate) fn take_boot_config_bytes(&mut self) -> Result<Vec<u8>> {
+        self.boot_config_bytes
+            .take()
+            .context("restore authenticated boot config was already consumed")
+    }
+    pub(crate) fn take_boot_manifest_bytes(&mut self) -> Result<Vec<u8>> {
+        self.boot_manifest_bytes
+            .take()
+            .context("restore authenticated boot manifest was already consumed")
+    }
+    pub(crate) fn take_bitlocker_secret(&mut self) -> Option<zeroize::Zeroizing<Vec<u8>>> {
+        self.bitlocker_secret.take()
+    }
+    pub fn rollback(self) -> Result<()> {
+        self.marker_pins
+            .verify_unchanged()
+            .context("restore marker directory changed before rollback")?;
+        self.target_pins
+            .verify_unchanged()
+            .context("restore target marker directory changed before rollback")?;
+        restore_file(
+            &self.target_marker_path,
+            self.target_marker_previous.as_deref(),
+        )
+        .context(tr!("回滚还原目标标记文件失败"))?;
+        restore_file(&self.marker_path, self.marker_previous.as_deref())
+            .context(tr!("回滚还原标记文件失败"))?;
+        self.marker_pins
+            .verify_unchanged()
+            .context("restore marker directory changed during rollback")?;
+        self.target_pins
+            .verify_unchanged()
+            .context("restore target marker directory changed during rollback")?;
+        Ok(())
+    }
+}
+
 /// Exact files changed while preparing a PE install handoff.
 ///
 /// The marker is published last. Until that atomic replace succeeds, PE cannot discover the new
@@ -572,6 +626,25 @@ pub struct BackupConfig {
     pub wim_engine: u8,
     /// Versioned source/destination/session authorization. Required for every new PE handoff.
     pub handoff: Option<lr_core::backup_handoff::BackupHandoffV2>,
+}
+
+/// 系统还原配置（用于PE环境内还原）
+#[derive(Debug, Clone, Default)]
+pub struct RestoreConfig {
+    /// 备份镜像在镜像卷上的绝对路径（PE 端经 marker 重绑后逐项校验）
+    pub image_path: String,
+    /// 目标分区盘符（如 "C:"）
+    pub target_partition: String,
+    /// 镜像内映像索引（从 1 起）
+    pub image_index: u32,
+    /// 映像名称（与镜像目录绑定校验）
+    pub image_name: String,
+    /// 映像描述
+    pub image_description: String,
+    /// WIM 镜像引擎：0=libwim（默认），1=wimgapi。随重启传给 PE 端。
+    pub wim_engine: u8,
+    /// Versioned image/target/session authorization. Required for every new PE handoff.
+    pub handoff: Option<lr_core::restore_handoff::RestoreHandoffV2>,
 }
 
 /// 无损扩容配置：进 PE 后无损扩大目标分区（通常为当前系统盘 C:）。
@@ -1373,6 +1446,179 @@ impl ConfigFileManager {
         Ok(transaction)
     }
 
+    pub fn write_restore_config_transactional(
+        image_partition: &str,
+        target_partition: &str,
+        config: &RestoreConfig,
+        auth_key: &lr_core::handoff_auth::SessionAuthKey,
+    ) -> Result<RestoreConfigTransaction> {
+        Self::write_restore_config_transactional_with_bitlocker_secret(
+            image_partition,
+            target_partition,
+            config,
+            auth_key,
+            None,
+        )
+    }
+
+    pub(crate) fn write_restore_config_transactional_with_bitlocker_secret(
+        image_partition: &str,
+        target_partition: &str,
+        config: &RestoreConfig,
+        _auth_key: &lr_core::handoff_auth::SessionAuthKey,
+        bitlocker_secret: Option<zeroize::Zeroizing<Vec<u8>>>,
+    ) -> Result<RestoreConfigTransaction> {
+        Self::validate_ini_value("image_partition", image_partition)?;
+        Self::validate_ini_value("target_partition", target_partition)?;
+        for (field, value) in [
+            ("ImagePath", config.image_path.as_str()),
+            ("TargetPartition", config.target_partition.as_str()),
+            ("ImageName", config.image_name.as_str()),
+            ("ImageDescription", config.image_description.as_str()),
+        ] {
+            Self::validate_ini_value(field, value)?;
+        }
+        // Build and validate the complete LRRH2 payload before creating or replacing any
+        // filesystem object. A missing/invalid authorization must be side-effect free.
+        let handoff = config
+            .handoff
+            .as_ref()
+            .context("restore handoff has no LRRH2 authorization")?;
+        handoff.validate().map_err(anyhow::Error::msg)?;
+        lr_core::handoff_auth::validate_session_id(&handoff.session_id)?;
+        let data_locator_token = lr_core::handoff_auth::generate_locator_token()?;
+        let target_locator_token = lr_core::handoff_auth::generate_locator_token()?;
+        // Artifact records must be pre-sorted by (role, ordinal): ArtifactRole derives its
+        // canonical order from declaration order, so the protected secret precedes the image.
+        let mut artifacts = Vec::new();
+        if let Some(secret) = bitlocker_secret.as_ref() {
+            artifacts.push(lr_core::handoff_manifest::ArtifactRecord {
+                role: lr_core::handoff_manifest::ArtifactRole::ProtectedBitLockerSecret,
+                location: lr_core::handoff_manifest::ArtifactLocation::ProtectedBoot,
+                ordinal: 0,
+                relative_path: lr_core::bl_passthrough::KEYS_FILE_NAME.to_owned(),
+                length_bytes: secret.len() as u64,
+                sha256: lr_core::install_handoff::decode_hex_array::<32>(
+                    &lr_core::hash::sha256_bytes(secret),
+                    "protected BitLocker secret SHA-256",
+                )?,
+            });
+        }
+        artifacts.push(lr_core::handoff_manifest::ArtifactRecord {
+            role: lr_core::handoff_manifest::ArtifactRole::RestoreImage,
+            location: lr_core::handoff_manifest::ArtifactLocation::PublicData,
+            ordinal: 0,
+            relative_path: handoff
+                .image_relative_path
+                .to_string_lossy()
+                .replace('/', "\\"),
+            length_bytes: handoff.image.length_bytes,
+            sha256: handoff.image.sha256,
+        });
+        let manifest = lr_core::handoff_manifest::HandoffManifest::new(
+            lr_core::handoff_auth::HandoffPurpose::Restore,
+            handoff.session_id.clone(),
+            data_locator_token.as_str(),
+            Some(target_locator_token.as_str().to_owned()),
+            None,
+            artifacts,
+        )?
+        .to_bytes()?;
+        let manifest_binding = lr_core::handoff_manifest::ManifestBinding::new(&manifest)?;
+        let mut content = Self::serialize_restore_config(config)?;
+        content.push_str(&manifest_binding.to_config_lines());
+        if content.len() > 128 * 1024 {
+            anyhow::bail!("restore configuration exceeds the 128 KiB handoff limit");
+        }
+        let (_, parsed_handoff) = lr_core::restore_handoff::parse_restore_payload(&content)
+            .context("validate the complete LRRH2 payload before publication")?;
+        if &parsed_handoff != handoff {
+            anyhow::bail!("serialized LRRH2 authorization changed during validation");
+        }
+        let image_root = PathBuf::from(format!(
+            "{}\\",
+            image_partition.trim_end_matches(['\\', '/'])
+        ));
+        let image_root_pins =
+            lr_core::scoped_temp_file::pin_existing_directory_ancestors(&image_root)
+                .context("pin restore image volume ancestors")?;
+        image_root_pins.verify_unchanged()?;
+        let target_root = PathBuf::from(format!(
+            "{}\\",
+            target_partition.trim_end_matches(['\\', '/'])
+        ));
+        let target_root_pins =
+            lr_core::scoped_temp_file::pin_existing_directory_ancestors(&target_root)
+                .context("pin restore target volume ancestors")?;
+        target_root_pins.verify_unchanged()?;
+
+        // Both volumes are rediscovered in PE only by their WIM-authenticated random tokens.
+        let marker_path = image_root.join(lr_core::install_handoff::DATA_VOLUME_MARKER_NAME);
+        let marker_parent = marker_path
+            .parent()
+            .context("restore marker has no volume root")?;
+        let marker_pins =
+            lr_core::scoped_temp_file::pin_existing_directory_ancestors(marker_parent)
+                .context("pin restore marker volume ancestors")?;
+        marker_pins.verify_unchanged()?;
+        let marker_previous = read_optional_bounded_plain_file(&marker_path, 4 * 1024)
+            .context(tr!("读取原还原标记文件失败"))?;
+        let target_marker_path =
+            target_root.join(lr_core::install_handoff::INSTALL_TARGET_MARKER_NAME);
+        let target_marker_previous =
+            read_optional_bounded_plain_file(&target_marker_path, 4 * 1024)
+                .context(tr!("读取原还原目标标记文件失败"))?;
+        let transaction = RestoreConfigTransaction {
+            marker_path: marker_path.clone(),
+            marker_previous,
+            marker_pins,
+            target_marker_path: target_marker_path.clone(),
+            target_marker_previous,
+            target_pins: target_root_pins,
+            boot_config_bytes: Some(content.as_bytes().to_vec()),
+            boot_manifest_bytes: Some(manifest),
+            bitlocker_secret,
+        };
+
+        transaction.marker_pins.verify_unchanged()?;
+        transaction.target_pins.verify_unchanged()?;
+        if let Err(error) = write_atomic_file(
+            &target_marker_path,
+            &lr_core::install_handoff::locator_marker_bytes(target_locator_token.as_str())?,
+        ) {
+            if let Err(rollback) = transaction.rollback() {
+                return Err(anyhow::anyhow!(
+                    "{error}; additionally failed to roll back handoff: {rollback}"
+                ));
+            }
+            return Err(error).context(tr!("写入还原目标标记文件失败"));
+        }
+        if let Err(error) = write_atomic_file(
+            &marker_path,
+            &lr_core::install_handoff::locator_marker_bytes(data_locator_token.as_str())?,
+        ) {
+            if let Err(rollback) = transaction.rollback() {
+                return Err(anyhow::anyhow!(
+                    "{error}; additionally failed to roll back handoff: {rollback}"
+                ));
+            }
+            return Err(error).context(tr!("写入还原标记文件失败"));
+        }
+        transaction.marker_pins.verify_unchanged()?;
+        transaction.target_pins.verify_unchanged()?;
+
+        log::info!("[CONFIG] authoritative restore config prepared in private boot payload");
+        log::info!(
+            "[CONFIG] restore data locator published: {}",
+            marker_path.display()
+        );
+        log::info!(
+            "[CONFIG] restore target locator published: {}",
+            target_marker_path.display()
+        );
+        Ok(transaction)
+    }
+
     /// 获取数据目录路径
     pub fn get_data_dir(partition: &str) -> String {
         format!("{}\\{}", partition, Self::DATA_DIR)
@@ -1626,6 +1872,34 @@ Language={}
             config.incremental,
             config.format,
             config.swm_split_size,
+            config.wim_engine,
+            crate::utils::i18n::current_language(),
+            handoff_fields,
+        ))
+    }
+
+    fn serialize_restore_config(config: &RestoreConfig) -> Result<String> {
+        let handoff = config
+            .handoff
+            .as_ref()
+            .context("restore configuration has no LRRH2 authorization")?;
+        let handoff_fields = handoff.serialize_fields()?;
+        Ok(format!(
+            r#"[Restore]
+ImagePath={}
+TargetPartition={}
+ImageIndex={}
+ImageName={}
+ImageDescription={}
+WimEngine={}
+Language={}
+{}
+"#,
+            config.image_path,
+            config.target_partition,
+            config.image_index,
+            config.image_name,
+            config.image_description,
             config.wim_engine,
             crate::utils::i18n::current_language(),
             handoff_fields,
