@@ -52,6 +52,7 @@ pub mod reboot;
 pub mod reg_file;
 pub mod registry;
 pub mod reserved_storage;
+pub mod restore_handoff;
 pub mod sam;
 pub mod scoped_temp_file;
 pub mod sec_health_ui;

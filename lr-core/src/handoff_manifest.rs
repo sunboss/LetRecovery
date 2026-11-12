@@ -49,6 +49,7 @@ pub enum ArtifactRole {
     ProtectedAdministratorSecret,
     ProtectedBitLockerSecret,
     BackupBaseImage,
+    RestoreImage,
 }
 
 impl ArtifactRole {
@@ -76,6 +77,7 @@ impl ArtifactRole {
             Self::ProtectedAdministratorSecret => "protected_administrator_secret",
             Self::ProtectedBitLockerSecret => "protected_bitlocker_secret",
             Self::BackupBaseImage => "backup_base_image",
+            Self::RestoreImage => "restore_image",
         }
     }
 
@@ -103,6 +105,7 @@ impl ArtifactRole {
             "protected_administrator_secret" => Ok(Self::ProtectedAdministratorSecret),
             "protected_bitlocker_secret" => Ok(Self::ProtectedBitLockerSecret),
             "backup_base_image" => Ok(Self::BackupBaseImage),
+            "restore_image" => Ok(Self::RestoreImage),
             _ => bail!("unknown handoff artifact role"),
         }
     }
@@ -133,6 +136,7 @@ impl ArtifactRole {
                 | Self::AutoPartitionMarker
                 | Self::ProtectedAdministratorSecret
                 | Self::ProtectedBitLockerSecret
+                | Self::RestoreImage
         )
     }
 }
@@ -293,7 +297,21 @@ impl HandoffManifest {
             (HandoffPurpose::Install, None) => {
                 bail!("installation handoff has no target locator token")
             }
-            (_, Some(_)) => bail!("only installation handoffs may carry a target locator token"),
+            // Restore mirrors installation: the data locator finds the volume holding the
+            // backup image, while an independent target locator finds the exact system volume
+            // that PE will format and overwrite.
+            (HandoffPurpose::Restore, Some(token)) => {
+                validate_locator_token(token)?;
+                if token == self.data_locator_token {
+                    bail!("restore data and target locator tokens must be independent");
+                }
+            }
+            (HandoffPurpose::Restore, None) => {
+                bail!("restore handoff has no target locator token")
+            }
+            (_, Some(_)) => {
+                bail!("only installation/restore handoffs may carry a target locator token")
+            }
             (_, None) => {}
         }
         if self.artifacts.len() > HANDOFF_MANIFEST_MAX_ARTIFACTS {
@@ -639,13 +657,20 @@ fn validate_role_matrix(
 ) -> Result<()> {
     for (role, records) in roles {
         let allowed = match purpose {
-            HandoffPurpose::Install => !matches!(role, ArtifactRole::BackupBaseImage),
+            HandoffPurpose::Install => !matches!(
+                role,
+                ArtifactRole::BackupBaseImage | ArtifactRole::RestoreImage
+            ),
             HandoffPurpose::Backup => matches!(
                 role,
                 ArtifactRole::BackupBaseImage | ArtifactRole::ProtectedBitLockerSecret
             ),
             HandoffPurpose::Expand => false,
             HandoffPurpose::Maintenance => *role == ArtifactRole::ProtectedBitLockerSecret,
+            HandoffPurpose::Restore => matches!(
+                role,
+                ArtifactRole::RestoreImage | ArtifactRole::ProtectedBitLockerSecret
+            ),
         };
         if !allowed {
             bail!("handoff artifact role is not allowed for this operation purpose");
@@ -666,6 +691,7 @@ fn validate_role_matrix(
                 | ArtifactRole::ProtectedAdministratorSecret
                 | ArtifactRole::ProtectedBitLockerSecret
                 | ArtifactRole::BackupBaseImage
+                | ArtifactRole::RestoreImage
         );
         if singleton && records.len() != 1 {
             bail!("singleton handoff artifact role appears more than once");
@@ -711,6 +737,22 @@ fn validate_role_matrix(
         }
         if image_count != 0 && xp_count != 0 {
             bail!("installation handoff cannot mix image spans with an XP source tree");
+        }
+    }
+    if purpose == HandoffPurpose::Restore {
+        // A restore authorization is meaningless without exactly one authenticated image on
+        // the data volume; split images are a backup-capture concern and never valid here.
+        let image_count = roles.get(&ArtifactRole::RestoreImage).map_or(0, Vec::len);
+        if image_count != 1 {
+            bail!("restore handoff must bind exactly one restore image artifact");
+        }
+        if let Some(image) = roles
+            .get(&ArtifactRole::RestoreImage)
+            .and_then(|records| records.first())
+        {
+            if image.location != ArtifactLocation::PublicData || image.ordinal != 0 {
+                bail!("restore image must be the ordinal-zero public data artifact");
+            }
         }
     }
     let secret_count = roles
@@ -1098,6 +1140,65 @@ mod tests {
     }
 
     #[test]
+    fn restore_requires_independent_target_token_and_exactly_one_image() {
+        let mut image = artifact("backups\\system.wim", 0);
+        image.role = ArtifactRole::RestoreImage;
+        let manifest = HandoffManifest::new(
+            HandoffPurpose::Restore,
+            "00112233445566778899aabbccddeeff",
+            DATA_TOKEN,
+            Some(TARGET_TOKEN.to_owned()),
+            None,
+            vec![image.clone()],
+        )
+        .unwrap();
+        let bytes = manifest.to_bytes().unwrap();
+        assert_eq!(HandoffManifest::parse(&bytes).unwrap(), manifest);
+        // Restore without a target locator cannot authorize formatting any volume.
+        assert!(HandoffManifest::new(
+            HandoffPurpose::Restore,
+            "00112233445566778899aabbccddeeff",
+            DATA_TOKEN,
+            None,
+            None,
+            vec![image.clone()],
+        )
+        .is_err());
+        // The two locators must be independent random tokens.
+        assert!(HandoffManifest::new(
+            HandoffPurpose::Restore,
+            "00112233445566778899aabbccddeeff",
+            DATA_TOKEN,
+            Some(DATA_TOKEN.to_owned()),
+            None,
+            vec![image.clone()],
+        )
+        .is_err());
+        // A restore manifest without its image, or with a second image, fails closed.
+        assert!(HandoffManifest::new(
+            HandoffPurpose::Restore,
+            "00112233445566778899aabbccddeeff",
+            DATA_TOKEN,
+            Some(TARGET_TOKEN.to_owned()),
+            None,
+            Vec::new(),
+        )
+        .is_err());
+        let mut second = image.clone();
+        second.ordinal = 1;
+        second.relative_path = "backups\\other.wim".to_owned();
+        assert!(HandoffManifest::new(
+            HandoffPurpose::Restore,
+            "00112233445566778899aabbccddeeff",
+            DATA_TOKEN,
+            Some(TARGET_TOKEN.to_owned()),
+            None,
+            vec![image, second],
+        )
+        .is_err());
+    }
+
+    #[test]
     fn image_spans_and_xp_tree_cannot_share_one_install_authorization() {
         let mut xp = artifact("xp\\I386\\setupldr.bin", 0);
         xp.role = ArtifactRole::XpSourceFile;
@@ -1245,6 +1346,7 @@ mod tests {
                 ArtifactRole::ProtectedBitLockerSecret,
                 "secrets\\bitlocker.bin",
             ),
+            (ArtifactRole::RestoreImage, "images\\restore.wim"),
         ] {
             let mut empty = artifact(path, 0);
             empty.role = role;

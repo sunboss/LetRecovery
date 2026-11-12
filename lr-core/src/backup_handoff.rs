@@ -253,7 +253,7 @@ fn parse_handoff_from_fields(fields: &BTreeMap<&str, &str>) -> Result<BackupHand
     Ok(handoff)
 }
 
-fn serialize_volume(prefix: &str, value: &CanonicalInstallTargetV2) -> String {
+pub(crate) fn serialize_volume(prefix: &str, value: &CanonicalInstallTargetV2) -> String {
     format!(
         "{prefix}CanonicalVersion={}\r\n{prefix}LayoutSha256={}\r\n{}{prefix}OffsetBytes={}\r\n{prefix}LengthBytes={}\r\n{prefix}DiskStyle={}\r\n{prefix}GptPartitionId={}\r\n",
         CANONICAL_TARGET_VERSION,
@@ -269,7 +269,10 @@ fn serialize_volume(prefix: &str, value: &CanonicalInstallTargetV2) -> String {
     )
 }
 
-fn parse_volume(prefix: &str, fields: &BTreeMap<&str, &str>) -> Result<CanonicalInstallTargetV2> {
+pub(crate) fn parse_volume(
+    prefix: &str,
+    fields: &BTreeMap<&str, &str>,
+) -> Result<CanonicalInstallTargetV2> {
     let value = |name: &str| -> Result<&str> {
         fields
             .get(name)

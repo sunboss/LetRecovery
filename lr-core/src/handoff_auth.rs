@@ -90,6 +90,7 @@ pub enum HandoffPurpose {
     Expand,
     /// Authenticated PE boot used for install, backup, expansion, or interactive maintenance.
     Maintenance,
+    Restore,
 }
 
 /// Security-document terminology retained as an explicit alias for endpoint APIs.
@@ -211,6 +212,7 @@ impl HandoffPurpose {
             Self::Backup => "backup",
             Self::Expand => "expand",
             Self::Maintenance => "maintenance",
+            Self::Restore => "restore",
         }
     }
 
@@ -220,6 +222,7 @@ impl HandoffPurpose {
             "backup" => Ok(Self::Backup),
             "expand" => Ok(Self::Expand),
             "maintenance" => Ok(Self::Maintenance),
+            "restore" => Ok(Self::Restore),
             _ => bail!("invalid handoff authentication purpose"),
         }
     }
@@ -230,6 +233,7 @@ impl HandoffPurpose {
             Self::Backup => 2,
             Self::Expand => 3,
             Self::Maintenance => 4,
+            Self::Restore => 5,
         }
     }
 }
@@ -932,16 +936,23 @@ mod tests {
         let backup = authenticate(&key, HandoffPurpose::Backup, session, config).unwrap();
         let expand = authenticate(&key, HandoffPurpose::Expand, session, config).unwrap();
         let maintenance = authenticate(&key, HandoffPurpose::Maintenance, session, config).unwrap();
+        let restore = authenticate(&key, HandoffPurpose::Restore, session, config).unwrap();
         assert_ne!(install, backup);
         assert_ne!(install, expand);
         assert_ne!(install, maintenance);
+        assert_ne!(install, restore);
         assert_ne!(backup, expand);
         assert_ne!(backup, maintenance);
+        assert_ne!(backup, restore);
         assert_ne!(expand, maintenance);
+        assert_ne!(expand, restore);
+        assert_ne!(maintenance, restore);
         assert!(verify(&key, HandoffPurpose::Backup, session, config, &install).is_err());
         assert!(verify(&key, HandoffPurpose::Expand, session, config, &backup).is_err());
         assert!(verify(&key, HandoffPurpose::Install, session, config, &expand).is_err());
         assert!(verify(&key, HandoffPurpose::Maintenance, session, config, &install).is_err());
+        assert!(verify(&key, HandoffPurpose::Restore, session, config, &install).is_err());
+        assert!(verify(&key, HandoffPurpose::Install, session, config, &restore).is_err());
     }
 
     #[test]
