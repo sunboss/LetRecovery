@@ -228,6 +228,7 @@ impl AuthenticatedOperationGuard {
                 lr_core::handoff_auth::HandoffPurpose::Install
                     | lr_core::handoff_auth::HandoffPurpose::Backup
                     | lr_core::handoff_auth::HandoffPurpose::Maintenance
+                    | lr_core::handoff_auth::HandoffPurpose::Restore
             ) || record.location != lr_core::handoff_manifest::ArtifactLocation::ProtectedBoot
                 || record.relative_path != lr_core::bl_passthrough::KEYS_FILE_NAME
             {
@@ -282,6 +283,7 @@ impl AuthenticatedOperationGuard {
             lr_core::handoff_auth::HandoffPurpose::Install => Some(OperationType::Install),
             lr_core::handoff_auth::HandoffPurpose::Backup => Some(OperationType::Backup),
             lr_core::handoff_auth::HandoffPurpose::Expand => Some(OperationType::Expand),
+            lr_core::handoff_auth::HandoffPurpose::Restore => Some(OperationType::Restore),
             lr_core::handoff_auth::HandoffPurpose::Maintenance => None,
         }
     }
@@ -406,6 +408,7 @@ pub enum AuthenticatedOperationConfig {
     Install(InstallConfig),
     Backup(BackupConfig),
     Expand(ExpandConfig),
+    Restore(RestoreConfig),
 }
 
 /// Move-only task authorization. The exact configuration comes only from the private boot WIM;
@@ -563,6 +566,13 @@ impl AuthenticatedOperationTask {
         }
     }
 
+    pub fn restore_config(&self) -> Result<&RestoreConfig> {
+        match &self.config {
+            AuthenticatedOperationConfig::Restore(config) => Ok(config),
+            _ => bail!("authenticated handoff is not a restore task"),
+        }
+    }
+
     pub fn private_wifi_profile_bytes(&self) -> Result<Option<&[u8]>> {
         let config = self.install_config()?;
         self.verify_unchanged()?;
@@ -591,6 +601,17 @@ impl AuthenticatedOperationTask {
             .context("authenticated installation target marker was already released")?;
         self.install_target_mount = target.temporary_mount;
         target.marker.delete_same_locked_file()
+    }
+
+    /// Restore selects its overwrite target through the same independent random target marker
+    /// mechanism as installation; only the consuming workflow differs.
+    pub fn restore_target(&self) -> Result<(&str, lr_core::windows_storage::VolumeIdentity)> {
+        self.install_target()
+    }
+
+    /// Release the restore target marker before formatting the selected volume.
+    pub fn release_restore_target_marker(&mut self) -> Result<()> {
+        self.release_install_target_marker()
     }
 
     /// Release every locator handle immediately before the full-disk transaction.
@@ -679,6 +700,33 @@ impl AuthenticatedOperationTask {
         role: lr_core::handoff_manifest::ArtifactRole,
     ) -> Result<Vec<PathBuf>> {
         self.install_config()?;
+        self.authenticated_artifact_paths(role)
+    }
+
+    pub fn restore_artifact_paths(
+        &self,
+        role: lr_core::handoff_manifest::ArtifactRole,
+    ) -> Result<Vec<PathBuf>> {
+        self.restore_config()?;
+        self.authenticated_artifact_paths(role)
+    }
+
+    /// The single authenticated backup image selected for this restore. The returned path stays
+    /// valid only while this task is alive: the file remains held by the task with write/delete
+    /// sharing denied.
+    pub fn restore_image_path(&self) -> Result<PathBuf> {
+        let paths =
+            self.restore_artifact_paths(lr_core::handoff_manifest::ArtifactRole::RestoreImage)?;
+        match paths.as_slice() {
+            [path] => Ok(path.clone()),
+            _ => bail!("authenticated restore task must bind exactly one restore image"),
+        }
+    }
+
+    fn authenticated_artifact_paths(
+        &self,
+        role: lr_core::handoff_manifest::ArtifactRole,
+    ) -> Result<Vec<PathBuf>> {
         let mut artifacts = self
             .public_artifacts
             .iter()
@@ -1224,6 +1272,28 @@ pub struct BackupConfig {
     pub handoff: Option<lr_core::backup_handoff::BackupHandoffV2>,
 }
 
+/// 系统还原配置（用于PE环境内还原）
+#[derive(Debug, Clone, Default)]
+pub struct RestoreConfig {
+    /// 正常系统端选定的镜像绝对路径，仅用于日志/诊断；PE 实际消费路径来自清单绑定的
+    /// LRRH2 相对路径与随机定位标记，盘符不参与卷选择。
+    pub image_path: String,
+    /// 目标系统分区盘符（正常系统端视角，仅用于日志/诊断）。
+    pub target_partition: String,
+    /// 要释放的映像索引（从 1 起），随 LRRH2 授权一同认证。
+    pub image_index: u32,
+    /// 备份时写入镜像目录的映像名称；PE 在格式化前与镜像目录核对。
+    pub image_name: String,
+    /// WIM 镜像引擎：0=libwim（默认），1=wimgapi。由正常系统端随重启传入。
+    pub wim_engine: u8,
+
+    /// 界面语言代码（如 "zh-TW"、"en-US"），由正常系统端随重启写入；空=简体中文。
+    pub language: String,
+    /// LRRH2 stable image/target/session authorization. Drive-letter-only restore handoffs
+    /// are deliberately rejected before any target write.
+    pub handoff: Option<lr_core::restore_handoff::RestoreHandoffV2>,
+}
+
 /// 配置文件管理器
 pub struct ConfigFileManager;
 
@@ -1441,8 +1511,11 @@ impl ConfigFileManager {
             lr_core::handoff_auth::HandoffPurpose::Expand => {
                 AuthenticatedOperationConfig::Expand(Self::deserialize_expand_config(content)?)
             }
+            lr_core::handoff_auth::HandoffPurpose::Restore => {
+                AuthenticatedOperationConfig::Restore(Self::deserialize_restore_config(content)?)
+            }
             lr_core::handoff_auth::HandoffPurpose::Maintenance => {
-                bail!("maintenance handoff does not contain an install/backup/expand task")
+                bail!("maintenance handoff does not contain an install/backup/expand/restore task")
             }
         };
         if let AuthenticatedOperationConfig::Install(install) = &mut config {
@@ -1891,6 +1964,54 @@ impl ConfigFileManager {
                     bail!("expand handoff must not contain external artifacts");
                 }
             }
+            AuthenticatedOperationConfig::Restore(config) => {
+                let handoff = config
+                    .handoff
+                    .as_ref()
+                    .context("authenticated restore has no LRRH2 authorization")?;
+                if handoff.session_id != manifest.session_id {
+                    bail!("restore config session does not match authenticated manifest");
+                }
+                if config.image_index != handoff.image_index {
+                    bail!("restore config image index does not match its LRRH2 authorization");
+                }
+                if manifest
+                    .artifacts
+                    .iter()
+                    .any(|record| {
+                        !matches!(
+                            record.role,
+                            ArtifactRole::RestoreImage
+                                | ArtifactRole::ProtectedBitLockerSecret
+                        )
+                    })
+                {
+                    bail!("restore handoff contains an unsupported artifact role");
+                }
+                let images = manifest
+                    .artifacts
+                    .iter()
+                    .filter(|record| record.role == ArtifactRole::RestoreImage)
+                    .collect::<Vec<_>>();
+                let [image] = images.as_slice() else {
+                    bail!("restore handoff must bind exactly one restore image artifact");
+                };
+                if image.location != lr_core::handoff_manifest::ArtifactLocation::PublicData {
+                    bail!("restore image artifact is not on the public data volume");
+                }
+                // The INI-carried LRRH2 relative path and file identity must name the exact
+                // object the manifest authenticated; neither side may substitute another file.
+                let relative = handoff.image_relative_path.to_string_lossy();
+                if lr_core::data_staging::strip_scatter_prefix(&image.relative_path) != relative
+                    || image.length_bytes != handoff.image.length_bytes
+                    || image.sha256 != handoff.image.sha256
+                {
+                    bail!("restore image manifest binding does not match its LRRH2 authorization");
+                }
+                if count(ArtifactRole::ProtectedBitLockerSecret) > 1 {
+                    bail!("restore handoff has more than one protected BitLocker secret");
+                }
+            }
         }
         Ok(())
     }
@@ -2294,6 +2415,20 @@ impl ConfigFileManager {
             handoff: Some(handoff),
         })
     }
+
+    /// 反序列化还原配置
+    fn deserialize_restore_config(content: &str) -> Result<RestoreConfig> {
+        let (values, handoff) = lr_core::restore_handoff::parse_restore_payload(content)?;
+        Ok(RestoreConfig {
+            image_path: values.image_path,
+            target_partition: values.target_partition,
+            image_index: handoff.image_index,
+            image_name: values.image_name,
+            wim_engine: values.wim_engine,
+            language: values.language,
+            handoff: Some(handoff),
+        })
+    }
 }
 
 #[cfg(test)]
@@ -2590,6 +2725,7 @@ pub enum OperationType {
     Install,
     Backup,
     Expand,
+    Restore,
 }
 
 /// 无损扩容配置（进 PE 后无损扩大目标分区，通常为系统盘 C:）。

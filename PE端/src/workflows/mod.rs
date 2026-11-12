@@ -2,6 +2,8 @@
 
 mod backup;
 mod expand;
+mod restore;
 
 pub(crate) use backup::execute_backup_workflow;
 pub(crate) use expand::execute_expand_workflow;
+pub(crate) use restore::execute_restore_workflow;

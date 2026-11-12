@@ -20,6 +20,7 @@ pub enum OperationKind {
     Install,
     Backup,
     Expand,
+    Restore,
     Repair,
     Custom,
 }

@@ -47,7 +47,7 @@ use windows::Win32::UI::WindowsAndMessaging::{MessageBoxW, MB_ICONERROR, MB_ICON
 use crate::app::{WorkerMessage, MAX_WORKER_MESSAGES_PER_POLL};
 use crate::app::{WorkflowRecoverySnapshot, WorkflowSession};
 use crate::core::config::{ConfigFileManager, OperationType};
-use crate::ui::progress::{BackupStep, InstallStep, ProgressState, StepStatus};
+use crate::ui::progress::{BackupStep, InstallStep, ProgressState, RestoreStep, StepStatus};
 
 use super::controls::{
     create_control, create_ui_font, create_ui_font_for_role, draw_indeterminate_ring,
@@ -190,14 +190,16 @@ fn progress_window_style() -> WINDOW_STYLE {
 fn preferred_progress_height(operation_type: OperationType) -> i32 {
     match operation_type {
         OperationType::Backup => BACKUP_PREFERRED_HEIGHT,
-        OperationType::Install | OperationType::Expand => PREFERRED_HEIGHT,
+        OperationType::Install | OperationType::Expand | OperationType::Restore => {
+            PREFERRED_HEIGHT
+        }
     }
 }
 
 fn minimum_progress_height(operation_type: OperationType) -> i32 {
     match operation_type {
         OperationType::Backup => BACKUP_MIN_HEIGHT,
-        OperationType::Install | OperationType::Expand => MIN_HEIGHT,
+        OperationType::Install | OperationType::Expand | OperationType::Restore => MIN_HEIGHT,
     }
 }
 
@@ -263,6 +265,8 @@ impl ProgressPresentation {
     fn from_state(state: &ProgressState) -> Self {
         let workflow = if state.is_expand_mode {
             WorkflowKind::Expand
+        } else if state.is_restore_mode {
+            WorkflowKind::Restore
         } else if state.is_install_mode {
             WorkflowKind::Install
         } else {
@@ -282,12 +286,16 @@ impl ProgressPresentation {
             WorkflowKind::Backup if state.has_current_step => {
                 Some(state.current_backup_step.name())
             }
+            WorkflowKind::Restore if state.has_current_step => {
+                Some(state.current_restore_step.name())
+            }
             WorkflowKind::Expand | WorkflowKind::Missing => None,
-            WorkflowKind::Install | WorkflowKind::Backup => None,
+            WorkflowKind::Install | WorkflowKind::Backup | WorkflowKind::Restore => None,
         };
         let rows = match workflow {
             WorkflowKind::Install => install_rows(state),
             WorkflowKind::Backup => backup_rows(state),
+            WorkflowKind::Restore => restore_rows(state),
             WorkflowKind::Expand | WorkflowKind::Missing => Vec::new(),
         };
         let status = if state.is_failed {
@@ -331,6 +339,25 @@ fn install_rows(state: &ProgressState) -> Vec<ProgressStepRow> {
 fn backup_rows(state: &ProgressState) -> Vec<ProgressStepRow> {
     let current = state.current_backup_step.index();
     BackupStep::all()
+        .into_iter()
+        .map(|step| {
+            let index = step.index();
+            let status = if state.has_current_step {
+                step_status(index, current, state.step_progress, state.is_failed)
+            } else {
+                StepStatus::Pending
+            };
+            ProgressStepRow {
+                name: step.name(),
+                status,
+            }
+        })
+        .collect()
+}
+
+fn restore_rows(state: &ProgressState) -> Vec<ProgressStepRow> {
+    let current = state.current_restore_step.index();
+    RestoreStep::all()
         .into_iter()
         .map(|step| {
             let index = step.index();
@@ -1233,6 +1260,7 @@ fn initial_progress(operation_type: OperationType) -> ProgressState {
         OperationType::Install => ProgressState::new_install(),
         OperationType::Backup => ProgressState::new_backup(),
         OperationType::Expand => ProgressState::new_expand(),
+        OperationType::Restore => ProgressState::new_restore(),
     }
 }
 
@@ -1254,6 +1282,12 @@ fn seed_running_preview(
             let _ = sender.send(WorkerMessage::SetBackupStep(BackupStep::ReadConfig));
             let _ = sender.send(WorkerMessage::SetProgress(100));
             let _ = sender.send(WorkerMessage::SetBackupStep(BackupStep::CaptureImage));
+            let _ = sender.send(WorkerMessage::SetProgress(58));
+        }
+        OperationType::Restore => {
+            let _ = sender.send(WorkerMessage::SetRestoreStep(RestoreStep::ReadConfig));
+            let _ = sender.send(WorkerMessage::SetProgress(100));
+            let _ = sender.send(WorkerMessage::SetRestoreStep(RestoreStep::ApplyImage));
             let _ = sender.send(WorkerMessage::SetProgress(58));
         }
         OperationType::Expand => {
@@ -1280,6 +1314,7 @@ fn launch_progress(
     match operation_type {
         OperationType::Install => progress.set_install_step(InstallStep::ApplyImage),
         OperationType::Backup => progress.set_backup_step(BackupStep::CaptureImage),
+        OperationType::Restore => progress.set_restore_step(RestoreStep::ApplyImage),
         OperationType::Expand => {}
     }
     progress.set_step_progress(match preview_state {
@@ -1298,6 +1333,7 @@ fn progress_title(workflow: WorkflowKind) -> String {
     match workflow {
         WorkflowKind::Install => crate::tr!("RZhuangJi PE 安装助手"),
         WorkflowKind::Backup => crate::tr!("RZhuangJi PE 备份助手"),
+        WorkflowKind::Restore => crate::tr!("RZhuangJi PE 还原助手"),
         WorkflowKind::Expand => crate::tr!("RZhuangJi PE 扩容助手"),
         WorkflowKind::Missing => crate::tr!("R装机 PE"),
     }

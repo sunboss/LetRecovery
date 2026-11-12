@@ -139,6 +139,71 @@ impl BackupStep {
     }
 }
 
+/// 还原步骤
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RestoreStep {
+    ReadConfig,
+    VerifyImage,
+    FormatPartition,
+    ApplyImage,
+    RepairBoot,
+    Cleanup,
+    Complete,
+}
+
+impl RestoreStep {
+    pub fn name(&self) -> &'static str {
+        match self {
+            RestoreStep::ReadConfig => "读取配置",
+            RestoreStep::VerifyImage => "校验镜像",
+            RestoreStep::FormatPartition => "格式化分区",
+            RestoreStep::ApplyImage => "释放系统镜像",
+            RestoreStep::RepairBoot => "修复引导",
+            RestoreStep::Cleanup => "清理临时文件",
+            RestoreStep::Complete => "还原完成",
+        }
+    }
+
+    pub fn index(&self) -> usize {
+        match self {
+            RestoreStep::ReadConfig => 0,
+            RestoreStep::VerifyImage => 1,
+            RestoreStep::FormatPartition => 2,
+            RestoreStep::ApplyImage => 3,
+            RestoreStep::RepairBoot => 4,
+            RestoreStep::Cleanup => 5,
+            RestoreStep::Complete => 6,
+        }
+    }
+
+    pub fn all() -> Vec<RestoreStep> {
+        vec![
+            RestoreStep::ReadConfig,
+            RestoreStep::VerifyImage,
+            RestoreStep::FormatPartition,
+            RestoreStep::ApplyImage,
+            RestoreStep::RepairBoot,
+            RestoreStep::Cleanup,
+            RestoreStep::Complete,
+        ]
+    }
+
+    /// Applying the image dominates restore duration, mirroring the install weighting; the
+    /// manifest hash authentication makes the verify step a catalog check rather than a second
+    /// full decompression pass.
+    const fn overall_range(self) -> (u8, u8) {
+        match self {
+            Self::ReadConfig => (0, 2),
+            Self::VerifyImage => (2, 5),
+            Self::FormatPartition => (5, 8),
+            Self::ApplyImage => (8, 92),
+            Self::RepairBoot => (92, 97),
+            Self::Cleanup => (97, 100),
+            Self::Complete => (100, 100),
+        }
+    }
+}
+
 const fn weighted_progress(range: (u8, u8), step_progress: u8) -> u8 {
     let (start, end) = range;
     let span = end.saturating_sub(start) as u16;
@@ -171,10 +236,14 @@ pub struct ProgressState {
     pub is_install_mode: bool,
     /// 是否为扩容模式（无损扩大系统盘）。为真时只显示状态+总进度，不显示安装/备份步骤列表。
     pub is_expand_mode: bool,
+    /// 是否为还原模式。为真时显示还原步骤列表。
+    pub is_restore_mode: bool,
     /// 当前安装步骤
     pub current_install_step: InstallStep,
     /// 当前备份步骤
     pub current_backup_step: BackupStep,
+    /// 当前还原步骤
+    pub current_restore_step: RestoreStep,
     /// Worker 尚未发出首个步骤消息时保持 false，避免首帧显示错误步骤。
     pub has_current_step: bool,
     /// 当前步骤进度 (0-100)
@@ -200,8 +269,10 @@ impl Default for ProgressState {
         Self {
             is_install_mode: true,
             is_expand_mode: false,
+            is_restore_mode: false,
             current_install_step: InstallStep::VerifyImage,
             current_backup_step: BackupStep::ReadConfig,
+            current_restore_step: RestoreStep::ReadConfig,
             has_current_step: false,
             step_progress: 0,
             overall_progress: 0,
@@ -237,6 +308,14 @@ impl ProgressState {
         }
     }
 
+    pub fn new_restore() -> Self {
+        Self {
+            is_install_mode: false,
+            is_restore_mode: true,
+            ..Default::default()
+        }
+    }
+
     /// 设置当前安装步骤
     pub fn set_install_step(&mut self, step: InstallStep) {
         self.current_install_step = step;
@@ -249,6 +328,15 @@ impl ProgressState {
     /// 设置当前备份步骤
     pub fn set_backup_step(&mut self, step: BackupStep) {
         self.current_backup_step = step;
+        self.has_current_step = true;
+        self.step_progress = 0;
+        self.status_message.clear();
+        self.update_overall_progress();
+    }
+
+    /// 设置当前还原步骤
+    pub fn set_restore_step(&mut self, step: RestoreStep) {
+        self.current_restore_step = step;
         self.has_current_step = true;
         self.step_progress = 0;
         self.status_message.clear();
@@ -271,7 +359,12 @@ impl ProgressState {
             self.overall_progress = 0;
             return;
         }
-        let next = if self.is_install_mode {
+        let next = if self.is_restore_mode {
+            weighted_progress(
+                self.current_restore_step.overall_range(),
+                self.step_progress,
+            )
+        } else if self.is_install_mode {
             weighted_progress(
                 self.current_install_step.overall_range(),
                 self.step_progress,
@@ -299,7 +392,9 @@ impl ProgressState {
         self.step_progress = 100;
         self.has_current_step = !self.is_expand_mode;
         if !self.is_expand_mode {
-            if self.is_install_mode {
+            if self.is_restore_mode {
+                self.current_restore_step = RestoreStep::Complete;
+            } else if self.is_install_mode {
                 self.current_install_step = InstallStep::Complete;
             } else {
                 self.current_backup_step = BackupStep::Complete;
@@ -316,7 +411,7 @@ impl ProgressState {
 
 #[cfg(test)]
 mod tests {
-    use super::{BackupStep, InstallStep, ProgressState};
+    use super::{BackupStep, InstallStep, ProgressState, RestoreStep};
     use crate::utils::i18n::LanguageFile;
 
     #[test]
@@ -329,6 +424,7 @@ mod tests {
             .into_iter()
             .map(|step| step.name())
             .chain(BackupStep::all().into_iter().map(|step| step.name()))
+            .chain(RestoreStep::all().into_iter().map(|step| step.name()))
         {
             let translation = catalog
                 .data
@@ -395,6 +491,18 @@ mod tests {
             backup.set_step_progress(100);
             assert!(backup.overall_progress >= previous);
             previous = backup.overall_progress;
+        }
+        assert_eq!(previous, 100);
+
+        let mut restore = ProgressState::new_restore();
+        previous = 0;
+        for step in RestoreStep::all() {
+            restore.set_restore_step(step);
+            assert!(restore.overall_progress >= previous);
+            previous = restore.overall_progress;
+            restore.set_step_progress(100);
+            assert!(restore.overall_progress >= previous);
+            previous = restore.overall_progress;
         }
         assert_eq!(previous, 100);
     }

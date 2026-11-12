@@ -15,7 +15,7 @@ use lr_core::operation::{OperationKind, StepDefinition};
 
 #[cfg(test)]
 use crate::core::config::OperationType;
-use crate::ui::progress::{BackupStep, InstallStep};
+use crate::ui::progress::{BackupStep, InstallStep, RestoreStep};
 
 const LAST_RUNTIME_LOG_FILE: &str = "RZhuangJiPE-last.log";
 
@@ -45,6 +45,15 @@ impl PeWorkflowJournal {
     pub(crate) fn observe_backup_step(&mut self, step: BackupStep) -> Result<(), OperationError> {
         self.journal
             .observe_step(backup_step_id(step), unix_time_millis())?;
+        Ok(())
+    }
+
+    pub(crate) fn observe_restore_step(
+        &mut self,
+        step: RestoreStep,
+    ) -> Result<(), OperationError> {
+        self.journal
+            .observe_step(restore_step_id(step), unix_time_millis())?;
         Ok(())
     }
 
@@ -125,6 +134,20 @@ fn operation_definition(
             vec![StepDefinition::new("expand", "无损扩大分区", false)],
             "expand",
         ),
+        OperationType::Restore => (
+            OperationKind::Restore,
+            RestoreStep::all()
+                .into_iter()
+                .map(|step| {
+                    StepDefinition::new(
+                        restore_step_id(step),
+                        step.name(),
+                        restore_step_is_idempotent(step),
+                    )
+                })
+                .collect(),
+            "restore",
+        ),
     }
 }
 
@@ -154,6 +177,18 @@ fn backup_step_id(step: BackupStep) -> &'static str {
     }
 }
 
+fn restore_step_id(step: RestoreStep) -> &'static str {
+    match step {
+        RestoreStep::ReadConfig => "read_config",
+        RestoreStep::VerifyImage => "verify_image",
+        RestoreStep::FormatPartition => "format_partition",
+        RestoreStep::ApplyImage => "apply_image",
+        RestoreStep::RepairBoot => "repair_boot",
+        RestoreStep::Cleanup => "cleanup",
+        RestoreStep::Complete => "complete",
+    }
+}
+
 #[cfg(test)]
 fn install_step_is_idempotent(step: InstallStep) -> bool {
     matches!(
@@ -174,6 +209,18 @@ fn backup_step_is_idempotent(step: BackupStep) -> bool {
             | BackupStep::RepairBoot
             | BackupStep::Cleanup
             | BackupStep::Complete
+    )
+}
+
+#[cfg(test)]
+fn restore_step_is_idempotent(step: RestoreStep) -> bool {
+    matches!(
+        step,
+        RestoreStep::ReadConfig
+            | RestoreStep::VerifyImage
+            | RestoreStep::RepairBoot
+            | RestoreStep::Cleanup
+            | RestoreStep::Complete
     )
 }
 

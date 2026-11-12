@@ -15,6 +15,7 @@ pub enum WorkflowKind {
     Install,
     Backup,
     Expand,
+    Restore,
     #[default]
     Missing,
 }
@@ -25,6 +26,7 @@ impl From<Option<OperationType>> for WorkflowKind {
             Some(OperationType::Install) => Self::Install,
             Some(OperationType::Backup) => Self::Backup,
             Some(OperationType::Expand) => Self::Expand,
+            Some(OperationType::Restore) => Self::Restore,
             None => Self::Missing,
         }
     }

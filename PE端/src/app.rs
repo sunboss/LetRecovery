@@ -7,7 +7,7 @@ use std::time::{Duration, Instant};
 use crate::core::config::{ConfigFileManager, OperationType};
 use crate::core::dism::DismProgress;
 use crate::tr;
-use crate::ui::progress::{BackupStep, InstallStep, ProgressState};
+use crate::ui::progress::{BackupStep, InstallStep, ProgressState, RestoreStep};
 use crate::utils::reboot_pe;
 use crate::workflow_journal::PeWorkflowJournal;
 use crate::workflow_journal::RecoveryCheckpointSnapshot;
@@ -19,6 +19,8 @@ pub(crate) enum WorkerMessage {
     SetInstallStep(InstallStep),
     /// 更新备份步骤
     SetBackupStep(BackupStep),
+    /// 更新还原步骤
+    SetRestoreStep(RestoreStep),
     /// 更新步骤进度
     SetProgress(u8),
     /// 更新状态消息
@@ -347,6 +349,7 @@ impl WorkflowSession {
             Some(OperationType::Install) => ProgressState::new_install(),
             Some(OperationType::Backup) => ProgressState::new_backup(),
             Some(OperationType::Expand) => ProgressState::new_expand(),
+            Some(OperationType::Restore) => ProgressState::new_restore(),
             None => ProgressState::new_install(),
         }));
 
@@ -376,6 +379,7 @@ impl WorkflowSession {
             OperationType::Install => ProgressState::new_install(),
             OperationType::Backup => ProgressState::new_backup(),
             OperationType::Expand => ProgressState::new_expand(),
+            OperationType::Restore => ProgressState::new_restore(),
         }));
         let (tx, rx) = channel();
         (
@@ -417,6 +421,9 @@ impl WorkflowSession {
                 }
                 (Some(OperationType::Expand), Some(guard)) => {
                     crate::workflows::execute_expand_workflow(tx, guard);
+                }
+                (Some(OperationType::Restore), Some(guard)) => {
+                    crate::workflows::execute_restore_workflow(tx, guard);
                 }
                 _ => {
                     let _ = tx.send(WorkerMessage::Failed(tr!("未检测到安装或备份配置")));
@@ -477,6 +484,9 @@ impl WorkflowSession {
                                 WorkerMessage::SetBackupStep(step) => {
                                     journal.observe_backup_step(*step)
                                 }
+                                WorkerMessage::SetRestoreStep(step) => {
+                                    journal.observe_restore_step(*step)
+                                }
                                 WorkerMessage::Completed => journal.complete(),
                                 WorkerMessage::CompletedWithWarning(_) => journal.complete(),
                                 WorkerMessage::Failed(error) => journal.fail(error),
@@ -498,6 +508,9 @@ impl WorkflowSession {
                                 }
                                 WorkerMessage::SetBackupStep(step) => {
                                     state.set_backup_step(step);
+                                }
+                                WorkerMessage::SetRestoreStep(step) => {
+                                    state.set_restore_step(step);
                                 }
                                 WorkerMessage::Completed => {
                                     state.mark_completed();

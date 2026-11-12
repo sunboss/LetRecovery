@@ -315,6 +315,7 @@ fn workflow_text(workflow: WorkflowKind) -> String {
     match workflow {
         WorkflowKind::Install => crate::tr!("系统安装"),
         WorkflowKind::Backup => crate::tr!("系统备份"),
+        WorkflowKind::Restore => crate::tr!("系统还原"),
         WorkflowKind::Expand => crate::tr!("无损扩大系统盘"),
         WorkflowKind::Missing => crate::tr!("未知任务"),
     }
@@ -327,6 +328,7 @@ fn current_step_text(progress: &ProgressState, workflow: WorkflowKind) -> String
     match workflow {
         WorkflowKind::Install => crate::tr!(progress.current_install_step.name()),
         WorkflowKind::Backup => crate::tr!(progress.current_backup_step.name()),
+        WorkflowKind::Restore => crate::tr!(progress.current_restore_step.name()),
         WorkflowKind::Expand => progress
             .status_message
             .split(['\r', '\n'])

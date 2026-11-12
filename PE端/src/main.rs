@@ -1114,7 +1114,12 @@ fn is_removed_pe_cli_invocation(args: &[String]) -> bool {
     args.len() == 2
         && matches!(
             args[1].to_ascii_lowercase().as_str(),
-            "/peinstall" | "--pe-install" | "/pebackup" | "--pe-backup"
+            "/peinstall"
+                | "--pe-install"
+                | "/pebackup"
+                | "--pe-backup"
+                | "/perestore"
+                | "--pe-restore"
         )
 }
 
@@ -1624,6 +1629,9 @@ fn main() -> anyhow::Result<()> {
             }
             core::config::OperationType::Expand => {
                 log::info!("检测到扩容配置，启动GUI扩容界面...");
+            }
+            core::config::OperationType::Restore => {
+                log::info!("检测到还原配置，启动GUI还原界面...");
             }
         }
     }
@@ -2331,7 +2339,14 @@ mod persistent_payload_tests {
     #[test]
     fn removed_pe_cli_is_case_insensitive_and_requires_exact_arity() {
         let program = "RZhuangJiPE.exe".to_owned();
-        for argument in ["/PEINSTALL", "--Pe-Install", "/pebackup", "--PE-BACKUP"] {
+        for argument in [
+            "/PEINSTALL",
+            "--Pe-Install",
+            "/pebackup",
+            "--PE-BACKUP",
+            "/PERESTORE",
+            "--Pe-Restore",
+        ] {
             assert!(is_removed_pe_cli_invocation(&[
                 program.clone(),
                 argument.to_owned()
