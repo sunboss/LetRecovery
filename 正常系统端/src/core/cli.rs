@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 
 use super::cli_config::{
     BackupSpec, CliBackupExecutionMode, CliBackupFormat, CliBackupOutputPolicy, CliConfig,
-    CliOperation, InstallSpec, CLI_CONFIG_SCHEMA_VERSION,
+    CliOperation, InstallSpec, RestoreSpec, CLI_CONFIG_SCHEMA_VERSION,
 };
 
 pub const EXIT_OK: i32 = 0;
@@ -58,6 +58,12 @@ pub enum Invocation {
         dry_run: bool,
         yes: bool,
     },
+    Restore {
+        action: Action,
+        config: PathBuf,
+        dry_run: bool,
+        yes: bool,
+    },
     Config {
         action: ConfigAction,
         options: BTreeMap<String, String>,
@@ -88,8 +94,9 @@ pub fn parse(args: &[String]) -> Result<Option<Invocation>> {
         return Ok(Some(Invocation::LegacyInstall));
     }
     match first {
-        "install" => parse_operation(args, true).map(Some),
-        "backup" => parse_operation(args, false).map(Some),
+        "install" => parse_operation(args, "install").map(Some),
+        "backup" => parse_operation(args, "backup").map(Some),
+        "restore" => parse_operation(args, "restore").map(Some),
         "config" => parse_config(args).map(Some),
         "inspect" => parse_inspect(args).map(Some),
         "update" => parse_update(args).map(Some),
@@ -163,6 +170,10 @@ pub fn execute_runtime_args(args: &[String]) -> Option<i32> {
                         action: Action::Plan,
                         ..
                     }
+                    | Invocation::Restore {
+                        action: Action::Plan,
+                        ..
+                    }
             ) || matches!(&invocation, Invocation::Tool(tool) if !tool.is_live()) =>
         {
             ensure_parent_console();
@@ -181,6 +192,9 @@ pub fn is_run_request(args: &[String]) -> bool {
                 action: Action::Run,
                 ..
             } | Invocation::Backup {
+                action: Action::Run,
+                ..
+            } | Invocation::Restore {
                 action: Action::Run,
                 ..
             } | Invocation::Update { .. }
@@ -202,6 +216,10 @@ pub fn is_destructive_run_request(args: &[String]) -> bool {
                 dry_run: false,
                 ..
             } | Invocation::Backup {
+                action: Action::Run,
+                dry_run: false,
+                ..
+            } | Invocation::Restore {
                 action: Action::Run,
                 dry_run: false,
                 ..
@@ -229,6 +247,9 @@ pub fn execute_run_args(args: &[String]) -> Option<i32> {
                 } | Invocation::Backup {
                     action: Action::Run,
                     ..
+                } | Invocation::Restore {
+                    action: Action::Run,
+                    ..
                 } | Invocation::Update { .. }
             ) || matches!(&invocation, Invocation::Tool(tool) if tool.is_live()) =>
         {
@@ -240,7 +261,7 @@ pub fn execute_run_args(args: &[String]) -> Option<i32> {
 }
 
 pub fn administrator_required() -> i32 {
-    administrator_required_for("install/backup/toolbox run, BitLocker key read, or update restore")
+    administrator_required_for("install/backup/restore/toolbox run, BitLocker key read, or update restore")
 }
 
 pub fn administrator_required_for(command: &str) -> i32 {
@@ -269,12 +290,12 @@ pub fn startup_usage_error(message: impl std::fmt::Display) -> i32 {
 pub fn development_run_denied() -> i32 {
     ensure_parent_console();
     let _ = print_json(
-        json!({"ok":false,"error":{"code":"development_build_denied","message":"non-elevated test builds cannot execute install/backup run or update restore"}}),
+        json!({"ok":false,"error":{"code":"development_build_denied","message":"non-elevated test builds cannot execute install/backup/restore run or update restore"}}),
     );
     EXIT_EXECUTION
 }
 
-fn parse_operation(args: &[String], install: bool) -> Result<Invocation> {
+fn parse_operation(args: &[String], operation: &str) -> Result<Invocation> {
     let action = match args.get(2).map(String::as_str) {
         Some("plan") => Action::Plan,
         Some("run") => Action::Run,
@@ -289,20 +310,27 @@ fn parse_operation(args: &[String], install: bool) -> Result<Invocation> {
     if action == Action::Plan && !flags.is_empty() {
         return Err(anyhow!("plan does not accept --yes or --dry-run"));
     }
-    let invocation = if install {
-        Invocation::Install {
+    let dry_run = flags.contains(&"dry-run".to_owned());
+    let yes = flags.contains(&"yes".to_owned());
+    let invocation = match operation {
+        "install" => Invocation::Install {
             action,
             config: config.into(),
-            dry_run: flags.contains(&"dry-run".to_owned()),
-            yes: flags.contains(&"yes".to_owned()),
-        }
-    } else {
-        Invocation::Backup {
+            dry_run,
+            yes,
+        },
+        "restore" => Invocation::Restore {
             action,
             config: config.into(),
-            dry_run: flags.contains(&"dry-run".to_owned()),
-            yes: flags.contains(&"yes".to_owned()),
-        }
+            dry_run,
+            yes,
+        },
+        _ => Invocation::Backup {
+            action,
+            config: config.into(),
+            dry_run,
+            yes,
+        },
     };
     Ok(invocation)
 }
@@ -436,6 +464,18 @@ fn execute_inner(invocation: Invocation) -> std::result::Result<(&'static str, V
             let result = super::cli_backup::run_backup(prepared)
                 .map_err(|error| fail(EXIT_EXECUTION, "backup_execution_failed", error))?;
             Ok(("backup.run", json!({"plan":plan,"result":result})))
+        }
+        Invocation::Restore { action, config, dry_run, yes } => {
+            let config = load_for_operation(&config, "restore")?;
+            let CliOperation::Restore(spec) = config.operation else { unreachable!() };
+            let prepared = super::cli_restore::plan_restore(&spec)
+                .map_err(|error| fail(EXIT_PREFLIGHT, "restore_preflight_failed", error))?;
+            let plan = super::cli_restore::restore_plan_json(&prepared);
+            if action == Action::Plan || dry_run { return Ok(("restore.plan", plan)); }
+            if !yes { return Err(fail(EXIT_USAGE, "confirmation_required", "restore run requires explicit --yes; use --dry-run to inspect the plan")); }
+            let result = super::cli_restore::run_restore(prepared)
+                .map_err(|error| fail(EXIT_EXECUTION, "restore_execution_failed", error))?;
+            Ok(("restore.run", json!({"plan":plan,"result":result})))
         }
     }
 }
@@ -585,7 +625,7 @@ fn generate_config(
             fail(
                 EXIT_USAGE,
                 "missing_option",
-                "--operation install|backup is required",
+                "--operation install|backup|restore is required",
             )
         })?;
     let config = match operation {
@@ -881,11 +921,35 @@ fn generate_config(
                 }),
             }
         }
+        "restore" => {
+            reject_config_args(
+                &options,
+                &flags,
+                &[
+                    "operation",
+                    "output",
+                    "image-path",
+                    "target-partition",
+                    "image-index",
+                    "auto-reboot",
+                ],
+                &["force", "interactive"],
+            )?;
+            CliConfig {
+                schema_version: CLI_CONFIG_SCHEMA_VERSION,
+                operation: CliOperation::Restore(RestoreSpec {
+                    image_path: required(&options, "image-path")?,
+                    target_partition: required(&options, "target-partition")?,
+                    image_index: restore_image_index_option(&options)?,
+                    auto_reboot: bool_option(&options, "auto-reboot", false)?,
+                }),
+            }
+        }
         _ => {
             return Err(fail(
                 EXIT_USAGE,
                 "invalid_option",
-                "--operation must be install or backup",
+                "--operation must be install, backup or restore",
             ))
         }
     };
@@ -907,7 +971,7 @@ fn fill_interactively(options: &mut BTreeMap<String, String>) -> Result<()> {
     let mut input = stdin.lock();
     let mut stdout = std::io::stderr();
     for (key, prompt) in [
-        ("operation", "Operation (install/backup)"),
+        ("operation", "Operation (install/backup/restore)"),
         ("output", "Output config path"),
     ] {
         if !options.contains_key(key) {
@@ -930,6 +994,16 @@ fn fill_interactively(options: &mut BTreeMap<String, String>) -> Result<()> {
                 ("source-partition", "Source partition"),
                 ("save-path", "Destination image path"),
                 ("name", "Backup name"),
+            ] {
+                if !options.contains_key(key) {
+                    prompt_value(&mut input, &mut stdout, options, key, prompt)?;
+                }
+            }
+        }
+        Some("restore") => {
+            for (key, prompt) in [
+                ("image-path", "Backup image path"),
+                ("target-partition", "Target partition (for example C:)"),
             ] {
                 if !options.contains_key(key) {
                     prompt_value(&mut input, &mut stdout, options, key, prompt)?;
@@ -980,6 +1054,7 @@ fn operation_name(operation: &CliOperation) -> &'static str {
     match operation {
         CliOperation::Install(_) => "install",
         CliOperation::Backup(_) => "backup",
+        CliOperation::Restore(_) => "restore",
     }
 }
 fn option(options: &BTreeMap<String, String>, key: &str) -> String {
@@ -999,6 +1074,25 @@ fn bool_option(
             "invalid_option",
             format!("--{key} must be true or false"),
         )),
+    }
+}
+
+fn restore_image_index_option(
+    options: &BTreeMap<String, String>,
+) -> std::result::Result<u32, Failure> {
+    match options.get("image-index").map(String::as_str) {
+        None => Ok(1),
+        Some(value) => value
+            .parse::<u32>()
+            .ok()
+            .filter(|index| *index > 0)
+            .ok_or_else(|| {
+                fail(
+                    EXIT_USAGE,
+                    "invalid_option",
+                    "--image-index must be a positive integer",
+                )
+            }),
     }
 }
 
@@ -1239,7 +1333,7 @@ fn reject_config_args(
 }
 
 pub fn help_text() -> &'static str {
-    "RZhuangJi command line (normal Windows only)\n\n  inspect disks\n  inspect image --path <image>\n  inspect pe-cache\n  install plan --config <file>\n  install run --config <file> [--yes] [--dry-run]\n  backup plan --config <file>\n  backup run --config <file> [--yes] [--dry-run]\n  update restore\n  tool list\n  config generate --operation install|backup --output <file> [operation flags] [--interactive] [--force]\n  config validate --config <file>\n  config normalize --config <file> [--output <file>] [--force]\n  config show --config <file>\n\nRun 'tool list' to enumerate all 22 toolbox CLI names; the full toolbox grammar is documented in the user guide. A real run, toolbox mutation, or update restore requires an already elevated administrator console; RZhuangJi never auto-elevates public CLI commands. Install/backup/toolbox run also requires --yes, while install/backup run --dry-run is read-only. Install generation supports image/image-backing paths; explicit --install-mode reinstall_partition|repartition_all_disks|dual_boot; current-session --confirmed-disk-numbers only for full-disk mode; --dual-boot-size-gib only for dual-boot mode; format/repair/unattended/auto-reboot; driver action; boot/PCA; built-in Administrator non-secret fields; advanced options including VMware Tools and guarded Windows 7 USB3/NVMe/storage/UEFI controls; --inherit-app-install-prefs true|false; comma-separated stable v4 IDs through --preinstalled-software-ids; and disposable-VM terminal power-off through --automation-shutdown-on-terminal true|false. Passwords, Wi-Fi credentials, and BitLocker unlock secrets are never accepted on the command line; BitLocker CLI unlock reads its secret only from stdin, while GUI export may place supported secrets only in protected, redacted JSON. Driver action is the only driver-export/import selector unless GUI preferences are explicitly inherited. Backup schema/generation supports --execution-mode auto|direct|via_pe, --output-policy create|replace|append, and --auto-reboot true|false. Feature-gated unsafe combinations fail closed. Backup incremental booleans and SWM/GHO output formats are rejected. Boolean option values accept only true|false. Final results are one JSON object on stdout; sanitized progress is JSON Lines on stderr. Interactive prompting occurs only with --interactive."
+    "RZhuangJi command line (normal Windows only)\n\n  inspect disks\n  inspect image --path <image>\n  inspect pe-cache\n  install plan --config <file>\n  install run --config <file> [--yes] [--dry-run]\n  backup plan --config <file>\n  backup run --config <file> [--yes] [--dry-run]\n  restore plan --config <file>\n  restore run --config <file> [--yes] [--dry-run]\n  update restore\n  tool list\n  config generate --operation install|backup|restore --output <file> [operation flags] [--interactive] [--force]\n  config validate --config <file>\n  config normalize --config <file> [--output <file>] [--force]\n  config show --config <file>\n\nRun 'tool list' to enumerate all 22 toolbox CLI names; the full toolbox grammar is documented in the user guide. A real run, toolbox mutation, or update restore requires an already elevated administrator console; RZhuangJi never auto-elevates public CLI commands. Install/backup/restore/toolbox run also requires --yes, while install/backup/restore run --dry-run is read-only. Install generation supports image/image-backing paths; explicit --install-mode reinstall_partition|repartition_all_disks|dual_boot; current-session --confirmed-disk-numbers only for full-disk mode; --dual-boot-size-gib only for dual-boot mode; format/repair/unattended/auto-reboot; driver action; boot/PCA; built-in Administrator non-secret fields; advanced options including VMware Tools and guarded Windows 7 USB3/NVMe/storage/UEFI controls; --inherit-app-install-prefs true|false; comma-separated stable v4 IDs through --preinstalled-software-ids; and disposable-VM terminal power-off through --automation-shutdown-on-terminal true|false. Passwords, Wi-Fi credentials, and BitLocker unlock secrets are never accepted on the command line; BitLocker CLI unlock reads its secret only from stdin, while GUI export may place supported secrets only in protected, redacted JSON. Driver action is the only driver-export/import selector unless GUI preferences are explicitly inherited. Backup schema/generation supports --execution-mode auto|direct|via_pe, --output-policy create|replace|append, and --auto-reboot true|false. Restore schema/generation supports --image-index (positive integer, default 1) and --auto-reboot true|false; restore always runs through PE and only accepts .wim/.esd backup images. Feature-gated unsafe combinations fail closed. Backup incremental booleans and SWM/GHO output formats are rejected. Boolean option values accept only true|false. Final results are one JSON object on stdout; sanitized progress is JSON Lines on stderr. Interactive prompting occurs only with --interactive."
 }
 
 #[cfg(test)]
@@ -1369,6 +1463,55 @@ mod tests {
     }
 
     #[test]
+    fn restore_commands_parse_like_backup_commands() {
+        let value = parse(&args(&["lr", "restore", "plan", "--config", "a.json"]))
+            .unwrap()
+            .unwrap();
+        assert!(matches!(
+            value,
+            Invocation::Restore {
+                action: Action::Plan,
+                dry_run: false,
+                yes: false,
+                ..
+            }
+        ));
+        let value = parse(&args(&[
+            "lr",
+            "restore",
+            "run",
+            "--config",
+            "a.json",
+            "--yes",
+        ]))
+        .unwrap()
+        .unwrap();
+        assert!(matches!(
+            value,
+            Invocation::Restore {
+                action: Action::Run,
+                yes: true,
+                ..
+            }
+        ));
+        assert!(is_run_request(&args(&[
+            "lr", "restore", "run", "--config", "a.json", "--yes"
+        ])));
+        assert!(is_destructive_run_request(&args(&[
+            "lr", "restore", "run", "--config", "a.json", "--yes"
+        ])));
+        assert!(!is_destructive_run_request(&args(&[
+            "lr",
+            "restore",
+            "run",
+            "--config",
+            "a.json",
+            "--yes",
+            "--dry-run"
+        ])));
+    }
+
+    #[test]
     fn help_is_an_exact_command() {
         assert!(matches!(
             parse(&args(&["lr", "help"])).unwrap(),
@@ -1432,6 +1575,23 @@ mod tests {
         values.insert("output-policy".to_owned(), "overwrite".to_owned());
         assert!(backup_execution_mode_option(&values).is_err());
         assert!(backup_output_policy_option(&values).is_err());
+    }
+
+    #[test]
+    fn restore_generator_image_index_defaults_to_one_and_rejects_non_positive_values() {
+        let empty = BTreeMap::new();
+        assert_eq!(restore_image_index_option(&empty).unwrap(), 1);
+
+        let mut values = BTreeMap::new();
+        values.insert("image-index".to_owned(), "3".to_owned());
+        assert_eq!(restore_image_index_option(&values).unwrap(), 3);
+
+        values.insert("image-index".to_owned(), "0".to_owned());
+        assert!(restore_image_index_option(&values).is_err());
+        values.insert("image-index".to_owned(), "-1".to_owned());
+        assert!(restore_image_index_option(&values).is_err());
+        values.insert("image-index".to_owned(), "first".to_owned());
+        assert!(restore_image_index_option(&values).is_err());
     }
 
     #[test]

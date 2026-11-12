@@ -409,8 +409,8 @@ pub fn run_backup(prepared: PreparedBackup) -> Result<Value> {
     Err(anyhow!("backup worker ended without a terminal result"))
 }
 
-fn first_cached_pe_verified_summary() -> Result<Option<(crate::download::config::OnlinePE, Value)>>
-{
+pub(crate) fn first_cached_pe_verified_summary(
+) -> Result<Option<(crate::download::config::OnlinePE, Value)>> {
     let Some(entries) = crate::download::config::PeCache::load_strict()
         .context("failed to load PE cache catalog")?
     else {
@@ -454,7 +454,7 @@ fn revalidate_destination_identity(
     Ok(())
 }
 
-fn stable_digest(identity: lr_core::windows_storage::StableVolumeIdentity) -> String {
+pub(crate) fn stable_digest(identity: lr_core::windows_storage::StableVolumeIdentity) -> String {
     let digest = blake3::hash(format!("{identity:?}").as_bytes()).to_hex();
     digest[..16].to_owned()
 }

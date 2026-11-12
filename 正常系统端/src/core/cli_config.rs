@@ -27,6 +27,7 @@ pub struct CliConfig {
 pub enum CliOperation {
     Install(Box<InstallSpec>),
     Backup(BackupSpec),
+    Restore(RestoreSpec),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -232,6 +233,17 @@ pub struct BackupSpec {
     pub execution_mode: CliBackupExecutionMode,
     #[serde(default)]
     pub output_policy: CliBackupOutputPolicy,
+    #[serde(default)]
+    pub auto_reboot: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RestoreSpec {
+    pub image_path: String,
+    pub target_partition: String,
+    #[serde(default = "default_volume_index")]
+    pub image_index: u32,
     #[serde(default)]
     pub auto_reboot: bool,
 }
@@ -484,6 +496,24 @@ impl CliConfig {
                 if !actual_extension.eq_ignore_ascii_case(expected_extension) {
                     return Err(anyhow!(
                         "save_path extension must match backup format {expected_extension}"
+                    ));
+                }
+            }
+            CliOperation::Restore(spec) => {
+                spec.image_path = normalize_required_path(&spec.image_path, "image_path")?;
+                spec.target_partition = normalize_drive(&spec.target_partition)?;
+                if spec.image_index == 0 {
+                    return Err(anyhow!("image_index must be greater than zero"));
+                }
+                let actual_extension = Path::new(&spec.image_path)
+                    .extension()
+                    .and_then(|value| value.to_str())
+                    .unwrap_or_default();
+                if !actual_extension.eq_ignore_ascii_case("wim")
+                    && !actual_extension.eq_ignore_ascii_case("esd")
+                {
+                    return Err(anyhow!(
+                        "image_path extension must be .wim or .esd for restore"
                     ));
                 }
             }
@@ -1310,6 +1340,32 @@ mod tests {
         assert!(CliConfig::parse(direct_reboot).is_err());
         let wrong_extension = r#"{"schema_version":1,"operation":{"type":"backup","source_partition":"C:","save_path":"D:\\a.esd","name":"a","format":"wim"}}"#;
         assert!(CliConfig::parse(wrong_extension).is_err());
+    }
+
+    #[test]
+    fn restore_defaults_to_first_image_without_reboot() {
+        let input = r#"{"schema_version":1,"operation":{"type":"restore","image_path":"D:\\backup.wim","target_partition":"C:"}}"#;
+        let config = CliConfig::parse(input).unwrap();
+        let CliOperation::Restore(spec) = config.operation else {
+            panic!()
+        };
+        assert_eq!(spec.image_index, 1);
+        assert!(!spec.auto_reboot);
+    }
+
+    #[test]
+    fn restore_rejects_zero_index_and_non_wim_family_extensions() {
+        let zero_index = r#"{"schema_version":1,"operation":{"type":"restore","image_path":"D:\\backup.wim","target_partition":"C:","image_index":0}}"#;
+        assert!(CliConfig::parse(zero_index).is_err());
+        let ghost = r#"{"schema_version":1,"operation":{"type":"restore","image_path":"D:\\backup.gho","target_partition":"C:"}}"#;
+        assert!(CliConfig::parse(ghost).is_err());
+        let esd = r#"{"schema_version":1,"operation":{"type":"restore","image_path":"D:\\backup.esd","target_partition":"C:","image_index":2,"auto_reboot":true}}"#;
+        let config = CliConfig::parse(esd).unwrap();
+        let CliOperation::Restore(spec) = config.operation else {
+            panic!()
+        };
+        assert_eq!(spec.image_index, 2);
+        assert!(spec.auto_reboot);
     }
 
     #[test]

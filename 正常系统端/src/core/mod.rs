@@ -9,6 +9,7 @@ pub mod cli;
 pub mod cli_backup;
 pub mod cli_config;
 pub mod cli_install;
+pub mod cli_restore;
 pub mod cli_tools;
 pub mod cli_update;
 pub mod custom_install_plan;
