@@ -1,0 +1,407 @@
+{
+  "data": {
+    "pe": [
+      {
+        "download_url": "https://zhuangji.1234r.com/downloads/RZhuangJi_PE.wim",
+        "display_name": "R装机 PE",
+        "filename": "RZhuangJi_PE.wim",
+        "enabled": true,
+        "sha256": "70C58E1471C65C862CBD858D4F2B41045C1E06969104F6D8E8DB22A571A6E660",
+        "md5": "60E165849C5DF32677821C4DCDA80E9B"
+      }
+    ],
+    "system_images": [
+      {
+        "download_url": "http://dl.delivery.mp.microsoft.com/filestreamingservice/files/5078590e-2c95-4af8-b076-132d124ebda9/26300.9711.261011-1601.26h2_ge_release_svc_refresh_CLIENTCONSUMER_RET_x64FRE_zh-cn.esd",
+        "display_name": "Windows 11 26H2 消费者版",
+        "legacy_type": "Win11",
+        "filename": "26300.9711.261011-1601.26h2_ge_release_svc_refresh_CLIENTCONSUMER_RET_x64FRE_zh-cn.esd",
+        "enabled": true,
+        "os": 11
+      },
+      {
+        "download_url": "http://dl.delivery.mp.microsoft.com/filestreamingservice/files/3a9c380a-cb07-447c-b328-133fe1851c46/26300.9711.261011-1601.26h2_ge_release_svc_refresh_CLIENTBUSINESS_VOL_x64FRE_zh-cn.esd",
+        "display_name": "Windows 11 26H2 批量许可版",
+        "legacy_type": "Win11",
+        "filename": "26300.9711.261011-1601.26h2_ge_release_svc_refresh_CLIENTBUSINESS_VOL_x64FRE_zh-cn.esd",
+        "enabled": true,
+        "os": 11
+      },
+      {
+        "download_url": "http://dl.delivery.mp.microsoft.com/filestreamingservice/files/e03c7bf6-1826-4ac1-a945-ceb316fa5161/26200.7462.251207-0044.25h2_ge_release_svc_refresh_CLIENTCONSUMER_RET_x64FRE_zh-cn.esd",
+        "display_name": "Windows 11 25H2 消费者版",
+        "legacy_type": "Win11",
+        "filename": "26200.7462.251207-0044.25h2_ge_release_svc_refresh_CLIENTCONSUMER_RET_x64FRE_zh-cn.esd",
+        "enabled": true,
+        "os": 11
+      },
+      {
+        "download_url": "http://dl.delivery.mp.microsoft.com/filestreamingservice/files/87542aac-d9aa-440d-bfc4-55a25ca0aeff/26200.7462.251207-0044.25h2_ge_release_svc_refresh_CLIENTBUSINESS_VOL_x64FRE_zh-cn.esd",
+        "display_name": "Windows 11 25H2 批量许可版",
+        "legacy_type": "Win11",
+        "filename": "26200.7462.251207-0044.25h2_ge_release_svc_refresh_CLIENTBUSINESS_VOL_x64FRE_zh-cn.esd",
+        "enabled": true,
+        "os": 11
+      },
+      {
+        "download_url": "http://dl.delivery.mp.microsoft.com/filestreamingservice/files/288a1e95-e381-478d-98a6-f40b24da3e15/26100.4349.250607-1500.ge_release_svc_refresh_CLIENTCONSUMER_RET_x64FRE_zh-cn.esd",
+        "display_name": "Windows 11 24H2 专业版",
+        "legacy_type": "Win11",
+        "filename": "26100.4349.250607-1500.ge_release_svc_refresh_CLIENTCONSUMER_RET_x64FRE_zh-cn.esd",
+        "enabled": true,
+        "os": 11
+      },
+      {
+        "download_url": "http://dl.delivery.mp.microsoft.com/filestreamingservice/files/d867ac31-3ea9-4249-a867-3bd213a6ce44/22631.2861.231204-0538.23H2_NI_RELEASE_SVC_REFRESH_CLIENTCONSUMER_RET_x64FRE_zh-cn.esd",
+        "display_name": "Windows 11 23H2 消费者版",
+        "legacy_type": "Win11",
+        "filename": "22631.2861.231204-0538.23H2_NI_RELEASE_SVC_REFRESH_CLIENTCONSUMER_RET_x64FRE_zh-cn.esd",
+        "enabled": true,
+        "os": 11
+      },
+      {
+        "download_url": "http://dl.delivery.mp.microsoft.com/filestreamingservice/files/1a115876-6cee-4c10-b8f8-d49ee1b07557/22631.2861.231204-0538.23H2_NI_RELEASE_SVC_REFRESH_CLIENTBUSINESS_VOL_x64FRE_zh-cn.esd",
+        "display_name": "Windows 11 23H2 企业版",
+        "legacy_type": "Win11",
+        "filename": "22631.2861.231204-0538.23H2_NI_RELEASE_SVC_REFRESH_CLIENTBUSINESS_VOL_x64FRE_zh-cn.esd",
+        "enabled": true,
+        "os": 11
+      },
+      {
+        "download_url": "http://dl.delivery.mp.microsoft.com/filestreamingservice/files/69e12f53-2f77-4cf9-aeb2-8f95ee0a446b/22621.1702.230505-1222.ni_release_svc_refresh_CLIENTCONSUMER_RET_x64FRE_zh-cn.esd",
+        "display_name": "Windows 11 22H2 消费者版",
+        "legacy_type": "Win11",
+        "filename": "22621.1702.230505-1222.ni_release_svc_refresh_CLIENTCONSUMER_RET_x64FRE_zh-cn.esd",
+        "enabled": true,
+        "os": 11
+      },
+      {
+        "download_url": "http://dl.delivery.mp.microsoft.com/filestreamingservice/files/76e9502e-281f-4796-aff6-7af699cc4273/22621.1702.230505-1222.ni_release_svc_refresh_CLIENTBUSINESS_VOL_x64FRE_zh-cn.esd",
+        "display_name": "Windows 11 22H2 企业版",
+        "legacy_type": "Win11",
+        "filename": "22621.1702.230505-1222.ni_release_svc_refresh_CLIENTBUSINESS_VOL_x64FRE_zh-cn.esd",
+        "enabled": true,
+        "os": 11
+      },
+      {
+        "download_url": "http://dl.delivery.mp.microsoft.com/filestreamingservice/files/e53a2dce-3faa-412f-a60a-2e9cba4c6010/22000.318.211104-1236.co_release_svc_refresh_CLIENTCONSUMER_RET_x64FRE_zh-cn.esd",
+        "display_name": "Windows 11 21H2 专业版",
+        "legacy_type": "Win11",
+        "filename": "22000.318.211104-1236.co_release_svc_refresh_CLIENTCONSUMER_RET_x64FRE_zh-cn.esd",
+        "enabled": true,
+        "os": 11
+      },
+      {
+        "download_url": "http://dl.delivery.mp.microsoft.com/filestreamingservice/files/73bedbd0-f169-4f2b-82ea-e6fa078838d6/22000.318.211104-1236.co_release_svc_refresh_CLIENTBUSINESS_VOL_x64FRE_zh-cn.esd",
+        "display_name": "Windows 11 21H2 企业版",
+        "legacy_type": "Win11",
+        "filename": "22000.318.211104-1236.co_release_svc_refresh_CLIENTBUSINESS_VOL_x64FRE_zh-cn.esd",
+        "enabled": true,
+        "os": 11
+      },
+      {
+        "download_url": "http://dl.delivery.mp.microsoft.com/filestreamingservice/files/04dcfb20-5583-43e7-8be1-30501b0a1c6e/19045.3803.231204-0204.22h2_release_svc_refresh_CLIENTCONSUMER_RET_x64FRE_zh-cn.esd",
+        "display_name": "Windows 10 22H2 专业版",
+        "legacy_type": "Win10",
+        "filename": "19045.3803.231204-0204.22h2_release_svc_refresh_CLIENTCONSUMER_RET_x64FRE_zh-cn.esd",
+        "enabled": true,
+        "os": 10
+      },
+      {
+        "download_url": "http://dl.delivery.mp.microsoft.com/filestreamingservice/files/e7aa8b81-ee80-4b52-8f04-c364f0ce1af1/19044.1288.211006-0501.21h2_release_svc_refresh_CLIENTCONSUMER_RET_x64FRE_zh-cn.esd",
+        "display_name": "Windows 10 21H2 专业版",
+        "legacy_type": "Win10",
+        "filename": "19044.1288.211006-0501.21h2_release_svc_refresh_CLIENTCONSUMER_RET_x64FRE_zh-cn.esd",
+        "enabled": true,
+        "os": 10
+      },
+      {
+        "download_url": "http://dl.delivery.mp.microsoft.com/filestreamingservice/files/5f1a3f35-a4a9-4fa8-8699-32234b927160/19041.508.200907-0256.vb_release_svc_refresh_CLIENTCONSUMER_RET_x64FRE_zh-cn.esd",
+        "display_name": "Windows 10 2004 专业版",
+        "legacy_type": "Win10",
+        "filename": "19041.508.200907-0256.vb_release_svc_refresh_CLIENTCONSUMER_RET_x64FRE_zh-cn.esd",
+        "enabled": true,
+        "os": 10
+      },
+      {
+        "download_url": "http://dl.delivery.mp.microsoft.com/filestreamingservice/files/3f88ad25-f1b2-49fa-b580-fb8d1ac54ecb/18363.592.200109-2016.19h2_release_svc_refresh_CLIENTCONSUMER_RET_x64FRE_zh-cn.esd",
+        "display_name": "Windows 10 1909 专业版",
+        "legacy_type": "Win10",
+        "filename": "18363.592.200109-2016.19h2_release_svc_refresh_CLIENTCONSUMER_RET_x64FRE_zh-cn.esd",
+        "enabled": true,
+        "os": 10
+      },
+      {
+        "download_url": "http://dl.delivery.mp.microsoft.com/filestreamingservice/files/f9525f5e-75b3-430e-b304-d4dcf29577f9/18363.592.200109-2016.19h2_release_svc_refresh_CLIENTBUSINESS_VOL_x64FRE_zh-cn.esd",
+        "display_name": "Windows 10 1909 企业版",
+        "legacy_type": "Win10",
+        "filename": "18363.592.200109-2016.19h2_release_svc_refresh_CLIENTBUSINESS_VOL_x64FRE_zh-cn.esd",
+        "enabled": true,
+        "os": 10
+      },
+      {
+        "download_url": "http://dl.delivery.mp.microsoft.com/filestreamingservice/files/dbd14770-9bf7-4c72-9f15-2d0c88cbb4b3/17763.379.190312-0539.rs5_release_svc_refresh_CLIENTCONSUMER_RET_x64FRE_zh-cn.esd",
+        "display_name": "Windows 10 1809 专业版",
+        "legacy_type": "Win10",
+        "filename": "17763.379.190312-0539.rs5_release_svc_refresh_CLIENTCONSUMER_RET_x64FRE_zh-cn.esd",
+        "enabled": true,
+        "os": 10
+      },
+      {
+        "download_url": "http://fg.ds.b1.download.windowsupdate.com/c/Upgr/2017/12/16299.125.171213-1220.rs3_release_svc_refresh_clientconsumer_ret_x64fre_zh-cn_a706bd3db9fe8d00ad1df2a1ae680ee54278878d.esd",
+        "display_name": "Windows 10 1709 专业版",
+        "legacy_type": "Win10",
+        "filename": "16299.125.171213-1220.rs3_release_svc_refresh_clientconsumer_ret_x64fre_zh-cn_a706bd3db9fe8d00ad1df2a1ae680ee54278878d.esd",
+        "enabled": true,
+        "os": 10
+      },
+      {
+        "download_url": "http://fg.ds.b1.download.windowsupdate.com/d/Upgr/2017/03/15063.0.170317-1834.rs2_release_clientcombinedchina_ret_x64fre_zh-cn_edd657930252ef02b70e13060777d40ba8789142.esd",
+        "display_name": "Windows 10 1703 消费者版",
+        "legacy_type": "Win10",
+        "filename": "15063.0.170317-1834.rs2_release_clientcombinedchina_ret_x64fre_zh-cn_edd657930252ef02b70e13060777d40ba8789142.esd",
+        "enabled": true,
+        "os": 10
+      }
+    ],
+    "easy_mode": {
+      "system": [
+        {
+          "Windows 11": {
+            "os_logo": "LOGO_WINDOWS11",
+            "os_download": "http://dl.delivery.mp.microsoft.com/filestreamingservice/files/5078590e-2c95-4af8-b076-132d124ebda9/26300.9711.261011-1601.26h2_ge_release_svc_refresh_CLIENTCONSUMER_RET_x64FRE_zh-cn.esd",
+            "volume": [
+              {
+                "number": 4,
+                "name": "家庭版"
+              },
+              {
+                "number": 6,
+                "name": "教育版"
+              },
+              {
+                "number": 7,
+                "name": "专业版"
+              }
+            ]
+          },
+          "Windows 10": {
+            "os_logo": "LOGO_WINDOWS10",
+            "os_download": "http://dl.delivery.mp.microsoft.com/filestreamingservice/files/04dcfb20-5583-43e7-8be1-30501b0a1c6e/19045.3803.231204-0204.22h2_release_svc_refresh_CLIENTCONSUMER_RET_x64FRE_zh-cn.esd",
+            "volume": [
+              {
+                "number": 4,
+                "name": "家庭版"
+              },
+              {
+                "number": 6,
+                "name": "教育版"
+              },
+              {
+                "number": 7,
+                "name": "专业版"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "software": [
+      {
+        "description": "装机必备：搜索、截图、传文件、播放器、笔记与组网",
+        "id": "core",
+        "items": [
+          {
+            "description": "文件全局秒搜神器，按文件名瞬间定位全盘文件",
+            "download_url": "https://www.voidtools.com/Everything-1.4.1.1032.x64-Setup.exe",
+            "file_size": "1.9 MB",
+            "filename": "Everything-1.4.1.1032.x64-Setup.exe",
+            "id": "everything",
+            "name": "Everything",
+            "requires_admin": true,
+            "silent_command": "\"{installer}\" /S",
+            "version": "1.4.1.1032",
+            "vm_tools": false
+          },
+          {
+            "description": "截图、长截图、OCR 与贴图神器",
+            "download_url": "https://down.pixpin.cn/PixPin_win_3.5.5.1.exe",
+            "file_size": "65 MB",
+            "filename": "PixPin_win_3.5.5.1.exe",
+            "id": "pixpin",
+            "name": "PixPin",
+            "requires_admin": false,
+            "silent_command": "\"{installer}\" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART",
+            "version": "3.5.5.1",
+            "vm_tools": false
+          },
+          {
+            "description": "跨平台局域网文件互传，无需账号不走云端",
+            "download_url": "https://github.com/localsend/localsend/releases/download/v1.18.2/LocalSend-1.18.2-windows-x86-64.exe",
+            "file_size": "18 MB",
+            "filename": "LocalSend-1.18.2-windows-x86-64.exe",
+            "id": "localsend",
+            "name": "LocalSend",
+            "requires_admin": false,
+            "silent_command": "\"{installer}\" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART",
+            "version": "1.18.2",
+            "vm_tools": false
+          },
+          {
+            "description": "全能高清本地视频播放器，格式支持齐全",
+            "download_url": "https://t1.daumcdn.net/potplayer/PotPlayer/Version/Latest/PotPlayerSetup64.exe",
+            "file_size": "51 MB",
+            "filename": "PotPlayerSetup64.exe",
+            "id": "potplayer",
+            "name": "PotPlayer",
+            "requires_admin": true,
+            "silent_command": "\"{installer}\" /S",
+            "version": "latest",
+            "vm_tools": false
+          },
+          {
+            "description": "开源 AI 图片高清化与放大工具，本地离线运行",
+            "download_url": "https://github.com/upscayl/upscayl/releases/download/v2.15.0/upscayl-2.15.0-win.exe",
+            "file_size": "248 MB",
+            "filename": "upscayl-2.15.0-win.exe",
+            "id": "upscayl",
+            "name": "Upscayl",
+            "requires_admin": false,
+            "silent_command": "\"{installer}\" /S",
+            "version": "2.15.0",
+            "vm_tools": false
+          },
+          {
+            "description": "双链笔记与第二大脑知识库，本地 Markdown 存储",
+            "download_url": "https://github.com/obsidianmd/obsidian-releases/releases/download/v1.14.5/Obsidian-1.14.5.exe",
+            "file_size": "326 MB",
+            "filename": "Obsidian-1.14.5.exe",
+            "id": "obsidian",
+            "name": "Obsidian",
+            "requires_admin": false,
+            "silent_command": "\"{installer}\" /S",
+            "version": "1.14.5",
+            "vm_tools": false
+          },
+          {
+            "description": "零配置异地虚拟组网，设备间像在同一局域网",
+            "download_url": "https://pkgs.tailscale.com/stable/tailscale-setup-1.104.2-amd64.msi",
+            "file_size": "37 MB",
+            "filename": "tailscale-setup-1.104.2-amd64.msi",
+            "id": "tailscale",
+            "name": "Tailscale",
+            "requires_admin": true,
+            "silent_command": "msiexec.exe /i \"{installer}\" /qn /norestart",
+            "version": "1.104.2",
+            "vm_tools": false
+          },
+          {
+            "description": "多台电脑无缝共享一套键鼠，Synergy 精神续作",
+            "download_url": "https://github.com/deskflow/deskflow/releases/download/v1.27.0/deskflow-1.27.0-win-x64.msi",
+            "file_size": "15 MB",
+            "filename": "deskflow-1.27.0-win-x64.msi",
+            "id": "deskflow",
+            "name": "Deskflow",
+            "requires_admin": true,
+            "silent_command": "msiexec.exe /i \"{installer}\" /qn /norestart",
+            "version": "1.27.0",
+            "vm_tools": false
+          },
+          {
+            "description": "现代代码编辑器，配 AI 插件生态做自动化生产力核心",
+            "download_url": "https://update.code.visualstudio.com/latest/win32-x64/stable",
+            "file_size": "150 MB",
+            "filename": "VSCodeSetup-x64.exe",
+            "id": "vscode",
+            "name": "VS Code",
+            "requires_admin": true,
+            "silent_command": "\"{installer}\" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART",
+            "version": "latest",
+            "vm_tools": false
+          }
+        ],
+        "name": "核心效率"
+      },
+      {
+        "description": "终端、启动器、代理、下载与系统增强遗珠",
+        "id": "toolbox",
+        "items": [
+          {
+            "description": "高性能现代终端，GPU 加速渲染与多路复用",
+            "download_url": "https://github.com/wezterm/wezterm/releases/download/20240203-110809-5046fc22/WezTerm-20240203-110809-5046fc22-setup.exe",
+            "file_size": "40 MB",
+            "filename": "WezTerm-20240203-110809-5046fc22-setup.exe",
+            "id": "wezterm",
+            "name": "WezTerm",
+            "requires_admin": false,
+            "silent_command": "\"{installer}\" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART",
+            "version": "20240203-110809-5046fc22",
+            "vm_tools": false
+          },
+          {
+            "description": "弹窗文件快速定位与随处搜索，老牌效率启动器",
+            "download_url": "https://www.listary.com/download/Listary.exe",
+            "file_size": "15 MB",
+            "filename": "Listary.exe",
+            "id": "listary",
+            "name": "Listary",
+            "requires_admin": true,
+            "silent_command": "\"{installer}\" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART",
+            "version": "6.3.5.94",
+            "vm_tools": false
+          },
+          {
+            "description": "基于 Mihomo 内核的现代化代理客户端",
+            "download_url": "https://github.com/clash-verge-rev/clash-verge-rev/releases/download/v2.5.8/Clash.Verge_2.5.8_x64-setup.exe",
+            "file_size": "57 MB",
+            "filename": "Clash.Verge_2.5.8_x64-setup.exe",
+            "id": "clash-verge-rev",
+            "name": "Clash Verge Rev",
+            "requires_admin": true,
+            "silent_command": "\"{installer}\" /S",
+            "version": "2.5.8",
+            "vm_tools": false
+          },
+          {
+            "description": "微软官方极客效率外挂合集，含 FancyZones 窗口布局等",
+            "download_url": "https://github.com/microsoft/PowerToys/releases/download/v0.102.2933.0/PowerToysSetup-0.102.2933.0-x64.exe",
+            "file_size": "308 MB",
+            "filename": "PowerToysSetup-0.102.2933.0-x64.exe",
+            "id": "powertoys",
+            "name": "Microsoft PowerToys",
+            "requires_admin": true,
+            "silent_command": "\"{installer}\" /quiet /norestart",
+            "version": "0.102.2933.0",
+            "vm_tools": false
+          },
+          {
+            "description": "清爽无广告的 BT 下载利器，增强版自动屏蔽吸血客户端",
+            "download_url": "https://github.com/c0re100/qBittorrent-Enhanced-Edition/releases/download/release-5.2.4.10/qbittorrent_enhanced_5.2.4.10_x64_setup.exe",
+            "file_size": "27 MB",
+            "filename": "qbittorrent_enhanced_5.2.4.10_x64_setup.exe",
+            "id": "qbittorrent-ee",
+            "name": "qBittorrent Enhanced Edition",
+            "requires_admin": false,
+            "silent_command": "\"{installer}\" /S",
+            "version": "5.2.4.10",
+            "vm_tools": false
+          },
+          {
+            "description": "历史剪贴板无限记忆与搜索神器，复制过的都找得回",
+            "download_url": "https://github.com/sabrogden/Ditto/releases/download/3.25.113.0/DittoSetup_3_25_113_0.exe",
+            "file_size": "5 MB",
+            "filename": "DittoSetup_3_25_113_0.exe",
+            "id": "ditto",
+            "name": "Ditto",
+            "requires_admin": false,
+            "silent_command": "\"{installer}\" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART",
+            "version": "3.25.113.0",
+            "vm_tools": false
+          }
+        ],
+        "name": "效率·网络·系统"
+      }
+    ],
+    "system_image_mode": 2
+  }
+}

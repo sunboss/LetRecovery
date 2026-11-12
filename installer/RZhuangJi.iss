@@ -23,16 +23,16 @@
 
 [Setup]
 AppId={{F0B9EACD-36A4-4D12-B07E-4D0CC87B4798}
-AppName=RZhuangJi
+AppName=R装机
 AppVersion={#AppDisplayVersion}
-AppVerName=RZhuangJi {#AppDisplayVersion}
+AppVerName=R装机 {#AppDisplayVersion}
 AppPublisher=中邦智能
 AppPublisherURL=https://www.1234r.com/
 AppSupportURL=https://www.1234r.com/
 AppUpdatesURL=https://www.1234r.com/
 AppCopyright=© 2026-present 中邦智能
 DefaultDirName={autopf}\RZhuangJi
-DefaultGroupName=RZhuangJi
+DefaultGroupName=R装机
 DisableProgramGroupPage=yes
 AllowNoIcons=yes
 LicenseFile=LICENSE.zh-CN.txt
@@ -45,7 +45,7 @@ OutputBaseFilename=RZhuangJi-Setup-x64
 #endif
 SetupIconFile={#AppIcon}
 UninstallDisplayIcon={app}\RZhuangJi.exe
-UninstallDisplayName=RZhuangJi
+UninstallDisplayName=R装机
 PrivilegesRequired=admin
 #if Arch == "x86"
 ArchitecturesAllowed=x86compatible
@@ -73,8 +73,8 @@ ShowLanguageDialog=no
 LanguageDetectionMethod=uilanguage
 VersionInfoVersion={#AppVersion}
 VersionInfoCompany=中邦智能
-VersionInfoDescription=RZhuangJi安装包
-VersionInfoProductName=RZhuangJi
+VersionInfoDescription=R装机安装包
+VersionInfoProductName=R装机
 VersionInfoProductVersion={#AppDisplayVersion}
 VersionInfoCopyright=© 2026-present 中邦智能
 
@@ -95,12 +95,12 @@ Source: "{#SourceDir}\*"; DestDir: "{app}"; Excludes: "config.json"; Flags: igno
 Source: "{#SourceDir}\config.json"; DestDir: "{app}"; Flags: onlyifdoesntexist
 
 [Icons]
-Name: "{group}\RZhuangJi"; Filename: "{app}\RZhuangJi.exe"; WorkingDir: "{app}"
-Name: "{group}\卸载 RZhuangJi"; Filename: "{uninstallexe}"
-Name: "{autodesktop}\RZhuangJi"; Filename: "{app}\RZhuangJi.exe"; WorkingDir: "{app}"; Tasks: desktopicon
+Name: "{group}\R装机"; Filename: "{app}\RZhuangJi.exe"; WorkingDir: "{app}"
+Name: "{group}\卸载 R装机"; Filename: "{uninstallexe}"
+Name: "{autodesktop}\R装机"; Filename: "{app}\RZhuangJi.exe"; WorkingDir: "{app}"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\RZhuangJi.exe"; Description: "启动 RZhuangJi"; WorkingDir: "{app}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\RZhuangJi.exe"; Description: "启动 R装机"; WorkingDir: "{app}"; Flags: nowait postinstall skipifsilent
 
 [UninstallDelete]
 Type: files; Name: "{app}\config.json"
