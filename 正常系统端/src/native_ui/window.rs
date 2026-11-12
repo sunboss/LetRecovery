@@ -13562,7 +13562,7 @@ impl NativeWindow {
             if let Some(page) = &mut self.progress_page {
                 let mut state = page.state().clone();
                 match message {
-                    RestoreWorkerMessage::Started { .. } => {
+                    RestoreWorkerMessage::Started => {
                         state.current_step = crate::tr!("还原任务已启动");
                         state.status_text = crate::tr!("正在准备还原");
                     }
