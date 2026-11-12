@@ -48,10 +48,7 @@ impl PeWorkflowJournal {
         Ok(())
     }
 
-    pub(crate) fn observe_restore_step(
-        &mut self,
-        step: RestoreStep,
-    ) -> Result<(), OperationError> {
+    pub(crate) fn observe_restore_step(&mut self, step: RestoreStep) -> Result<(), OperationError> {
         self.journal
             .observe_step(restore_step_id(step), unix_time_millis())?;
         Ok(())

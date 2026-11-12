@@ -190,9 +190,7 @@ fn progress_window_style() -> WINDOW_STYLE {
 fn preferred_progress_height(operation_type: OperationType) -> i32 {
     match operation_type {
         OperationType::Backup => BACKUP_PREFERRED_HEIGHT,
-        OperationType::Install | OperationType::Expand | OperationType::Restore => {
-            PREFERRED_HEIGHT
-        }
+        OperationType::Install | OperationType::Expand | OperationType::Restore => PREFERRED_HEIGHT,
     }
 }
 

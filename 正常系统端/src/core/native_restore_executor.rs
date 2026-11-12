@@ -19,9 +19,7 @@ use crate::core::dism::Dism;
 #[cfg(not(feature = "non-elevated-tests"))]
 use crate::core::install_config::ConfigFileManager;
 #[cfg(not(feature = "non-elevated-tests"))]
-use crate::core::native_backup_executor::{
-    require_verified_cached_pe, strict_bitlocker_status,
-};
+use crate::core::native_backup_executor::{require_verified_cached_pe, strict_bitlocker_status};
 #[cfg(not(feature = "non-elevated-tests"))]
 use std::sync::mpsc::{self, Sender};
 
@@ -122,8 +120,9 @@ fn authorize_restore_intent(
         ));
     }
 
-    let image_layout = lr_core::windows_storage::disk_layout_snapshot(image_identity.extent.disk_number)
-        .map_err(|error| format!("snapshot restore image disk: {error}"))?;
+    let image_layout =
+        lr_core::windows_storage::disk_layout_snapshot(image_identity.extent.disk_number)
+            .map_err(|error| format!("snapshot restore image disk: {error}"))?;
     let target_layout =
         lr_core::windows_storage::disk_layout_snapshot(target_identity.extent.disk_number)
             .map_err(|error| format!("snapshot restore target disk: {error}"))?;
@@ -275,12 +274,11 @@ fn run_pe_handoff(
             .ok_or_else(|| {
                 RestoreRunError::Failed("restore image has no local drive".to_owned())
             })?;
-    let current_image = lr_core::windows_storage::stable_volume_identity(image_letter)
-        .map_err(|error| {
+    let current_image =
+        lr_core::windows_storage::stable_volume_identity(image_letter).map_err(|error| {
             RestoreRunError::Failed(format!("recheck restore image volume: {error}"))
         })?;
-    if !lr_core::windows_storage::same_stable_volume_identity(authorization.image, current_image)
-    {
+    if !lr_core::windows_storage::same_stable_volume_identity(authorization.image, current_image) {
         return Err(RestoreRunError::Failed(
             "restore image drive letter changed before handoff".to_owned(),
         ));
@@ -290,22 +288,20 @@ fn run_pe_handoff(
             .ok_or_else(|| {
                 RestoreRunError::Failed("restore target has no local drive".to_owned())
             })?;
-    let current_target = lr_core::windows_storage::stable_volume_identity(target_letter)
-        .map_err(|error| {
+    let current_target =
+        lr_core::windows_storage::stable_volume_identity(target_letter).map_err(|error| {
             RestoreRunError::Failed(format!("recheck restore target volume: {error}"))
         })?;
-    if !lr_core::windows_storage::same_stable_volume_identity(
-        authorization.target,
-        current_target,
-    ) {
+    if !lr_core::windows_storage::same_stable_volume_identity(authorization.target, current_target)
+    {
         return Err(RestoreRunError::Failed(
             "restore target drive letter changed before authenticated handoff".to_owned(),
         ));
     }
     let image_status =
         strict_bitlocker_status(&format!("{}:", image_letter)).map_err(RestoreRunError::Failed)?;
-    let target_status = strict_bitlocker_status(&format!("{}:", target_letter))
-        .map_err(RestoreRunError::Failed)?;
+    let target_status =
+        strict_bitlocker_status(&format!("{}:", target_letter)).map_err(RestoreRunError::Failed)?;
     let known_via_pe_status = |status| {
         matches!(
             status,

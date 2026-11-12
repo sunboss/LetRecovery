@@ -61,9 +61,7 @@ impl std::fmt::Display for RestorePlanningError {
             }
             Self::TargetPartitionMissing => formatter.write_str("还原目标分区不能为空"),
             Self::InvalidImageIndex => formatter.write_str("映像索引必须从 1 开始"),
-            Self::PeUnavailable => {
-                formatter.write_str(&crate::tr!("系统还原需要可用的 PE 环境。"))
-            }
+            Self::PeUnavailable => formatter.write_str(&crate::tr!("系统还原需要可用的 PE 环境。")),
         }
     }
 }

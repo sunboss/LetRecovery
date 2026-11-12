@@ -323,16 +323,14 @@ mod tests {
             VolumeStatus::EncryptedUnlocked,
         )
         .is_ok());
-        assert!(validate_bitlocker_for_restore(
-            VolumeStatus::Unknown,
-            VolumeStatus::NotEncrypted,
-        )
-        .is_err());
-        assert!(validate_bitlocker_for_restore(
-            VolumeStatus::NotEncrypted,
-            VolumeStatus::Unknown,
-        )
-        .is_err());
+        assert!(
+            validate_bitlocker_for_restore(VolumeStatus::Unknown, VolumeStatus::NotEncrypted,)
+                .is_err()
+        );
+        assert!(
+            validate_bitlocker_for_restore(VolumeStatus::NotEncrypted, VolumeStatus::Unknown,)
+                .is_err()
+        );
     }
 
     #[test]

@@ -1975,17 +1975,12 @@ impl ConfigFileManager {
                 if config.image_index != handoff.image_index {
                     bail!("restore config image index does not match its LRRH2 authorization");
                 }
-                if manifest
-                    .artifacts
-                    .iter()
-                    .any(|record| {
-                        !matches!(
-                            record.role,
-                            ArtifactRole::RestoreImage
-                                | ArtifactRole::ProtectedBitLockerSecret
-                        )
-                    })
-                {
+                if manifest.artifacts.iter().any(|record| {
+                    !matches!(
+                        record.role,
+                        ArtifactRole::RestoreImage | ArtifactRole::ProtectedBitLockerSecret
+                    )
+                }) {
                     bail!("restore handoff contains an unsupported artifact role");
                 }
                 let images = manifest

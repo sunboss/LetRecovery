@@ -261,7 +261,9 @@ pub fn execute_run_args(args: &[String]) -> Option<i32> {
 }
 
 pub fn administrator_required() -> i32 {
-    administrator_required_for("install/backup/restore/toolbox run, BitLocker key read, or update restore")
+    administrator_required_for(
+        "install/backup/restore/toolbox run, BitLocker key read, or update restore",
+    )
 }
 
 pub fn administrator_required_for(command: &str) -> i32 {
@@ -1477,12 +1479,7 @@ mod tests {
             }
         ));
         let value = parse(&args(&[
-            "lr",
-            "restore",
-            "run",
-            "--config",
-            "a.json",
-            "--yes",
+            "lr", "restore", "run", "--config", "a.json", "--yes",
         ]))
         .unwrap()
         .unwrap();

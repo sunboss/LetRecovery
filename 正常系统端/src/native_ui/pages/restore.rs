@@ -18,10 +18,9 @@ use windows::Win32::UI::Controls::{
 };
 use windows::Win32::UI::Input::KeyboardAndMouse::EnableWindow;
 use windows::Win32::UI::WindowsAndMessaging::{
-    CreateWindowExW, GetWindowTextLengthW, GetWindowTextW, SendMessageW, ShowWindow,
-    BS_OWNERDRAW, CBS_DROPDOWNLIST, CB_ADDSTRING, CB_GETCURSEL, CB_RESETCONTENT, CB_SETCURSEL,
-    ES_AUTOHSCROLL, HMENU, SW_HIDE, SW_SHOW, WINDOW_EX_STYLE, WINDOW_STYLE, WM_SETFONT, WS_CHILD,
-    WS_TABSTOP,
+    CreateWindowExW, GetWindowTextLengthW, GetWindowTextW, SendMessageW, ShowWindow, BS_OWNERDRAW,
+    CBS_DROPDOWNLIST, CB_ADDSTRING, CB_GETCURSEL, CB_RESETCONTENT, CB_SETCURSEL, ES_AUTOHSCROLL,
+    HMENU, SW_HIDE, SW_SHOW, WINDOW_EX_STYLE, WINDOW_STYLE, WM_SETFONT, WS_CHILD, WS_TABSTOP,
 };
 
 use super::super::controls::{child, move_layout_window as MoveWindow, wide};
@@ -66,9 +65,7 @@ impl std::fmt::Display for RestoreValidationError {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::ImagePathRequired => formatter.write_str(&crate::tr!("请选择备份镜像文件")),
-            Self::ImageEntryRequired => {
-                formatter.write_str(&crate::tr!("请选择要还原的映像"))
-            }
+            Self::ImageEntryRequired => formatter.write_str(&crate::tr!("请选择要还原的映像")),
             Self::TargetPartitionRequired => {
                 formatter.write_str(&crate::tr!("请选择要还原到的分区"))
             }
@@ -135,10 +132,7 @@ impl RestorePageState {
     }
 }
 
-pub fn target_warning_text(
-    partitions: &[BackupPartitionRow],
-    selected: Option<usize>,
-) -> String {
+pub fn target_warning_text(partitions: &[BackupPartitionRow], selected: Option<usize>) -> String {
     match selected.and_then(|index| partitions.get(index)) {
         Some(partition) if !partition.has_windows => {
             crate::tr!("所选分区似乎没有 Windows 系统")
@@ -343,10 +337,22 @@ impl RestorePage {
 
         let image_top = top;
         let label_y = centered_control_y_ceil(image_top, row_height, metrics.label_height);
-        move_control(h.image_label, left, label_y, label_width, metrics.label_height);
+        move_control(
+            h.image_label,
+            left,
+            label_y,
+            label_width,
+            metrics.label_height,
+        );
         let browse_width = s(88);
         let edit_width = (width - label_width - browse_width - s(8)).max(0);
-        move_control(h.image_path, left + label_width, image_top, edit_width, row_height);
+        move_control(
+            h.image_path,
+            left + label_width,
+            image_top,
+            edit_width,
+            row_height,
+        );
         move_control(
             h.browse,
             left + label_width + edit_width + s(8),
@@ -441,13 +447,8 @@ impl RestorePage {
             LPARAM(LVIS_SELECTED.0 as isize),
         )
         .0;
-        let combo_index = SendMessageW(
-            self.handles.image_list,
-            CB_GETCURSEL,
-            WPARAM(0),
-            LPARAM(0),
-        )
-        .0;
+        let combo_index =
+            SendMessageW(self.handles.image_list, CB_GETCURSEL, WPARAM(0), LPARAM(0)).0;
         let image_index = (combo_index >= 0)
             .then(|| {
                 self.images

@@ -70,7 +70,6 @@ use super::pages::advanced::{
 use super::pages::backup::{
     localized_backup_defaults, BackupPage, BackupPageState, BackupPartitionRow,
 };
-use super::pages::restore::{RestorePage, RestorePageState};
 use super::pages::download::{
     DownloadIntent, DownloadLabels, DownloadPage, DownloadTab, PageRect, ID_RESOURCE_LIST,
     ID_SOFTWARE_CATEGORIES,
@@ -84,6 +83,7 @@ use super::pages::progress::{
     DownloadCompletionAction, LongTaskProgress, ProgressCompletion, ProgressIntent, ProgressPage,
     ProgressStatus, ProgressValue, ID_CANCEL_OPERATION, ID_PROGRESS_PRIMARY, ID_PROGRESS_SECONDARY,
 };
+use super::pages::restore::{RestorePage, RestorePageState};
 use super::pages::tools::{ToolIntent, ToolLabels, ToolsPage};
 use super::preinstall_dialog::{NativePreinstallDialog, PreinstallDialogIntent};
 use super::redraw;
@@ -126,12 +126,6 @@ use crate::core::native_bitlocker_gate::{
     plan_restore_locked_volumes, validate_credential, BitLockerCredential as GateCredential,
     BitLockerVolumeSnapshot,
 };
-use crate::core::native_restore_controller::{
-    plan_restore_launch, PeRestorePreparationIntent,
-};
-use crate::core::native_restore_executor::{
-    execute_restore, RestoreExecution, RestoreWorkerMessage,
-};
 use crate::core::native_download_controller::{
     CatalogueState, ControllerIntent, DownloadAction, NativeDownloadController, ResourceCategory,
     SoftwareArchitecture,
@@ -154,6 +148,10 @@ use crate::core::native_install_controller::{
 use crate::core::native_install_executor::{
     BitLockerRequirement, InstallExecutionContext, InstallExecutionEvent, NativeInstallExecutor,
     StableTargetIdentity,
+};
+use crate::core::native_restore_controller::{plan_restore_launch, PeRestorePreparationIntent};
+use crate::core::native_restore_executor::{
+    execute_restore, RestoreExecution, RestoreWorkerMessage,
 };
 use crate::core::native_tool_backend::{
     NativeToolBackend, NativeToolBackendRequest, NativeToolBackendResult,
@@ -4166,11 +4164,7 @@ impl NativeWindow {
         backup.apply_theme(self.palette);
         self.backup_page = Some(backup);
 
-        let restore = RestorePage::create(
-            hwnd,
-            &backup_rows,
-            &RestorePageState::default(),
-        )?;
+        let restore = RestorePage::create(hwnd, &backup_rows, &RestorePageState::default())?;
         restore.apply_font(self.font);
         restore.apply_theme(self.palette);
         self.restore_page = Some(restore);
@@ -6908,12 +6902,10 @@ impl NativeWindow {
                     .images()
                     .iter()
                     .enumerate()
-                    .map(|(offset, image)| {
-                        super::pages::restore::RestoreImageEntry {
-                            index: offset as u32 + 1,
-                            name: image.name.clone(),
-                            description: image.description.clone(),
-                        }
+                    .map(|(offset, image)| super::pages::restore::RestoreImageEntry {
+                        index: offset as u32 + 1,
+                        name: image.name.clone(),
+                        description: image.description.clone(),
                     })
                     .collect::<Vec<_>>()
             })
@@ -13150,7 +13142,7 @@ impl NativeWindow {
             self.pending_remote_install = None;
             self.pending_install_after_pe_download = None;
             self.pending_backup_after_pe_download = None;
-                    self.pending_restore_after_pe_download = None;
+            self.pending_restore_after_pe_download = None;
             self.pending_expand_after_pe_download = None;
             self.download_follow_up = None;
             state.status = ProgressStatus::Failed;

@@ -10,11 +10,11 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
-use anyhow::{Context, Result, bail};
+use anyhow::{bail, Context, Result};
 use sha2::Digest;
 
 use crate::backup_handoff::{parse_volume, serialize_volume, validate_relative_output_path};
-use crate::install_handoff::{CanonicalInstallTargetV2, encode_hex, unique_canonical_target_match};
+use crate::install_handoff::{encode_hex, unique_canonical_target_match, CanonicalInstallTargetV2};
 use crate::windows_storage::DiskLayoutSnapshot;
 
 pub const RESTORE_HANDOFF_VERSION: u8 = 2;
