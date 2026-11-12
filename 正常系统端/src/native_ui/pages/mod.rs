@@ -4,4 +4,5 @@ pub mod download;
 pub mod easy_mode;
 pub mod info;
 pub mod progress;
+pub mod restore;
 pub mod tools;

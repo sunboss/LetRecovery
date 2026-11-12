@@ -70,6 +70,7 @@ use super::pages::advanced::{
 use super::pages::backup::{
     localized_backup_defaults, BackupPage, BackupPageState, BackupPartitionRow,
 };
+use super::pages::restore::{RestorePage, RestorePageState};
 use super::pages::download::{
     DownloadIntent, DownloadLabels, DownloadPage, DownloadTab, PageRect, ID_RESOURCE_LIST,
     ID_SOFTWARE_CATEGORIES,
@@ -121,8 +122,15 @@ use crate::core::cli_config::{
 use crate::core::native_backup_controller::{plan_backup_launch, BackupLaunchIntent};
 use crate::core::native_backup_executor::{execute_backup, BackupExecution, BackupWorkerMessage};
 use crate::core::native_bitlocker_gate::{
-    execute_unlock, plan_backup_locked_volumes, plan_install_locked_volumes, validate_credential,
-    BitLockerCredential as GateCredential, BitLockerVolumeSnapshot,
+    execute_unlock, plan_backup_locked_volumes, plan_install_locked_volumes,
+    plan_restore_locked_volumes, validate_credential, BitLockerCredential as GateCredential,
+    BitLockerVolumeSnapshot,
+};
+use crate::core::native_restore_controller::{
+    plan_restore_launch, PeRestorePreparationIntent,
+};
+use crate::core::native_restore_executor::{
+    execute_restore, RestoreExecution, RestoreWorkerMessage,
 };
 use crate::core::native_download_controller::{
     CatalogueState, ControllerIntent, DownloadAction, NativeDownloadController, ResourceCategory,
@@ -275,6 +283,7 @@ const WM_AUTO_IMAGE_DISCOVERY_READY: u32 = 0x8008;
 const WM_EASY_CATALOGUE_READY: u32 = 0x8009;
 const WM_REMOTE_IMAGE_INFO_READY: u32 = 0x800a;
 const BACKUP_TIMER_ID: usize = 1;
+const RESTORE_TIMER_ID: usize = 11;
 const DOWNLOAD_TIMER_ID: usize = 2;
 const INSTALL_TIMER_ID: usize = 3;
 const TOOL_DIALOG_TIMER_ID: usize = 4;
@@ -1212,6 +1221,7 @@ fn classify_stable_target_probe(
 enum PendingBitLockerIntent {
     Install(Box<crate::core::native_install_controller::StartInstallIntent>),
     Backup(Box<BackupLaunchIntent>),
+    Restore(Box<PeRestorePreparationIntent>),
 }
 
 impl PendingBitLockerIntent {
@@ -1234,6 +1244,11 @@ impl PendingBitLockerIntent {
                 };
                 plan_backup_locked_volumes(source, &volumes)
             }
+            Self::Restore(intent) => plan_restore_locked_volumes(
+                intent.config.image_path.get(..2).unwrap_or_default(),
+                &intent.config.target_partition,
+                &volumes,
+            ),
         }
     }
 }
@@ -1381,11 +1396,12 @@ const fn effective_easy_mode_enabled(configured: bool, is_pe_environment: bool) 
     configured && !is_pe_environment
 }
 
-const fn navigation_visibility(easy_mode_enabled: bool, progress_visible: bool) -> [bool; 6] {
+const fn navigation_visibility(easy_mode_enabled: bool, progress_visible: bool) -> [bool; 7] {
     if progress_visible {
-        [false; 6]
+        [false; 7]
     } else {
         [
+            true,
             true,
             true,
             !easy_mode_enabled,
@@ -1987,13 +2003,13 @@ mod layout_tests {
     fn easy_mode_navigation_hides_download_and_tools_without_leaving_other_rows_hidden() {
         assert_eq!(
             navigation_visibility(false, false),
-            [true, true, true, true, true, true]
+            [true, true, true, true, true, true, true]
         );
         assert_eq!(
             navigation_visibility(true, false),
-            [true, true, false, false, true, true]
+            [true, true, true, false, false, true, true]
         );
-        assert_eq!(navigation_visibility(true, true), [false; 6]);
+        assert_eq!(navigation_visibility(true, true), [false; 7]);
     }
 
     #[test]
@@ -2685,6 +2701,7 @@ mod layout_tests {
 
 const ID_NAV_INSTALL: u16 = 100;
 const ID_NAV_BACKUP: u16 = 101;
+const ID_NAV_RESTORE: u16 = 106;
 const ID_NAV_DOWNLOAD: u16 = 102;
 const ID_NAV_TOOLS: u16 = 103;
 const ID_NAV_HARDWARE: u16 = 104;
@@ -2737,6 +2754,7 @@ const fn command_button_role(id: u16) -> ButtonRole {
 enum Page {
     Install,
     Backup,
+    Restore,
     Download,
     Tools,
     Hardware,
@@ -2772,6 +2790,7 @@ fn active_layout_surface(
 enum PrimaryStateRefresh {
     Install,
     Backup,
+    Restore,
     None,
 }
 
@@ -2785,6 +2804,7 @@ const fn primary_state_refresh_for_page(page: Page) -> PrimaryStateRefresh {
     match page {
         Page::Install => PrimaryStateRefresh::Install,
         Page::Backup => PrimaryStateRefresh::Backup,
+        Page::Restore => PrimaryStateRefresh::Restore,
         Page::Download | Page::Tools | Page::Hardware | Page::About => PrimaryStateRefresh::None,
     }
 }
@@ -2838,7 +2858,7 @@ fn remote_image_chrome_for_page(
 #[derive(Clone, Copy)]
 struct Handles {
     brand: HWND,
-    nav: [HWND; 6],
+    nav: [HWND; 7],
     title: HWND,
     description: HWND,
     image_label: HWND,
@@ -2940,6 +2960,7 @@ struct NativeWindow {
     pca_target_detection_pending: bool,
     pca_target_detection_error: Option<String>,
     backup_page: Option<BackupPage>,
+    restore_page: Option<RestorePage>,
     download_page: Option<DownloadPage>,
     download_controller: NativeDownloadController,
     machine_environment: MachineEnvironment,
@@ -2954,6 +2975,7 @@ struct NativeWindow {
     pending_install_after_pe_download:
         Option<crate::core::native_install_controller::StartInstallIntent>,
     pending_backup_after_pe_download: Option<BackupLaunchIntent>,
+    pending_restore_after_pe_download: Option<PeRestorePreparationIntent>,
     pending_expand_after_pe_download: Option<ExpandCRequest>,
     expand_from_quick_partition: bool,
     pending_bitlocker_gate: Option<PendingBitLockerGate>,
@@ -2966,6 +2988,7 @@ struct NativeWindow {
     progress_visible: bool,
     close_after_task: bool,
     backup_execution: Option<BackupExecution>,
+    restore_execution: Option<RestoreExecution>,
     download_worker: Option<DownloadWorker>,
     download_follow_up: Option<crate::core::native_download_controller::DownloadCompletion>,
     install_messages: Option<Receiver<InstallWorkerMessage>>,
@@ -3176,6 +3199,7 @@ impl NativeWindow {
             pca_target_detection_pending: false,
             pca_target_detection_error: None,
             backup_page: None,
+            restore_page: None,
             download_page: None,
             download_controller,
             machine_environment,
@@ -3189,6 +3213,7 @@ impl NativeWindow {
             pending_remote_install: None,
             pending_install_after_pe_download: None,
             pending_backup_after_pe_download: None,
+            pending_restore_after_pe_download: None,
             pending_expand_after_pe_download: None,
             expand_from_quick_partition: false,
             pending_bitlocker_gate: None,
@@ -3201,6 +3226,7 @@ impl NativeWindow {
             progress_visible: false,
             close_after_task: false,
             backup_execution: None,
+            restore_execution: None,
             download_worker: None,
             download_follow_up: None,
             install_messages: None,
@@ -3323,6 +3349,7 @@ impl NativeWindow {
 
     fn has_active_long_task(&self) -> bool {
         self.backup_execution.is_some()
+            || self.restore_execution.is_some()
             || self.download_worker.is_some()
             || self.install_messages.is_some()
             || self.expand_c_execution.is_some()
@@ -3335,6 +3362,9 @@ impl NativeWindow {
         }
         self.close_after_task = true;
         if let Some(execution) = &self.backup_execution {
+            execution.request_cancel();
+        }
+        if let Some(execution) = &self.restore_execution {
             execution.request_cancel();
         }
         if let Some(worker) = &self.download_worker {
@@ -3436,6 +3466,7 @@ impl NativeWindow {
         let nav_labels = [
             crate::tr!("系统安装"),
             crate::tr!("系统备份"),
+            crate::tr!("系统还原"),
             crate::tr!("在线下载"),
             crate::tr!("工具箱"),
             crate::tr!("硬件信息"),
@@ -3444,12 +3475,13 @@ impl NativeWindow {
         let nav_ids = [
             ID_NAV_INSTALL,
             ID_NAV_BACKUP,
+            ID_NAV_RESTORE,
             ID_NAV_DOWNLOAD,
             ID_NAV_TOOLS,
             ID_NAV_HARDWARE,
             ID_NAV_ABOUT,
         ];
-        let mut nav = [HWND::default(); 6];
+        let mut nav = [HWND::default(); 7];
         for (index, (label, id)) in nav_labels.into_iter().zip(nav_ids).enumerate() {
             nav[index] = child(
                 hwnd,
@@ -4134,6 +4166,15 @@ impl NativeWindow {
         backup.apply_theme(self.palette);
         self.backup_page = Some(backup);
 
+        let restore = RestorePage::create(
+            hwnd,
+            &backup_rows,
+            &RestorePageState::default(),
+        )?;
+        restore.apply_font(self.font);
+        restore.apply_theme(self.palette);
+        self.restore_page = Some(restore);
+
         let advanced = AdvancedPage::create(
             hwnd,
             &self.app_config.install_prefs.advanced_options,
@@ -4380,6 +4421,9 @@ impl NativeWindow {
             self.backup_page
                 .as_ref()
                 .map(|page| page.handles().source_list),
+            self.restore_page
+                .as_ref()
+                .map(|page| page.handles().target_list),
             self.download_page.as_ref().map(|page| page.resources),
             self.hardware_page.as_ref().map(|page| page.report),
         ]
@@ -4410,6 +4454,9 @@ impl NativeWindow {
             LPARAM(control_palette.text.0 as isize),
         );
         if let Some(page) = &self.backup_page {
+            page.apply_theme(control_palette);
+        }
+        if let Some(page) = &self.restore_page {
             page.apply_theme(control_palette);
         }
         if let Some(page) = &self.advanced_page {
@@ -4592,6 +4639,9 @@ impl NativeWindow {
             );
         }
         if let Some(page) = &self.backup_page {
+            page.apply_font(self.font);
+        }
+        if let Some(page) = &self.restore_page {
             page.apply_font(self.font);
         }
         if let Some(page) = &self.download_page {
@@ -5276,6 +5326,11 @@ impl NativeWindow {
                     page.layout(content_left, page_top, content_width, self.dpi);
                 }
             }
+            ActiveLayoutSurface::Standard(Page::Restore) => {
+                if let Some(page) = &self.restore_page {
+                    page.layout(content_left, page_top, content_width, self.dpi);
+                }
+            }
             ActiveLayoutSurface::Standard(Page::Download) => {
                 if let Some(page) = &self.download_page {
                     page.layout(page_rect, self.dpi);
@@ -5541,6 +5596,7 @@ impl NativeWindow {
             for (page, name) in [
                 (Page::Install, "install"),
                 (Page::Backup, "backup"),
+                (Page::Restore, "restore"),
                 (Page::Download, "download"),
                 (Page::Tools, "tools"),
                 (Page::Hardware, "hardware"),
@@ -5843,6 +5899,11 @@ impl NativeWindow {
                 crate::tr!("选择源分区、保存位置和备份格式。"),
                 crate::tr!("开始备份"),
             ),
+            Page::Restore => (
+                crate::tr!("系统还原"),
+                crate::tr!("选择备份镜像、映像和要还原到的分区。"),
+                crate::tr!("开始还原"),
+            ),
             Page::Download => (
                 crate::tr!("在线下载"),
                 crate::tr!("下载 Windows 镜像、驱动和常用软件。"),
@@ -5948,6 +6009,9 @@ impl NativeWindow {
         if let Some(backup) = &self.backup_page {
             backup.show(page == Page::Backup);
         }
+        if let Some(restore) = &self.restore_page {
+            restore.show(page == Page::Restore);
+        }
         if let Some(download) = &self.download_page {
             download.show(page == Page::Download);
         }
@@ -5975,6 +6039,7 @@ impl NativeWindow {
         match primary_state_refresh_for_page(page) {
             PrimaryStateRefresh::Install => self.update_install_primary_state(),
             PrimaryStateRefresh::Backup => self.update_backup_primary_state(),
+            PrimaryStateRefresh::Restore => self.update_restore_primary_state(),
             PrimaryStateRefresh::None => {}
         }
         // Firmware/boot-mode status is global machine state, so it remains visible on every page.
@@ -6332,6 +6397,30 @@ impl NativeWindow {
                     &crate::tr!("备份当前系统分区需要可用的 PE 环境。"),
                 );
             }
+        }
+        if IsWindowEnabled(handles.primary).as_bool() != enabled {
+            let _ = EnableWindow(handles.primary, enabled);
+            let _ = InvalidateRect(handles.primary, None, false);
+        }
+    }
+
+    unsafe fn update_restore_primary_state(&self) {
+        if self.page != Page::Restore {
+            return;
+        }
+        let (Some(handles), Some(page)) = (&self.handles, &self.restore_page) else {
+            return;
+        };
+        let rows = self.backup_partition_rows();
+        let state = page.read_state();
+        page.update_target_warning(&rows);
+        let mut enabled = state.validate(&rows).is_ok();
+        if enabled && self.available_pe().is_empty() {
+            enabled = false;
+            set_text(
+                page.handles().warning,
+                &crate::tr!("系统还原需要可用的 PE 环境。"),
+            );
         }
         if IsWindowEnabled(handles.primary).as_bool() != enabled {
             let _ = EnableWindow(handles.primary, enabled);
@@ -6780,6 +6869,58 @@ impl NativeWindow {
         page.set_save_path(&path.to_string_lossy(), path.exists());
     }
 
+    unsafe fn browse_for_restore(&self) {
+        let Some(page) = &self.restore_page else {
+            return;
+        };
+        let Some(path) = rfd::FileDialog::new()
+            .add_filter(crate::tr!("系统备份镜像"), &["wim", "esd"])
+            .pick_file()
+        else {
+            return;
+        };
+        page.set_image_path(&path.to_string_lossy());
+        self.refresh_restore_image_entries();
+    }
+
+    /// Re-reads the verified catalog for the image path currently on the restore page and
+    /// refills the image combo. Any read failure clears the combo so a stale entry can never
+    /// be submitted against a different file.
+    unsafe fn refresh_restore_image_entries(&self) {
+        let Some(page) = &self.restore_page else {
+            return;
+        };
+        let path = page.read_state().image_path;
+        let entries = std::path::Path::new(path.trim())
+            .extension()
+            .and_then(|extension| extension.to_str())
+            .filter(|extension| {
+                extension.eq_ignore_ascii_case("wim") || extension.eq_ignore_ascii_case("esd")
+            })
+            .and_then(|_| {
+                crate::core::dism::Dism::read_verified_backup_catalog(std::path::Path::new(
+                    path.trim(),
+                ))
+                .ok()
+            })
+            .map(|catalog| {
+                catalog
+                    .images()
+                    .iter()
+                    .enumerate()
+                    .map(|(offset, image)| {
+                        super::pages::restore::RestoreImageEntry {
+                            index: offset as u32 + 1,
+                            name: image.name.clone(),
+                            description: image.description.clone(),
+                        }
+                    })
+                    .collect::<Vec<_>>()
+            })
+            .unwrap_or_default();
+        page.set_image_entries(entries);
+    }
+
     unsafe fn handle_image_edit_changed(&mut self, hwnd: HWND) {
         if self.image_edit_programmatic_change {
             return;
@@ -7028,6 +7169,14 @@ impl NativeWindow {
             .map(PartitionSelectionKey::from)
     }
 
+    unsafe fn selected_restore_partition_key(&self) -> Option<PartitionSelectionKey> {
+        self.restore_page
+            .as_ref()
+            .and_then(|page| page.read_state().target_partition)
+            .and_then(|index| self.partitions.get(index))
+            .map(PartitionSelectionKey::from)
+    }
+
     unsafe fn apply_partition_inventory(
         &mut self,
         partitions: Vec<crate::core::disk::Partition>,
@@ -7037,6 +7186,7 @@ impl NativeWindow {
         };
         let previous_install_target = self.selected_install_partition_key(list);
         let previous_backup_source = self.selected_backup_partition_key();
+        let previous_restore_target = self.selected_restore_partition_key();
         self.partitions = partitions;
         let selected_install_target = previous_install_target
             .as_ref()
@@ -7052,6 +7202,11 @@ impl NativeWindow {
                 )
             });
         let selected_backup_source = previous_backup_source.as_ref().and_then(|key| {
+            self.partitions
+                .iter()
+                .position(|partition| key.matches(partition))
+        });
+        let selected_restore_target = previous_restore_target.as_ref().and_then(|key| {
             self.partitions
                 .iter()
                 .position(|partition| key.matches(partition))
@@ -7092,7 +7247,11 @@ impl NativeWindow {
         if let Some(page) = &self.backup_page {
             page.replace_partitions(&backup_rows, selected_backup_source);
         }
+        if let Some(page) = &self.restore_page {
+            page.replace_partitions(&backup_rows, selected_restore_target);
+        }
         self.update_backup_primary_state();
+        self.update_restore_primary_state();
         true
     }
 
@@ -9886,6 +10045,7 @@ impl NativeWindow {
         match intent {
             PendingBitLockerIntent::Install(intent) => self.start_install_execution(hwnd, *intent),
             PendingBitLockerIntent::Backup(_) => self.prepare_backup_from_page(hwnd),
+            PendingBitLockerIntent::Restore(_) => self.prepare_restore_from_page(hwnd),
         }
     }
 
@@ -10036,6 +10196,157 @@ impl NativeWindow {
             }
             Err(error) => {
                 if let Some(page) = &self.backup_page {
+                    set_text(
+                        page.handles().warning,
+                        &crate::tr!("PE 文件不可用：{}", error),
+                    );
+                }
+                true
+            }
+        }
+    }
+
+    /// Re-enters the complete restore preflight from live controls. This is used for the
+    /// initial click, after BitLocker unlock, and after a PE download so no cached intent can
+    /// bypass a fresh disk inventory, catalog check, or lock-state check.
+    unsafe fn prepare_restore_from_page(&mut self, hwnd: HWND) {
+        let Some(page) = &self.restore_page else {
+            return;
+        };
+        let warning = page.handles().warning;
+        if !self.refresh_partitions() {
+            set_text(
+                warning,
+                &crate::tr!("无法重新读取目标分区和 BitLocker 状态，还原已停止。"),
+            );
+            return;
+        }
+
+        let Some(page) = &self.restore_page else {
+            return;
+        };
+        let restore_state = page.read_state();
+        let rows = self.backup_partition_rows();
+        let entries = page.image_entries();
+        let Some(entry) = entries
+            .iter()
+            .find(|entry| entry.index == restore_state.image_index)
+        else {
+            set_text(warning, &crate::tr!("请选择要还原的映像"));
+            return;
+        };
+        let config = match restore_state.to_restore_config(
+            &rows,
+            &entry.name,
+            &entry.description,
+            self.app_config.wim_engine,
+        ) {
+            Ok(config) => config,
+            Err(error) => {
+                set_text(warning, &error.to_string());
+                return;
+            }
+        };
+        let pe = self.available_pe();
+        let plan = match plan_restore_launch(&config, pe.first()) {
+            Ok(plan) => plan,
+            Err(error) => {
+                set_text(warning, &error.to_string());
+                return;
+            }
+        };
+        set_text(warning, &crate::tr!("还原配置已通过安全验证。"));
+        log::info!(
+            "原生还原意图已生成: image={}, target={}",
+            config.image_path,
+            config.target_partition
+        );
+        let pending = PendingBitLockerIntent::Restore(Box::new(plan.intent));
+        match pending.locked_volumes(&self.partitions) {
+            Ok(locked) if !locked.is_empty() => self.begin_bitlocker_gate(hwnd, pending, locked),
+            Ok(_) => {
+                let PendingBitLockerIntent::Restore(intent) = pending else {
+                    unreachable!()
+                };
+                self.start_restore_execution(hwnd, *intent);
+            }
+            Err(error) => set_text(warning, &crate::tr!("无法检查 BitLocker 锁定卷：{}", error)),
+        }
+    }
+
+    unsafe fn start_restore_execution(&mut self, hwnd: HWND, intent: PeRestorePreparationIntent) {
+        #[cfg(not(feature = "non-elevated-tests"))]
+        if self.prepare_pe_download_for_restore(hwnd, &intent) {
+            return;
+        }
+        match execute_restore(intent) {
+            Ok(execution) => self.show_restore_progress(hwnd, execution),
+            Err(error) => {
+                if let Some(page) = &self.restore_page {
+                    set_text(
+                        page.handles().warning,
+                        &crate::tr!("无法启动还原：{}", error),
+                    );
+                }
+            }
+        }
+    }
+
+    #[cfg(not(feature = "non-elevated-tests"))]
+    unsafe fn prepare_pe_download_for_restore(
+        &mut self,
+        hwnd: HWND,
+        intent: &PeRestorePreparationIntent,
+    ) -> bool {
+        let pe = &intent.pe;
+        match crate::core::pe::PeManager::check_cached_pe(
+            &pe.filename,
+            pe.sha256.as_deref(),
+            pe.md5.as_deref(),
+        ) {
+            Ok(lr_core::cached_artifact::CachedArtifactStatus::Ready { .. }) => false,
+            Ok(lr_core::cached_artifact::CachedArtifactStatus::Missing) => {
+                let integrity = match lr_core::download_integrity::select_expected_hash(
+                    pe.sha256.as_deref(),
+                    pe.md5.as_deref(),
+                ) {
+                    Ok(value) => value,
+                    Err(error) => {
+                        if let Some(page) = &self.restore_page {
+                            set_text(
+                                page.handles().warning,
+                                &crate::tr!("PE 校验配置无效：{}", error),
+                            );
+                        }
+                        return true;
+                    }
+                };
+                let plan = crate::core::native_download_controller::DownloadPlan {
+                    url: pe.download_url.clone(),
+                    save_directory: crate::utils::path::get_pe_download_cache_dir(),
+                    filename: pe.filename.clone(),
+                    integrity,
+                    completion: crate::core::native_download_controller::DownloadCompletion::None,
+                    download_threads: self.app_config.download_threads,
+                };
+                match NativeDownloadExecutor::start(plan) {
+                    Ok(worker) => {
+                        self.pending_restore_after_pe_download = Some(intent.clone());
+                        self.show_download_progress(hwnd, worker);
+                    }
+                    Err(error) => {
+                        if let Some(page) = &self.restore_page {
+                            set_text(
+                                page.handles().warning,
+                                &crate::tr!("无法下载所需 PE 环境：{}", error),
+                            );
+                        }
+                    }
+                }
+                true
+            }
+            Err(error) => {
+                if let Some(page) = &self.restore_page {
                     set_text(
                         page.handles().warning,
                         &crate::tr!("PE 文件不可用：{}", error),
@@ -11865,6 +12176,9 @@ impl NativeWindow {
         if let Some(page) = &self.backup_page {
             page.show(false);
         }
+        if let Some(page) = &self.restore_page {
+            page.show(false);
+        }
         if let Some(page) = &self.download_page {
             page.show(false);
         }
@@ -11940,6 +12254,25 @@ impl NativeWindow {
                 cancellable: true,
             },
             BACKUP_TIMER_ID,
+        );
+    }
+
+    unsafe fn show_restore_progress(&mut self, hwnd: HWND, execution: RestoreExecution) {
+        self.restore_execution = Some(execution);
+        self.enter_progress(
+            hwnd,
+            LongTaskProgress {
+                title: crate::tr!("正在准备系统还原"),
+                description: crate::tr!("正在准备 PE 还原环境，请勿关闭程序。"),
+                current_step: crate::tr!("正在准备还原任务..."),
+                detail: String::new(),
+                overall: ProgressValue::new(0, 100),
+                step: ProgressValue::new(0, 100),
+                status: ProgressStatus::Running,
+                status_text: String::new(),
+                cancellable: true,
+            },
+            RESTORE_TIMER_ID,
         );
     }
 
@@ -12533,6 +12866,15 @@ impl NativeWindow {
                         state.cancellable = false;
                         page.update(state);
                     }
+                } else if let Some(execution) = &self.restore_execution {
+                    execution.request_cancel();
+                    if let Some(page) = &mut self.progress_page {
+                        let mut state = page.state().clone();
+                        state.status = ProgressStatus::Cancelling;
+                        state.status_text = crate::tr!("正在请求取消，请等待当前安全点...");
+                        state.cancellable = false;
+                        page.update(state);
+                    }
                 } else if let Some(cancel) = &self.install_cancel {
                     cancel.store(true, Ordering::SeqCst);
                     if let Some(page) = &mut self.progress_page {
@@ -12671,6 +13013,7 @@ impl NativeWindow {
         let mut remote_install = None;
         let mut pe_install = None;
         let mut pe_backup = None;
+        let mut pe_restore = None;
         let mut pe_expand = None;
         for message in messages {
             if terminal {
@@ -12753,6 +13096,7 @@ impl NativeWindow {
                     remote_install = self.pending_remote_install.take();
                     pe_install = self.pending_install_after_pe_download.take();
                     pe_backup = self.pending_backup_after_pe_download.take();
+                    pe_restore = self.pending_restore_after_pe_download.take();
                     pe_expand = self.pending_expand_after_pe_download.take();
                     terminal = true;
                 }
@@ -12764,6 +13108,7 @@ impl NativeWindow {
                     self.pending_remote_install = None;
                     self.pending_install_after_pe_download = None;
                     self.pending_backup_after_pe_download = None;
+                    self.pending_restore_after_pe_download = None;
                     self.pending_expand_after_pe_download = None;
                     self.download_follow_up = None;
                     state.status = ProgressStatus::Cancelled;
@@ -12780,6 +13125,7 @@ impl NativeWindow {
                     self.pending_remote_install = None;
                     self.pending_install_after_pe_download = None;
                     self.pending_backup_after_pe_download = None;
+                    self.pending_restore_after_pe_download = None;
                     self.pending_expand_after_pe_download = None;
                     self.download_follow_up = None;
                     log::warn!(
@@ -12804,6 +13150,7 @@ impl NativeWindow {
             self.pending_remote_install = None;
             self.pending_install_after_pe_download = None;
             self.pending_backup_after_pe_download = None;
+                    self.pending_restore_after_pe_download = None;
             self.pending_expand_after_pe_download = None;
             self.download_follow_up = None;
             state.status = ProgressStatus::Failed;
@@ -12849,6 +13196,8 @@ impl NativeWindow {
             self.start_install_execution(hwnd, intent);
         } else if pe_backup.is_some() {
             self.prepare_backup_from_page(hwnd);
+        } else if pe_restore.is_some() {
+            self.prepare_restore_from_page(hwnd);
         } else if let Some(request) = pe_expand {
             self.leave_progress(hwnd);
             if let Some(dialog) = &mut self.expand_c_dialog {
@@ -13200,6 +13549,91 @@ impl NativeWindow {
         }
     }
 
+    unsafe fn poll_restore_messages(&mut self, hwnd: HWND) {
+        let mut messages = Vec::new();
+        let mut disconnected = false;
+        if let Some(execution) = &self.restore_execution {
+            loop {
+                match execution.messages.try_recv() {
+                    Ok(message) => messages.push(message),
+                    Err(std::sync::mpsc::TryRecvError::Empty) => break,
+                    Err(std::sync::mpsc::TryRecvError::Disconnected) => {
+                        disconnected = true;
+                        break;
+                    }
+                }
+            }
+        }
+        let mut show_failure_log_prompt = false;
+        for message in messages {
+            let mut terminal = false;
+            if let Some(page) = &mut self.progress_page {
+                let mut state = page.state().clone();
+                match message {
+                    RestoreWorkerMessage::Started { .. } => {
+                        state.current_step = crate::tr!("还原任务已启动");
+                        state.status_text = crate::tr!("正在准备还原");
+                    }
+                    RestoreWorkerMessage::Progress { percentage, status } => {
+                        state.overall = ProgressValue::new(u64::from(percentage), 100);
+                        state.step = state.overall;
+                        state.current_step = status;
+                    }
+                    RestoreWorkerMessage::PeCommitStarted => {
+                        state.current_step = crate::tr!("正在提交 PE 启动环境");
+                        state.status_text = crate::tr!("已进入不可取消的提交阶段，请勿关闭程序。");
+                        state.cancellable = false;
+                    }
+                    RestoreWorkerMessage::Completed => {
+                        state.overall = ProgressValue::new(100, 100);
+                        state.step = state.overall;
+                        state.status = ProgressStatus::Succeeded;
+                        state.current_step = crate::tr!("PE 还原环境准备完成");
+                        state.status_text = crate::tr!("系统将在重启进入 PE 后执行实际还原。");
+                        page.set_completion(ProgressCompletion::ViaPePrepared);
+                        terminal = true;
+                    }
+                    RestoreWorkerMessage::Cancelled => {
+                        state.status = ProgressStatus::Cancelled;
+                        state.current_step = crate::tr!("还原已取消");
+                        state.status_text = crate::tr!("未执行任何还原操作。");
+                        terminal = true;
+                    }
+                    RestoreWorkerMessage::Failed { error } => {
+                        state.status = ProgressStatus::Failed;
+                        state.current_step = crate::tr!("还原失败");
+                        state.detail = error;
+                        state.status_text = crate::tr!("请检查错误信息后重试。");
+                        show_failure_log_prompt = true;
+                        terminal = true;
+                    }
+                }
+                page.update(state);
+            }
+            if terminal {
+                self.restore_execution = None;
+                let _ = KillTimer(hwnd, RESTORE_TIMER_ID);
+            }
+        }
+        if disconnected && self.restore_execution.is_some() {
+            if let Some(page) = &mut self.progress_page {
+                let mut state = page.state().clone();
+                state.status = ProgressStatus::Failed;
+                state.current_step = crate::tr!("还原任务异常结束");
+                state.status_text =
+                    crate::tr!("还原工作线程未返回完成状态，尚未执行任何还原操作。");
+                state.cancellable = false;
+                page.update(state);
+            }
+            self.restore_execution = None;
+            let _ = KillTimer(hwnd, RESTORE_TIMER_ID);
+            show_failure_log_prompt = true;
+        }
+        if show_failure_log_prompt {
+            self.show_terminal_error_log_prompt(hwnd);
+        }
+    }
+
     unsafe fn poll_backup_messages(&mut self, hwnd: HWND) {
         let mut messages = Vec::new();
         let mut disconnected = false;
@@ -13423,6 +13857,7 @@ impl NativeWindow {
                 }
             }
             Page::Backup => self.prepare_backup_from_page(hwnd),
+            Page::Restore => self.prepare_restore_from_page(hwnd),
             Page::Hardware => {
                 if let Some(page) = &self.hardware_page {
                     if let Err(error) = clipboard_win::set_clipboard_string(&page.report_text()) {
@@ -13569,6 +14004,11 @@ impl NativeWindow {
         let backup_rows = self.backup_partition_rows();
         if let Some(page) = &self.backup_page {
             let selected = page.read_state().source_partition;
+            page.relocalize();
+            page.replace_partitions(&backup_rows, selected);
+        }
+        if let Some(page) = &self.restore_page {
+            let selected = page.read_state().target_partition;
             page.relocalize();
             page.replace_partitions(&backup_rows, selected);
         }
@@ -15399,6 +15839,7 @@ unsafe extern "system" fn window_proc(
                 match command_id {
                     ID_NAV_INSTALL => state.navigate_to(hwnd, Page::Install),
                     ID_NAV_BACKUP => state.navigate_to(hwnd, Page::Backup),
+                    ID_NAV_RESTORE => state.navigate_to(hwnd, Page::Restore),
                     ID_NAV_DOWNLOAD if !state.easy_mode_enabled() => {
                         state.navigate_to(hwnd, Page::Download)
                     }
@@ -15456,6 +15897,20 @@ unsafe extern "system" fn window_proc(
                     crate::native_ui::pages::backup::ID_BROWSE => {
                         state.browse_for_backup();
                         state.update_backup_primary_state();
+                    }
+                    crate::native_ui::pages::restore::ID_BROWSE => {
+                        state.browse_for_restore();
+                        state.update_restore_primary_state();
+                    }
+                    crate::native_ui::pages::restore::ID_IMAGE_PATH
+                        if notification == EN_CHANGE as u16 =>
+                    {
+                        state.refresh_restore_image_entries();
+                        state.update_restore_primary_state();
+                    }
+                    crate::native_ui::pages::restore::ID_IMAGE_LIST
+                    | crate::native_ui::pages::restore::ID_TARGET_LIST => {
+                        state.update_restore_primary_state();
                     }
                     crate::native_ui::pages::backup::ID_FORMAT => {
                         if let Some(page) = &state.backup_page {
@@ -15687,6 +16142,8 @@ unsafe extern "system" fn window_proc(
             if let Some(state) = state {
                 if wparam.0 == BACKUP_TIMER_ID {
                     state.poll_backup_messages(hwnd);
+                } else if wparam.0 == RESTORE_TIMER_ID {
+                    state.poll_restore_messages(hwnd);
                 } else if wparam.0 == DOWNLOAD_TIMER_ID {
                     state.poll_download_messages(hwnd);
                 } else if wparam.0 == INSTALL_TIMER_ID {
@@ -15854,6 +16311,10 @@ unsafe extern "system" fn window_proc(
                     && header.code == LVN_ITEMCHANGED
                 {
                     state.update_backup_primary_state();
+                } else if header.idFrom == crate::native_ui::pages::restore::ID_TARGET_LIST as usize
+                    && header.code == LVN_ITEMCHANGED
+                {
+                    state.update_restore_primary_state();
                 } else if header.idFrom == ID_SOFTWARE_CATEGORIES as usize
                     && header.code == LVN_ITEMCHANGED
                 {
@@ -16067,6 +16528,9 @@ unsafe extern "system" fn window_proc(
                 if let Some(execution) = &state.backup_execution {
                     execution.request_cancel();
                 }
+                if let Some(execution) = &state.restore_execution {
+                    execution.request_cancel();
+                }
                 if let Some(worker) = &state.download_worker {
                     let _ = worker.send(DownloadWorkerCommand::Cancel);
                 }
@@ -16078,6 +16542,7 @@ unsafe extern "system" fn window_proc(
                 }
             }
             let _ = KillTimer(hwnd, BACKUP_TIMER_ID);
+            let _ = KillTimer(hwnd, RESTORE_TIMER_ID);
             let _ = KillTimer(hwnd, DOWNLOAD_TIMER_ID);
             let _ = KillTimer(hwnd, INSTALL_TIMER_ID);
             let _ = KillTimer(hwnd, TOOL_DIALOG_TIMER_ID);
@@ -16187,10 +16652,11 @@ impl NativeWindow {
 
     unsafe fn draw_button(&self, item: &DRAWITEMSTRUCT) {
         let id = item.CtlID as u16;
-        let is_nav = (ID_NAV_INSTALL..=ID_NAV_ABOUT).contains(&id);
+        let is_nav = (ID_NAV_INSTALL..=ID_NAV_ABOUT).contains(&id) || id == ID_NAV_RESTORE;
         let is_current_nav = match self.page {
             Page::Install => id == ID_NAV_INSTALL,
             Page::Backup => id == ID_NAV_BACKUP,
+            Page::Restore => id == ID_NAV_RESTORE,
             Page::Download => id == ID_NAV_DOWNLOAD,
             Page::Tools => id == ID_NAV_TOOLS,
             Page::Hardware => id == ID_NAV_HARDWARE,

@@ -177,6 +177,25 @@ pub fn plan_backup_locked_volumes(
     Ok(Vec::new())
 }
 
+pub fn plan_restore_locked_volumes(
+    image: &str,
+    target: &str,
+    volumes: &[BitLockerVolumeSnapshot],
+) -> Result<Vec<String>, NativeBitLockerGateError> {
+    let mut locked = Vec::new();
+    for candidate in [image, target] {
+        let drive = canonical_drive(candidate)?;
+        let is_locked = volumes.iter().any(|volume| {
+            canonical_drive(&volume.drive).as_deref() == Ok(drive.as_str())
+                && volume.status.needs_unlock()
+        });
+        if is_locked && !locked.contains(&drive) {
+            locked.push(drive);
+        }
+    }
+    Ok(locked)
+}
+
 pub fn execute_unlock(
     drive: &str,
     credential: &ValidatedBitLockerCredential,
