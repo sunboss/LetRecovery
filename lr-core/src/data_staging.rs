@@ -966,7 +966,7 @@ mod scatter_tests {
             "RZhuangJi_Data\\a.wim"
         );
         assert_eq!(split_scatter_prefix("RZhuangJi_Scatter_abc\\x"), None);
-        let upper = format!("letrecovery_scatter_{}/y", "B".repeat(64));
+        let upper = format!("rzhuangji_scatter_{}/y", "B".repeat(64));
         assert_eq!(
             split_scatter_prefix(&upper).map(|(_, rest)| rest),
             Some("y")
